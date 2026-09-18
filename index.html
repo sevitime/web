@@ -47,14 +47,32 @@
 </head>
 <body>
 
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="SeviTime" width="28" height="28">
+      <span>SeviTime</span>
+    </a>
+    <a href="https://sevitime-editor.pages.dev" class="nav-btn-mapa" target="_blank" rel="noopener">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+      <span>Ver Mapa Web</span>
+    </a>
+  </div>
+</nav>
+
 <header class="hero">
   <img class="logo" src="/icono.png" alt="" width="76" height="76">
   <p class="marca">SeviTime</p>
   <h1>Sevilla, a mano</h1>
   <p class="claim">Qué ver cerca, dónde tapear, cómo moverte y qué pasa hoy&nbsp;— en Sevilla y su provincia.</p>
-  <a class="badge" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
-    <img src="/play-badge.png" alt="Disponible en Google Play" width="646" height="250">
-  </a>
+  <div class="hero-ctas">
+    <a class="badge" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
+      <img src="/play-badge.png" alt="Disponible en Google Play" width="646" height="250">
+    </a>
+    <a class="hero-link-mapa" href="https://sevitime-editor.pages.dev" target="_blank" rel="noopener">
+      ¿En ordenador? <strong>Abrir mapa interactivo y editor ➔</strong>
+    </a>
+  </div>
   <ul class="senas">
     <li>Sin registro</li>
     <li>Funciona de forma anónima</li>
@@ -103,6 +121,20 @@
   </ul>
 </section>
 
+<section class="banner-mapa" aria-label="Mapa colaborativo">
+  <div class="banner-mapa-contenido">
+    <div class="banner-mapa-texto">
+      <p class="etiqueta">Comunidad y mapa abierto</p>
+      <h2>Colabora en el mapa de Sevilla</h2>
+      <p>¿Conoces un sitio que falta? ¿Un bar ha cerrado o cambiado de nombre? Explora el mapa de toda la provincia desde tu navegador, sugiere sitios nuevos o reporta cambios y suma puntos de experiencia en SeviTime.</p>
+    </div>
+    <a class="btn-banner-mapa" href="https://sevitime-editor.pages.dev" target="_blank" rel="noopener">
+      <span>Abrir mapa y editor</span>
+      <span aria-hidden="true">➔</span>
+    </a>
+  </div>
+</section>
+
 <section class="que-hace">
   <h2>Qué hace</h2>
   <ul>
@@ -142,6 +174,8 @@
 </section>
 
 <footer>
+  <a href="https://sevitime-editor.pages.dev" target="_blank" rel="noopener">Mapa web y editor</a>
+  <span aria-hidden="true">·</span>
   <a href="https://sevitime.github.io/privacidad/">Privacidad</a>
   <span aria-hidden="true">·</span>
   <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
