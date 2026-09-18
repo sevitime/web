@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cuadro de honor — SeviTime</title>
+<meta name="description" content="Los colaboradores que mantienen el mapa de Sevilla al día: reseñas, rutas y avisos, por nivel y experiencia.">
+<link rel="canonical" href="https://sevitime.com/ranking/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sevitime.com/ranking/">
+<meta property="og:site_name" content="SeviTime">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="Cuadro de honor — SeviTime">
+<meta property="og:description" content="Los colaboradores que mantienen el mapa de Sevilla al día.">
+<meta property="og:image" content="https://sevitime.com/social.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#00897B">
+<link rel="icon" href="/icono.png">
+<link rel="apple-touch-icon" href="/icono.png">
+<link rel="stylesheet" href="/estilo.css">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  .ranking {
+    max-width: 680px;
+    margin: 0 auto;
+    padding: 0 24px 60px;
+  }
+  .ranking-intro {
+    text-align: center;
+    padding: 40px 24px 8px;
+  }
+  .ranking-intro h1 {
+    font-size: clamp(28px, 7vw, 40px);
+    font-weight: 800;
+    color: #fff;
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+  }
+  .ranking-intro p {
+    color: var(--apagado);
+    font-size: 15.5px;
+    max-width: 46ch;
+    margin: 0 auto;
+  }
+  .ranking-intro .etiqueta {
+    font-size: 12px;
+    font-weight: 700;
+    color: var(--verde-claro);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .fila {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--borde);
+  }
+  .fila:last-child { border-bottom: none; }
+
+  .puesto {
+    flex: 0 0 34px;
+    text-align: center;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--tenue);
+    font-variant-numeric: tabular-nums;
+  }
+  .fila.top3 .puesto { color: #fff; }
+
+  .avatar {
+    width: 44px; height: 44px; border-radius: 50%;
+    flex: 0 0 auto;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; overflow: hidden;
+    background: #26302e; color: var(--verde-claro); font-weight: 700;
+    text-decoration: none;
+  }
+  .avatar img { width: 100%; height: 100%; object-fit: cover; }
+  a.avatar:hover { box-shadow: 0 0 0 2px var(--verde-claro); }
+
+  .quien { flex: 1; min-width: 0; }
+  .quien .nombre {
+    font-size: 16px; font-weight: 600; color: #fff;
+    overflow-wrap: anywhere;
+  }
+  .quien .nombre a { color: inherit; text-decoration: none; }
+  .quien .nombre a:hover { color: var(--verde-claro); text-decoration: underline; }
+  .quien .titulo { font-size: 13px; color: var(--apagado); margin-top: 1px; }
+
+  .xp {
+    flex: 0 0 auto;
+    text-align: right;
+  }
+  .xp .numero { font-size: 16px; font-weight: 700; color: var(--verde-claro); font-variant-numeric: tabular-nums; }
+  .xp .nivel { font-size: 11.5px; color: var(--tenue); margin-top: 1px; }
+
+  .cargando, .error-ranking {
+    text-align: center;
+    color: var(--apagado);
+    padding: 40px 24px;
+    font-size: 15px;
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="SeviTime" width="28" height="28">
+      <span>SeviTime</span>
+    </a>
+    <a href="/ranking/" class="nav-btn-mapa" aria-current="page">Cuadro de honor</a>
+  </div>
+</nav>
+
+<header class="ranking-intro">
+  <p class="etiqueta">Comunidad</p>
+  <h1>Cuadro de honor</h1>
+  <p>Los colaboradores que mantienen el mapa de Sevilla al día, ordenados por lo que han aportado: reseñas, rutas, avisos y sitios nuevos.</p>
+</header>
+
+<main class="ranking">
+  <div id="lista" class="cargando">Cargando…</div>
+</main>
+
+<footer>
+  <a href="/">Inicio</a>
+  <span aria-hidden="true">·</span>
+  <a href="https://sevitime.github.io/privacidad/">Privacidad</a>
+  <span aria-hidden="true">·</span>
+  <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
+</footer>
+
+<script>
+(function () {
+  var SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
+  var SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
+
+  var COLOR_PRESET = {
+    giralda: '#00897B', catedral: '#5E7A8A', azahar: '#7CB342', ceramica: '#1E88E5',
+    rebujito: '#C0A020', barco: '#00838F', flamenco: '#AD1457', abanico: '#6D4C9F',
+    farol: '#E65100', sol: '#F9A825', madruga: '#37474F', cafe: '#6D4C41'
+  };
+  var EMOJI_PRESET = {
+    giralda: '🏛️', catedral: '⛪', azahar: '🌸', ceramica: '🔷',
+    rebujito: '🍷', barco: '⛵', flamenco: '🎵', abanico: '🎐',
+    farol: '💡', sol: '☀️', madruga: '🌙', cafe: '☕'
+  };
+
+  var lista = document.getElementById('lista');
+  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  function iniciales(nombre) {
+    var partes = (nombre || '').trim().split(/\s+/).filter(Boolean);
+    if (partes.length === 0) return '?';
+    if (partes.length === 1) return partes[0].charAt(0).toUpperCase();
+    return (partes[0].charAt(0) + partes[1].charAt(0)).toUpperCase();
+  }
+
+  function avatar(fila) {
+    var a = document.createElement('a');
+    a.className = 'avatar';
+    a.href = 'https://sevitime.github.io/perfil/?n=' + encodeURIComponent(fila.nombre_publico);
+    a.title = 'Ver el perfil de ' + fila.nombre_publico;
+    var guardado = fila.avatar;
+    if (guardado && guardado.indexOf('preset:') === 0) {
+      var id = guardado.slice(7);
+      a.style.background = COLOR_PRESET[id] || '#00897B';
+      a.textContent = EMOJI_PRESET[id] || '📍';
+    } else if (guardado) {
+      var img = document.createElement('img');
+      img.src = guardado;
+      img.alt = '';
+      img.referrerPolicy = 'no-referrer';
+      a.appendChild(img);
+    } else {
+      a.textContent = iniciales(fila.nombre_publico);
+    }
+    return a;
+  }
+
+  function numero(n) { return (n || 0).toLocaleString('es-ES'); }
+
+  function pintar(filas) {
+    lista.textContent = '';
+    lista.className = 'ranking';
+    if (!filas.length) {
+      lista.textContent = 'Todavía no hay nadie en el cuadro de honor.';
+      lista.className = 'error-ranking';
+      return;
+    }
+    filas.forEach(function (fila) {
+      var filaEl = document.createElement('div');
+      filaEl.className = 'fila' + (fila.posicion <= 3 ? ' top3' : '');
+
+      var puesto = document.createElement('div');
+      puesto.className = 'puesto';
+      puesto.textContent = fila.posicion;
+      filaEl.appendChild(puesto);
+
+      filaEl.appendChild(avatar(fila));
+
+      var quien = document.createElement('div');
+      quien.className = 'quien';
+      var nombre = document.createElement('div');
+      nombre.className = 'nombre';
+      var enlace = document.createElement('a');
+      enlace.href = 'https://sevitime.github.io/perfil/?n=' + encodeURIComponent(fila.nombre_publico);
+      enlace.textContent = fila.nombre_publico;
+      nombre.appendChild(enlace);
+      quien.appendChild(nombre);
+      var titulo = document.createElement('div');
+      titulo.className = 'titulo';
+      titulo.textContent = fila.titulo || '';
+      quien.appendChild(titulo);
+      filaEl.appendChild(quien);
+
+      var xp = document.createElement('div');
+      xp.className = 'xp';
+      var num = document.createElement('div');
+      num.className = 'numero';
+      num.textContent = numero(fila.xp) + ' XP';
+      xp.appendChild(num);
+      var nivel = document.createElement('div');
+      nivel.className = 'nivel';
+      nivel.textContent = 'nivel ' + fila.nivel;
+      xp.appendChild(nivel);
+      filaEl.appendChild(xp);
+
+      lista.appendChild(filaEl);
+    });
+  }
+
+  sb.rpc('fn_ranking_contribuidores', { p_limit: 100 })
+    .then(function (res) {
+      if (res.error) throw res.error;
+      pintar(res.data || []);
+    })
+    .catch(function () {
+      lista.textContent = 'No se pudo cargar el cuadro de honor. Recarga dentro de un momento.';
+      lista.className = 'error-ranking';
+    });
+})();
+</script>
+</body>
+</html>

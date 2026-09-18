@@ -188,6 +188,19 @@ footer span { margin: 0 8px; }
 .nav-marca img {
   border-radius: 7px;
 }
+.nav-acciones {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.nav-link {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--apagado);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+.nav-link:hover { color: #fff; }
 .nav-btn-mapa {
   display: inline-flex;
   align-items: center;
