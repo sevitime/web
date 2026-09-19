@@ -37,7 +37,7 @@
     padding: 40px 24px 8px;
   }
   .ranking-intro h1 {
-    font-size: clamp(28px, 7vw, 40px);
+    font-size: var(--t-display);
     font-weight: 800;
     color: var(--texto);
     letter-spacing: -0.02em;
@@ -45,12 +45,12 @@
   }
   .ranking-intro p {
     color: var(--apagado);
-    font-size: 15.5px;
+    font-size: var(--t-item);
     max-width: 46ch;
     margin: 0 auto;
   }
   .ranking-intro .etiqueta {
-    font-size: 12px;
+    font-size: var(--t-etiqueta);
     font-weight: 700;
     color: var(--verde-claro);
     letter-spacing: 0.08em;
@@ -70,7 +70,7 @@
   .puesto {
     flex: 0 0 34px;
     text-align: center;
-    font-size: 15px;
+    font-size: var(--t-cuerpo);
     font-weight: 700;
     color: var(--tenue);
     font-variant-numeric: tabular-nums;
@@ -79,7 +79,7 @@
   .fila.top3 .avatar { box-shadow: 0 0 0 2px var(--dorado); }
   .fila.mia {
     background: rgba(38, 166, 154, 0.10);
-    border-radius: 12px;
+    border-radius: var(--r-sm);
     padding-left: 10px;
     padding-right: 10px;
     margin: 0 -10px;
@@ -87,11 +87,11 @@
   .tu-etiqueta {
     display: inline-block;
     margin-left: 8px;
-    font-size: 11px;
+    font-size: var(--t-etiqueta);
     font-weight: 700;
     color: var(--fondo);
     background: var(--verde-claro);
-    border-radius: 999px;
+    border-radius: var(--r-pill);
     padding: 1px 8px;
     vertical-align: middle;
   }
@@ -100,7 +100,7 @@
     width: 44px; height: 44px; border-radius: 50%;
     flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center;
-    font-size: 18px; overflow: hidden;
+    font-size: var(--t-seccion); overflow: hidden;
     background: var(--superficie-alta); color: var(--verde-claro); font-weight: 700;
     border: 1px solid var(--borde);
     text-decoration: none;
@@ -110,19 +110,19 @@
 
   .quien { flex: 1; min-width: 0; }
   .quien .nombre {
-    font-size: 16px; font-weight: 600; color: var(--texto);
+    font-size: var(--t-item); font-weight: 600; color: var(--texto);
     overflow-wrap: anywhere;
   }
   .quien .nombre a { color: inherit; text-decoration: none; }
   .quien .nombre a:hover { color: var(--verde-claro); text-decoration: underline; }
-  .quien .titulo { font-size: 13px; color: var(--apagado); margin-top: 1px; }
+  .quien .titulo { font-size: var(--t-etiqueta); color: var(--apagado); margin-top: 1px; }
 
   .xp {
     flex: 0 0 auto;
     text-align: right;
   }
-  .xp .numero { font-size: 16px; font-weight: 700; color: var(--verde-claro); font-variant-numeric: tabular-nums; }
-  .xp .nivel { font-size: 11.5px; color: var(--tenue); margin-top: 1px; }
+  .xp .numero { font-size: var(--t-item); font-weight: 700; color: var(--verde-claro); font-variant-numeric: tabular-nums; }
+  .xp .nivel { font-size: var(--t-etiqueta); color: var(--tenue); margin-top: 1px; }
 
   .cargando, .error-ranking {
     text-align: center;
@@ -149,7 +149,7 @@
     <div class="nav-acciones">
       <a href="/ranking/" class="nav-link" aria-current="page">Cuadro de honor</a>
       <a href="/mapa/" class="nav-btn-mapa">
-        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
         <span>Ver Mapa Web</span>
       </a>
       <div id="auth-seccion"></div>
