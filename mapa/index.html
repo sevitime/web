@@ -227,7 +227,7 @@
     <input id="r-nombre-nuevo" type="text" maxlength="120" />
   </div>
 
-  <label>Notas (opcional)</label>
+  <label id="r-notas-label">Notas (opcional)</label>
   <textarea id="r-notas" maxlength="300"></textarea>
 
   <div class="acciones">
@@ -617,10 +617,14 @@
     attraction: '🎡', museum: '🖼️', monument: '🗿', parking: '🅿️',
     pharmacy: '💊', atm: '🏧', otro: '➕',
   };
+  // Los mismos cuatro que ofrece la app en su hoja de quejas
+  // (`motivosDeQueja` en lib/utils/moderacion_labels.dart): quien usa las dos
+  // no debe encontrarse opciones distintas según por dónde entre.
   const MOTIVOS = {
     cerrado: { emoji: '😕', etiqueta: 'Ha cerrado' },
     no_existe: { emoji: '❌', etiqueta: 'Ya no existe' },
     renombrado: { emoji: '✏️', etiqueta: 'Cambió de nombre' },
+    otro: { emoji: '➕', etiqueta: 'Otro' },
   };
 
   function pintarChips(contenedor, opciones, valorInicial, alElegir) {
@@ -654,9 +658,16 @@
 
   const rMotivoChips = document.getElementById('r-motivo-chips');
   const cajaNombreNuevo = document.getElementById('r-nombre-nuevo-caja');
-  pintarChips(rMotivoChips, MOTIVOS, 'cerrado', (valor) => {
+  const notasLabel = document.getElementById('r-notas-label');
+
+  // Con «Otro» la nota es lo único que sabemos del problema, así que deja de
+  // ser opcional y el rótulo lo dice. Mismo criterio que la app.
+  function ajustarCamposMotivo(valor) {
     cajaNombreNuevo.classList.toggle('oculto', valor !== 'renombrado');
-  });
+    notasLabel.textContent = valor === 'otro' ? 'Cuéntanos qué ocurre' : 'Notas (opcional)';
+  }
+
+  pintarChips(rMotivoChips, MOTIVOS, 'cerrado', ajustarCamposMotivo);
 
   // ---- Interacción con el mapa: un solo gesto ----
   // Tocar un sitio que ya existe = reportar un cambio. Tocar un hueco = añadir uno nuevo.
@@ -721,8 +732,8 @@
     document.getElementById('r-titulo').textContent = '📍 ' + nombre;
     document.getElementById('r-subtitulo').textContent = '¿Qué le pasa a este sitio?';
     rMotivoChips.seleccionar('cerrado');
+    ajustarCamposMotivo('cerrado');
     document.getElementById('r-nombre-nuevo').value = '';
-    cajaNombreNuevo.classList.add('oculto');
     document.getElementById('r-notas').value = '';
     limpiarMensajes(panelReportar);
     panelReportar.classList.add('visible');
@@ -755,7 +766,13 @@
       lat: parseFloat(panelSugerir.dataset.lat),
       lon: parseFloat(panelSugerir.dataset.lng),
       device_id: deviceId(),
-      punto_origen: 'mapa',
+      // 'web' y no 'mapa' para poder saber si este mapa aporta algo: la app
+      // manda 'mapa' cuando se marca el punto a mano y 'gps' cuando lo pone
+      // el móvil, y con el mismo valor las dos eran indistinguibles. Ojo: el
+      // panel de moderación trata 'mapa' y 'web' igual (punto puesto a mano,
+      // sin lectura de GPS que valorar), así que si sale otro origen nuevo
+      // hay que darlo de alta allí en `_esMarcadoAMano`.
+      punto_origen: 'web',
     };
     if (notas) fila.notas = notas;
 
@@ -782,6 +799,14 @@
 
     if (motivo === 'renombrado' && !nombreNuevo) {
       errorEl.textContent = 'Dinos el nuevo nombre.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    // Con «Otro» la nota es la única información que llega, así que se exige
+    // contenido real —mismo listón que la app— para que no acabe en la cola
+    // un aviso vacío o un «asdf» que no se puede moderar.
+    if (motivo === 'otro' && !(notas.length >= 10 && (notas.match(/[a-zA-ZáéíóúüñÁÉÍÓÚÜÑ]/g) || []).length >= 3)) {
+      errorEl.textContent = 'Cuéntanos un poco más para que podamos entenderlo.';
       errorEl.style.display = 'block';
       return;
     }
