@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192" width="192" height="192">
+  <!-- Favicon de SeviTime: solo la Giralda, en macizo.
+       El icono de la app lleva el skyline entero (Giralda, Alamillo, Torre
+       Sevilla, el estanque). A 16 px eso es un borrón: aquí queda una sola
+       forma, gruesa y centrada, sobre el verde de siempre.
+       Las proporciones están engordadas a propósito respecto a la torre real:
+       a 16 px un trazo fino desaparece, y lo que tiene que leerse es la
+       silueta, no la arquitectura. -->
+  <rect width="192" height="192" rx="26" fill="#00897B"/>
+
+  <g fill="#FFFFFF">
+    <!-- Suelo: ancla la torre y da una base que se ve incluso a 16 px -->
+    <rect x="34" y="158" width="124" height="16" rx="5"/>
+    <!-- Cuerpo del alminar -->
+    <rect x="64" y="74" width="64" height="86"/>
+    <!-- Cornisa entre el cuerpo y el campanario -->
+    <rect x="56" y="62" width="80" height="14" rx="3"/>
+    <!-- Campanario -->
+    <rect x="76" y="40" width="40" height="23"/>
+    <!-- Cornisa del campanario -->
+    <rect x="68" y="31" width="56" height="11" rx="3"/>
+    <!-- Cupulín -->
+    <path d="M96 10 c14 0 20 10 20 21 h-40 c0-11 6-21 20-21 z"/>
+  </g>
+</svg>

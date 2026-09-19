@@ -16,8 +16,13 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
-<link rel="icon" href="/icono.png">
-<link rel="apple-touch-icon" href="/icono.png">
+<!-- El .ico primero: es el que mira el rastreador de Google, y el
+     favicon de antes era un PNG de 691x691. Google exige un cuadrado de un
+     múltiplo de 48 px, así que lo descartaba y ponía el globo gris. -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css">
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
