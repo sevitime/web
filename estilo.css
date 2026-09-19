@@ -277,6 +277,17 @@ footer span { margin: 0 8px; }
 
 /* ---------- pantallas grandes ---------- */
 
+@media (max-width: 719px) {
+  .top-nav { padding: 12px 16px; }
+  .top-nav-inner { flex-wrap: wrap; gap: 10px; }
+  .nav-acciones { flex-wrap: wrap; gap: 10px; row-gap: 8px; }
+  /* En móvil el botón del mapa se queda solo con el icono para hacer sitio
+     al login, que es lo que no debe desaparecer nunca. */
+  .nav-btn-mapa span { display: none; }
+  .nav-btn-mapa { padding: 8px 11px; }
+  .auth-nombre { max-width: 90px; }
+}
+
 @media (min-width: 720px) {
   .hero { padding: 90px 24px 52px; }
   .capturas ul {
