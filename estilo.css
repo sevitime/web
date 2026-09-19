@@ -49,6 +49,7 @@
   --gris-fg: #A9C2BF;
   --gris-tenue: #7C9490;
   --atrib-bg: rgba(15, 28, 26, 0.72);
+  --nav-bg: rgba(15, 28, 26, 0.85);
   /* Escala tipográfica de la app (lib/theme/app_type.dart): cinco pasos y
      ningún intermedio. Los nombres son los de la app para que móvil y web
      hablen igual; el titular de página es la única excepción. */
@@ -93,6 +94,7 @@
     --gris-fg: #556360;
     --gris-tenue: #5A6B68;
     --atrib-bg: rgba(255, 255, 255, 0.78);
+    --nav-bg: rgba(242, 247, 246, 0.85);
   }
 }
 
@@ -211,11 +213,12 @@ img { max-width: 100%; display: block; }
 
 /* ---------- qué hace ---------- */
 
-.que-hace { padding: 36px 24px 8px; max-width: 900px; margin: 0 auto; }
+.que-hace { padding: 36px 24px 8px; max-width: 1120px; margin: 0 auto; }
 /* Título de sección como en la app: 20 px, w700 y en color de texto, sin
    versalitas ni verde. El rótulo verde en mayúsculas era invento de aquí. */
 .que-hace h2,
-.cierre h2 {
+.cierre h2,
+.navegador h2 {
   font-size: var(--t-seccion);
   font-weight: 700;
   color: var(--texto);
@@ -232,6 +235,41 @@ img { max-width: 100%; display: block; }
 }
 .que-hace h3 { font-size: var(--t-item); font-weight: 700; color: var(--texto); margin-bottom: 4px; }
 .que-hace p { font-size: var(--t-cuerpo); color: var(--apagado); }
+
+/* ---------- en el navegador ---------- */
+
+/* Las dos cosas que solo existen en la web (mapa y cuadro de honor): es lo
+   que sostiene el «lo bueno pide pantalla grande». */
+.navegador { padding: 40px 24px 8px; max-width: 1120px; margin: 0 auto; }
+.navegador-claim {
+  text-align: center;
+  color: var(--apagado);
+  font-size: var(--t-item);
+  max-width: 52ch;
+  margin: -14px auto 26px;
+}
+.navegador ul { list-style: none; display: grid; gap: 14px; }
+.navegador a {
+  display: block;
+  text-decoration: none;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-lg);
+  padding: 22px;
+  transition: border-color 0.15s ease, transform 0.12s ease;
+}
+.navegador a:hover { border-color: var(--verde-claro); transform: translateY(-2px); }
+.navegador a:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+.navegador .ico {
+  width: 42px; height: 42px; margin-bottom: 14px;
+  border-radius: var(--r-sm);
+  background: rgba(38, 166, 154, 0.12);
+  color: var(--verde-claro);
+  display: flex; align-items: center; justify-content: center;
+}
+.navegador h3 { font-size: var(--t-item); font-weight: 700; color: var(--texto); margin-bottom: 4px; }
+.navegador p { font-size: var(--t-cuerpo); color: var(--apagado); }
+.navegador .flecha { color: var(--verde-claro); font-weight: 700; }
 
 /* ---------- cierre ---------- */
 
@@ -254,15 +292,19 @@ footer span { margin: 0 8px; }
 /* ---------- top-nav ---------- */
 
 .top-nav {
-  position: absolute;
+  /* En escritorio deja de flotar y se pega arriba con cristal: es lo que
+     convierte la portada en un sitio de escritorio y no en un folleto. */
+  position: sticky;
   top: 0;
-  left: 0;
-  right: 0;
   z-index: 10;
   padding: 16px 20px;
+  background: var(--nav-bg);
+  backdrop-filter: saturate(1.4) blur(12px);
+  -webkit-backdrop-filter: saturate(1.4) blur(12px);
+  border-bottom: 1px solid var(--borde);
 }
 .top-nav-inner {
-  max-width: 1000px;
+  max-width: 1120px;
   margin: 0 auto;
   display: flex;
   justify-content: space-between;
@@ -426,17 +468,22 @@ footer span { margin: 0 8px; }
 }
 
 @media (min-width: 720px) {
-  .hero { padding: 90px 24px 52px; }
+  .hero { padding: 64px 24px 52px; }
   .capturas ul {
     justify-content: center;
     overflow-x: visible;
-    max-width: 1000px;
+    max-width: 1120px;
     margin: 0 auto;
   }
   .capturas li { flex: 0 0 205px; }
   .que-hace { padding-top: 48px; }
   .que-hace ul { grid-template-columns: 1fr 1fr; }
+  .navegador ul { grid-template-columns: 1fr 1fr; }
   .badge img { width: 215px; }
+}
+
+@media (min-width: 1000px) {
+  .que-hace ul { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
