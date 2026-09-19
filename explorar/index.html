@@ -64,6 +64,17 @@
 
   .resumen { padding: 0 16px 8px; font-size: var(--t-etiqueta); color: var(--tenue); }
 
+  /* Los dos mapas tienen funciones distintas: este para mirar, /mapa/ para
+     aportar. Sin decirlo, quien busca corregir algo se pierde. */
+  .nota-editor {
+    margin: 0 16px 10px; padding: 9px 11px;
+    font-size: var(--t-etiqueta); color: var(--apagado);
+    background: var(--superficie); border: 1px solid var(--borde);
+    border-radius: var(--r-sm);
+  }
+  .nota-editor a { color: var(--verde-claro); font-weight: 600; text-decoration: none; }
+  .nota-editor a:hover { text-decoration: underline; }
+
   .lista { list-style: none; flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 16px; }
   .ficha {
     display: flex; gap: 12px; align-items: flex-start;
@@ -93,6 +104,7 @@
   .popup .meta { font-size: var(--t-etiqueta); color: var(--apagado); margin-top: 2px; }
   .popup a { display: inline-block; margin-top: 8px; font-size: var(--t-etiqueta); color: var(--verde-claro); text-decoration: none; }
   .popup a:hover { text-decoration: underline; }
+  .popup .editor a { margin-top: 6px; color: var(--apagado); }
   .maplibregl-popup-content { background: var(--superficie) !important; border: 1px solid var(--borde); border-radius: var(--r-sm); }
   .maplibregl-popup-tip { border-top-color: var(--superficie) !important; border-bottom-color: var(--superficie) !important; }
 
@@ -131,6 +143,10 @@
       <input id="q" type="search" placeholder="Busca un bar, un monumento, un parque…" autocomplete="off" aria-label="Buscar sitios">
     </form>
     <div id="chips" class="chips" role="group" aria-label="Filtrar por tipo"></div>
+    <p class="nota-editor">
+      Aquí solo se mira. ¿Falta un sitio o hay algo mal?
+      Se sugiere y se corrige en el <a href="/mapa/">Mapa web y editor</a>.
+    </p>
     <p id="resumen" class="resumen">Cargando los sitios de Sevilla…</p>
     <ul id="lista" class="lista"></ul>
     <p id="aviso-ubicacion" class="aviso" hidden>
