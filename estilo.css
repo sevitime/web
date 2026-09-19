@@ -18,7 +18,12 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--fondo);
+  /* El resplandor verde vive aquí, en lo alto de la página, para que el nav
+     y el hero lo compartan sin una costura: si fuera del hero solo, el nav
+     quedaría como una franja oscura por encima. */
+  background:
+    radial-gradient(120% 520px at 50% 0%, rgba(0,137,123,0.30) 0%, rgba(0,137,123,0) 62%),
+    var(--fondo);
   color: var(--texto);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -40,9 +45,6 @@ img { max-width: 100%; display: block; }
 .hero {
   text-align: center;
   padding: 56px 24px 44px;
-  background:
-    radial-gradient(120% 90% at 50% 0%, rgba(0,137,123,0.30) 0%, rgba(0,137,123,0) 62%),
-    var(--fondo);
 }
 .hero .logo {
   width: 76px;
