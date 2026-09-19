@@ -40,6 +40,15 @@
   --glass-bg: rgba(255, 255, 255, 0.06);
   --glass-borde: rgba(255, 255, 255, 0.10);
   --glass-borde-avatar: rgba(255, 255, 255, 0.25);
+  /* Semánticos: éxito/error, estados neutros y fondos translúcidos (los usa
+     sobre todo /mapa/). */
+  --error: #FF8A8A;
+  --ok-bg: rgba(76, 175, 80, 0.18);
+  --ok-fg: #8BE28F;
+  --gris-bg: rgba(255, 255, 255, 0.08);
+  --gris-fg: #A9C2BF;
+  --gris-tenue: #7C9490;
+  --atrib-bg: rgba(15, 28, 26, 0.72);
 }
 
 /* Claro: la escala clara de la app. El verde de acento baja a #00897B
@@ -48,7 +57,10 @@
 @media (prefers-color-scheme: light) {
   :root {
     color-scheme: light;
-    --verde-claro: #00897B;
+    /* #00796B y #587370 en vez de #00897B y #7A938F: sobre el fondo claro
+       los tonos anteriores se quedaban en 3,99:1 y 3,03:1 y no llegan al
+       4,5:1 que pide AA para el texto menudo (rótulos, pies, enlaces). */
+    --verde-claro: #00796B;
     --dorado-texto: #926702;
     --fondo: #F2F7F6;
     --superficie: #FFFFFF;
@@ -56,11 +68,18 @@
     --borde: #E4EDEC;
     --texto: #1A2E2B;
     --apagado: #4A6360;
-    --tenue: #7A938F;
+    --tenue: #587370;
     --hero-glow: rgba(0, 137, 123, 0.15);
     --glass-bg: rgba(15, 40, 35, 0.05);
     --glass-borde: rgba(15, 40, 35, 0.10);
     --glass-borde-avatar: rgba(15, 40, 35, 0.15);
+    --error: #C0362C;
+    --ok-bg: #E8F5E9;
+    --ok-fg: #2E7D32;
+    --gris-bg: #F1F1F1;
+    --gris-fg: #556360;
+    --gris-tenue: #5A6B68;
+    --atrib-bg: rgba(255, 255, 255, 0.78);
   }
 }
 
@@ -83,6 +102,16 @@ img { max-width: 100%; display: block; }
 .badge img { width: 200px; height: auto; }
 .badge:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
 
+/* Enlaces sueltos dentro de una sección (el «Ir al inicio» de la 404, por
+   ejemplo). Antes la 404 llevaba un #00BFA5 a mano que ni era el verde de
+   marca ni llegaba a contraste sobre el fondo claro. */
+.hero a:not(.badge), .cierre a:not(.badge) {
+  color: var(--verde-claro);
+  font-weight: 600;
+  text-decoration: none;
+}
+.hero a:not(.badge):hover, .cierre a:not(.badge):hover { text-decoration: underline; }
+
 /* ---------- hero ---------- */
 
 .hero {
@@ -99,13 +128,8 @@ img { max-width: 100%; display: block; }
   margin: 0 auto 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
-.hero .marca {
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--verde-claro);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
+/* El rótulo «SEVITIME» que iba aquí repetía la marca que ya lleva el nav y el
+   propio icono; el hero respira mejor sin la triple mención. */
 .hero h1 {
   font-size: clamp(30px, 8vw, 46px);
   font-weight: 800;
@@ -116,7 +140,9 @@ img { max-width: 100%; display: block; }
 .hero .claim {
   font-size: 17px;
   color: var(--apagado);
-  max-width: 30ch;
+  /* 30ch partía el antetítulo en tres líneas con mal ragged en escritorio;
+     con 46ch respira y sigue corto para móvil. */
+  max-width: 46ch;
   margin: 0 auto 26px;
 }
 

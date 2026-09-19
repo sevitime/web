@@ -14,12 +14,13 @@
 <meta property="og:description" content="Los colaboradores que mantienen el mapa de Sevilla al día.">
 <meta property="og:image" content="https://sevitime.com/social.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="theme-color" content="#00897B">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
 <link rel="icon" href="/icono.png">
 <link rel="apple-touch-icon" href="/icono.png">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
   .ranking {
     max-width: 680px;
@@ -83,7 +84,7 @@
     margin-left: 8px;
     font-size: 11px;
     font-weight: 700;
-    color: #0b1513;
+    color: var(--fondo);
     background: var(--verde-claro);
     border-radius: 999px;
     padding: 1px 8px;
@@ -124,6 +125,12 @@
     padding: 40px 24px;
     font-size: 15px;
   }
+
+  @media (min-width: 720px) {
+    /* En escritorio el nav flota sobre la intro; sin este aire, al añadir
+       «Ver Mapa Web» el rótulo «Comunidad» se le echaba encima. */
+    .ranking-intro { padding-top: 90px; }
+  }
 </style>
 </head>
 <body>
@@ -131,11 +138,15 @@
 <nav class="top-nav">
   <div class="top-nav-inner">
     <a href="/" class="nav-marca">
-      <img src="/icono.png" alt="SeviTime" width="28" height="28">
-      <span>SeviTime</span>
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
     </a>
     <div class="nav-acciones">
       <a href="/ranking/" class="nav-link" aria-current="page">Cuadro de honor</a>
+      <a href="/mapa/" class="nav-btn-mapa">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="3 6 9 3 15 6 21 3 21 18 15 21 9 18 3 21"/><line x1="9" y1="3" x2="9" y2="18"/><line x1="15" y1="6" x2="15" y2="21"/></svg>
+        <span>Ver Mapa Web</span>
+      </a>
       <div id="auth-seccion"></div>
     </div>
   </div>
@@ -154,13 +165,19 @@
 <footer>
   <a href="/">Inicio</a>
   <span aria-hidden="true">·</span>
+  <a href="/mapa/">Mapa web y editor</a>
+  <span aria-hidden="true">·</span>
   <a href="https://sevitime.github.io/privacidad/">Privacidad</a>
   <span aria-hidden="true">·</span>
   <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
 </footer>
 
-<script src="/auth.js"></script>
+<script defer src="/auth.js"></script>
 <script>
+// auth.js va con `defer`, así que no existe `window.SEVI` mientras se parsea
+// este HTML: hay que esperar a que los scripts diferidos terminen, que es
+// justo antes de DOMContentLoaded.
+document.addEventListener('DOMContentLoaded', function () {
 (function () {
   var COLOR_PRESET = {
     giralda: '#00897B', catedral: '#5E7A8A', azahar: '#7CB342', ceramica: '#1E88E5',
@@ -280,6 +297,7 @@
   window.SEVI.onAuth.push(cargar);
   cargar();
 })();
+});
 </script>
 </body>
 </html>
