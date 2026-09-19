@@ -345,6 +345,7 @@
       .setLngLat([p.lon, p.lat])
       .setDOMContent(nodoPopup({
         nombre: p.nombre, label: p.label, dist: p.dist, web: p.web, osm: p.osm,
+        lat: p.lat, lon: p.lon,
       }))
       .addTo(map);
   }
@@ -381,6 +382,15 @@
     g.textContent = 'Cómo llegar';
     enlaces.appendChild(g);
     el.appendChild(enlaces);
+
+    // Este mapa solo enseña; para aportar hay que ir al editor.
+    const editor = document.createElement('div');
+    editor.className = 'editor';
+    const ea = document.createElement('a');
+    ea.href = '/mapa/';
+    ea.textContent = '¿Algo mal? Corregir en el mapa web';
+    editor.appendChild(ea);
+    el.appendChild(editor);
     return el;
   }
 })();
