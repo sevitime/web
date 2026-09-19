@@ -361,14 +361,28 @@ footer span { margin: 0 8px; }
 /* ---------- pantallas grandes ---------- */
 
 @media (max-width: 719px) {
-  .top-nav { padding: 12px 16px; }
-  .top-nav-inner { flex-wrap: wrap; gap: 10px; }
-  .nav-acciones { flex-wrap: wrap; gap: 10px; row-gap: 8px; }
-  /* En móvil el botón del mapa se queda solo con el icono para hacer sitio
-     al login, que es lo que no debe desaparecer nunca. */
-  .nav-btn-mapa span { display: none; }
-  .nav-btn-mapa { padding: 0 12px; }
+  /* En móvil el nav deja de flotar: se coloca en el flujo, reserva su alto
+     y así no puede tapar el logo del hero ni el título del ranking. */
+  .top-nav { position: relative; padding: 12px 16px 4px; }
+  .top-nav-inner { flex-wrap: wrap; gap: 8px 10px; }
+
+  /* La cápsula de acciones desaparece para que marca, cuenta y enlaces
+     pasen a ser hermanos directos y se ordenen en dos filas limpias:
+     arriba la marca y el login (que nunca deben desaparecer) y debajo
+     los enlaces. */
+  .nav-acciones { display: contents; }
+  #auth-seccion { order: 2; margin-left: auto; }
+  .nav-link { order: 3; }
+  .nav-btn-mapa { order: 4; }
+
+  /* El enlace de la página en la que ya estás sobra en móvil. */
+  .nav-link[aria-current="page"] { display: none; }
+
+  /* Con dos filas hay sitio de sobra: el botón del mapa recupera su texto. */
+  .nav-btn-mapa span { display: inline; }
   .auth-nombre { max-width: 90px; }
+
+  .hero { padding: 26px 24px 44px; }
 }
 
 @media (min-width: 720px) {
