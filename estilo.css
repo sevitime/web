@@ -49,6 +49,19 @@
   --gris-fg: #A9C2BF;
   --gris-tenue: #7C9490;
   --atrib-bg: rgba(15, 28, 26, 0.72);
+  /* Escala tipográfica de la app (lib/theme/app_type.dart): cinco pasos y
+     ningún intermedio. Los nombres son los de la app para que móvil y web
+     hablen igual; el titular de página es la única excepción. */
+  --t-etiqueta: 12px;
+  --t-cuerpo: 14px;
+  --t-item: 16px;
+  --t-seccion: 20px;
+  --t-titulo: 26px;
+  --t-display: clamp(30px, 6vw, 42px);
+  /* Radios de la app (lib/theme/app_type.dart): 10 y 16, más la píldora. */
+  --r-sm: 10px;
+  --r-lg: 16px;
+  --r-pill: 999px;
 }
 
 /* Claro: la escala clara de la app. El verde de acento baja a #00897B
@@ -97,7 +110,7 @@ img { max-width: 100%; display: block; }
    lleva relleno extra ni fondo: sus normas de marca no permiten alterarlo. */
 .badge {
   display: inline-block;
-  border-radius: 10px;
+  border-radius: var(--r-sm);
 }
 .badge img { width: 200px; height: auto; }
 .badge:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
@@ -124,21 +137,21 @@ img { max-width: 100%; display: block; }
 .hero .logo {
   width: 76px;
   height: 76px;
-  border-radius: 19px;
+  border-radius: var(--r-lg);
   margin: 0 auto 14px;
   box-shadow: 0 10px 30px rgba(0,0,0,0.5);
 }
 /* El rótulo «SEVITIME» que iba aquí repetía la marca que ya lleva el nav y el
    propio icono; el hero respira mejor sin la triple mención. */
 .hero h1 {
-  font-size: clamp(30px, 8vw, 46px);
+  font-size: var(--t-display);
   font-weight: 800;
   color: var(--texto);
   letter-spacing: -0.02em;
   margin: 10px 0 14px;
 }
 .hero .claim {
-  font-size: 17px;
+  font-size: var(--t-item);
   color: var(--apagado);
   /* 30ch partía el antetítulo en tres líneas con mal ragged en escritorio;
      con 46ch respira y sigue corto para móvil. */
@@ -156,10 +169,10 @@ img { max-width: 100%; display: block; }
   margin-top: 22px;
 }
 .senas li {
-  font-size: 12.5px;
+  font-size: var(--t-etiqueta);
   color: var(--tenue);
   border: 1px solid var(--borde);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   padding: 4px 12px;
 }
 
@@ -185,27 +198,28 @@ img { max-width: 100%; display: block; }
   aspect-ratio: 1080 / 2300;
   object-fit: cover;
   object-position: center top;
-  border-radius: 18px;
+  border-radius: var(--r-lg);
   border: 1px solid var(--borde);
   box-shadow: 0 18px 40px rgba(0,0,0,0.55);
 }
 .capturas figcaption {
   margin-top: 12px;
   text-align: center;
-  font-size: 13px;
+  font-size: var(--t-etiqueta);
   color: var(--tenue);
 }
 
 /* ---------- qué hace ---------- */
 
 .que-hace { padding: 36px 24px 8px; max-width: 900px; margin: 0 auto; }
+/* Título de sección como en la app: 20 px, w700 y en color de texto, sin
+   versalitas ni verde. El rótulo verde en mayúsculas era invento de aquí. */
 .que-hace h2,
 .cierre h2 {
-  font-size: 13px;
+  font-size: var(--t-seccion);
   font-weight: 700;
-  color: var(--verde-claro);
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
+  color: var(--texto);
+  letter-spacing: -0.4px;
   text-align: center;
   margin-bottom: 26px;
 }
@@ -213,11 +227,11 @@ img { max-width: 100%; display: block; }
 .que-hace li {
   background: var(--superficie);
   border: 1px solid var(--borde);
-  border-radius: 14px;
+  border-radius: var(--r-lg);
   padding: 18px 20px;
 }
-.que-hace h3 { font-size: 16px; font-weight: 700; color: var(--texto); margin-bottom: 4px; }
-.que-hace p { font-size: 15px; color: var(--apagado); }
+.que-hace h3 { font-size: var(--t-item); font-weight: 700; color: var(--texto); margin-bottom: 4px; }
+.que-hace p { font-size: var(--t-cuerpo); color: var(--apagado); }
 
 /* ---------- cierre ---------- */
 
@@ -229,7 +243,7 @@ img { max-width: 100%; display: block; }
 footer {
   text-align: center;
   padding: 24px;
-  font-size: 13px;
+  font-size: var(--t-etiqueta);
   color: var(--tenue);
   border-top: 1px solid var(--borde);
 }
@@ -260,12 +274,12 @@ footer span { margin: 0 8px; }
   gap: 8px;
   text-decoration: none;
   font-weight: 700;
-  font-size: 15px;
+  font-size: var(--t-item);
   color: var(--texto);
   letter-spacing: -0.01em;
 }
 .nav-marca img {
-  border-radius: 7px;
+  border-radius: var(--r-sm);
 }
 
 /* "Time" en dorado, como en el logotipo. */
@@ -294,13 +308,13 @@ footer span { margin: 0 8px; }
   height: 38px;
   padding: 0 16px 0 14px;
   font-family: inherit;
-  font-size: 13.5px;
+  font-size: var(--t-cuerpo);
   font-weight: 500;
   letter-spacing: 0.01em;
   color: #3c4043;
   background: #fff;
   border: 1px solid #dadce0;
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 4px 14px rgba(0, 0, 0, 0.18);
   transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
@@ -323,7 +337,7 @@ footer span { margin: 0 8px; }
   padding: 0 12px 0 5px;
   background: var(--glass-bg);
   border: 1px solid var(--glass-borde);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
 }
 .auth-avatar {
   width: 30px; height: 30px; border-radius: 50%;
@@ -331,23 +345,23 @@ footer span { margin: 0 8px; }
   border: 1px solid var(--glass-borde-avatar);
   display: flex; align-items: center; justify-content: center;
   background: var(--superficie-alta); color: var(--verde-claro);
-  font-size: 12px; font-weight: 700;
+  font-size: var(--t-etiqueta); font-weight: 700;
 }
 .auth-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .auth-nombre {
-  font-size: 13px; color: var(--texto); font-weight: 500;
+  font-size: var(--t-cuerpo); color: var(--texto); font-weight: 500;
   max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .auth-xp {
-  font-size: 11.5px; font-weight: 700;
+  font-size: var(--t-etiqueta); font-weight: 700;
   color: var(--dorado-texto);
   background: rgba(252, 196, 64, 0.14);
   border: 1px solid rgba(252, 196, 64, 0.38);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   padding: 3px 9px; white-space: nowrap;
 }
 .auth-salir {
-  font-size: 12px; color: var(--tenue);
+  font-size: var(--t-etiqueta); color: var(--tenue);
   background: transparent; border: none; cursor: pointer;
   padding: 2px 4px;
   transition: color 0.15s ease;
@@ -355,7 +369,7 @@ footer span { margin: 0 8px; }
 .auth-salir:hover { color: #ff6b6b; }
 
 .nav-link {
-  font-size: 13.5px;
+  font-size: var(--t-cuerpo);
   font-weight: 600;
   color: var(--apagado);
   text-decoration: none;
@@ -368,12 +382,12 @@ footer span { margin: 0 8px; }
   gap: 7px;
   height: 38px;
   padding: 0 15px;
-  font-size: 13.5px;
+  font-size: var(--t-cuerpo);
   font-weight: 600;
   color: var(--texto);
   background: rgba(38, 166, 154, 0.12);
   border: 1px solid rgba(38, 166, 154, 0.35);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   text-decoration: none;
   transition: all 0.2s ease;
 }
