@@ -69,6 +69,24 @@
     font-variant-numeric: tabular-nums;
   }
   .fila.top3 .puesto { color: #fff; }
+  .fila.mia {
+    background: rgba(0, 191, 165, 0.08);
+    border-radius: 12px;
+    padding-left: 10px;
+    padding-right: 10px;
+    margin: 0 -10px;
+  }
+  .tu-etiqueta {
+    display: inline-block;
+    margin-left: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #0b1513;
+    background: var(--verde-claro);
+    border-radius: 999px;
+    padding: 1px 8px;
+    vertical-align: middle;
+  }
 
   .avatar {
     width: 44px; height: 44px; border-radius: 50%;
@@ -113,7 +131,10 @@
       <img src="/icono.png" alt="SeviTime" width="28" height="28">
       <span>SeviTime</span>
     </a>
-    <a href="/ranking/" class="nav-btn-mapa" aria-current="page">Cuadro de honor</a>
+    <div class="nav-acciones">
+      <a href="/ranking/" class="nav-link" aria-current="page">Cuadro de honor</a>
+      <div id="auth-seccion"></div>
+    </div>
   </div>
 </nav>
 
@@ -135,11 +156,9 @@
   <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
 </footer>
 
+<script src="/auth.js"></script>
 <script>
 (function () {
-  var SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
-  var SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
-
   var COLOR_PRESET = {
     giralda: '#00897B', catedral: '#5E7A8A', azahar: '#7CB342', ceramica: '#1E88E5',
     rebujito: '#C0A020', barco: '#00838F', flamenco: '#AD1457', abanico: '#6D4C9F',
@@ -152,7 +171,7 @@
   };
 
   var lista = document.getElementById('lista');
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  var sb = window.SEVI.sb;
 
   function iniciales(nombre) {
     var partes = (nombre || '').trim().split(/\s+/).filter(Boolean);
@@ -195,7 +214,7 @@
     }
     filas.forEach(function (fila) {
       var filaEl = document.createElement('div');
-      filaEl.className = 'fila' + (fila.posicion <= 3 ? ' top3' : '');
+      filaEl.className = 'fila' + (fila.posicion <= 3 ? ' top3' : '') + (fila.es_mio ? ' mia' : '');
 
       var puesto = document.createElement('div');
       puesto.className = 'puesto';
@@ -212,6 +231,12 @@
       enlace.href = 'https://sevitime.github.io/perfil/?n=' + encodeURIComponent(fila.nombre_publico);
       enlace.textContent = fila.nombre_publico;
       nombre.appendChild(enlace);
+      if (fila.es_mio) {
+        var etiqueta = document.createElement('span');
+        etiqueta.className = 'tu-etiqueta';
+        etiqueta.textContent = 'Tú';
+        nombre.appendChild(etiqueta);
+      }
       quien.appendChild(nombre);
       var titulo = document.createElement('div');
       titulo.className = 'titulo';
@@ -235,15 +260,22 @@
     });
   }
 
-  sb.rpc('fn_ranking_contribuidores', { p_limit: 100 })
-    .then(function (res) {
-      if (res.error) throw res.error;
-      pintar(res.data || []);
-    })
-    .catch(function () {
-      lista.textContent = 'No se pudo cargar el cuadro de honor. Recarga dentro de un momento.';
-      lista.className = 'error-ranking';
-    });
+  function cargar() {
+    sb.rpc('fn_ranking_contribuidores', { p_limit: 100 })
+      .then(function (res) {
+        if (res.error) throw res.error;
+        pintar(res.data || []);
+      })
+      .catch(function () {
+        lista.textContent = 'No se pudo cargar el cuadro de honor. Recarga dentro de un momento.';
+        lista.className = 'error-ranking';
+      });
+  }
+
+  // Al entrar o salir se repinta: así tu fila se marca (o desmarca) al
+  // momento sin recargar la página.
+  window.SEVI.onAuth.push(cargar);
+  cargar();
 })();
 </script>
 </body>
