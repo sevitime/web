@@ -155,10 +155,21 @@
     attributionControl: true,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
-  map.addControl(new maplibregl.GeolocateControl({
-    positionOptions: { enableHighAccuracy: true },
-    trackUserLocation: false,
-  }), 'top-right');
+
+  // Tu punto. Se pinta a mano en vez de con el control de MapLibre porque ese
+  // arrastra la cámara a donde estés, y si estás lejos de Sevilla dejaría el
+  // mapa sin un solo sitio a la vista.
+  let yoMarker = null;
+  function marcarYo(lat, lon) {
+    if (!yoMarker) {
+      const el = document.createElement('span');
+      el.className = 'yo';
+      el.title = 'Estás aquí';
+      yoMarker = new maplibregl.Marker({ element: el }).setLngLat([lon, lat]).addTo(map);
+    } else {
+      yoMarker.setLngLat([lon, lat]);
+    }
+  }
 
   function montarCapas() {
     if (map.getSource('sitios')) return;
@@ -226,12 +237,21 @@
 
   function usarUbicacion() {
     if (!navigator.geolocation) return;
+    // El navegador pregunta la primera vez. En un PC sin GPS la da por red y
+    // puede caer a kilómetros, así que solo movemos la cámara si estás cerca
+    // de Sevilla; si no, se deja el mapa donde está y se reordena la lista.
     navigator.geolocation.getCurrentPosition((pos) => {
-      estado.centro = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      const punto = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+      estado.centro = punto;
+      marcarYo(punto.lat, punto.lon);
       aviso.hidden = true;
-      map.flyTo({ center: [estado.centro.lon, estado.centro.lat], zoom: 14 });
+      if (metros(SEVILLA, punto) < 40000) {
+        map.flyTo({ center: [punto.lon, punto.lat], zoom: 14 });
+      }
       aplicar();
-    }, () => { /* se queda en Sevilla centro */ }, { timeout: 8000 });
+    }, () => {
+      aviso.hidden = false;
+    }, { timeout: 8000, maximumAge: 600000 });
   }
 
   // --- Carga ---
@@ -241,6 +261,7 @@
       estado.todos = (d.elements || []).map(aLugar).filter(Boolean);
       aviso.hidden = false;
       aplicar();
+      usarUbicacion();
     })
     .catch(() => {
       resumen.textContent = 'No se pudieron cargar los sitios. Recarga en un momento.';

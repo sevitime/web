@@ -98,6 +98,21 @@
   .mapa-caja { flex: 1; min-width: 0; position: relative; }
   #map { position: absolute; inset: 0; }
 
+  /* Tu punto en el mapa, como el de la app. */
+  .yo {
+    display: block; width: 16px; height: 16px; border-radius: 50%;
+    background: #1a73e8; border: 3px solid #fff;
+    box-shadow: 0 0 0 3px rgba(26, 115, 232, 0.3);
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .yo { animation: yo-pulso 2s ease-out infinite; }
+  }
+  @keyframes yo-pulso {
+    0% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0.45); }
+    70% { box-shadow: 0 0 0 12px rgba(26, 115, 232, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(26, 115, 232, 0); }
+  }
+
   /* Ficha emergente del mapa */
   .popup { font-family: 'Inter', sans-serif; }
   .popup .nombre { font-size: var(--t-item); font-weight: 700; color: var(--texto); }
@@ -150,7 +165,8 @@
     <p id="resumen" class="resumen">Cargando los sitios de Sevilla…</p>
     <ul id="lista" class="lista"></ul>
     <p id="aviso-ubicacion" class="aviso" hidden>
-      Ordenado desde el centro de Sevilla. <a href="#" id="usar-ubicacion">Usa mi ubicación</a> para ordenar a tu alrededor.
+      No sabemos dónde estás, así que se ordena desde el centro de Sevilla.
+      <a href="#" id="usar-ubicacion">Reintentar con mi ubicación</a>.
     </p>
   </aside>
   <div class="mapa-caja">
