@@ -21,11 +21,12 @@
      dorado como segundo color, sobre negros con matiz verde y no grises
      neutros. El verde claro es el que usa la app en tema oscuro (#26A69A),
      no el teal #00BFA5 que se había colado aquí. */
+  color-scheme: dark;
   --verde: #00897B;
   --verde-claro: #26A69A;
   --verde-profundo: #004C45;
   --dorado: #FCC440;
-  --dorado-texto: #926702;
+  --dorado-texto: #FCC440;
   --fondo: #0F1C1A;
   --superficie: #1A2B29;
   --superficie-alta: #223634;
@@ -33,6 +34,34 @@
   --texto: #E8F0EF;
   --apagado: #8AADAA;
   --tenue: #6E9591;
+  /* El nav flota sobre el hero: el resplandor de arriba y el cristal de la
+     cápsula de usuario cambian de fuerza según el tema. */
+  --hero-glow: rgba(0, 137, 123, 0.30);
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-borde: rgba(255, 255, 255, 0.10);
+  --glass-borde-avatar: rgba(255, 255, 255, 0.25);
+}
+
+/* Claro: la escala clara de la app. El verde de acento baja a #00897B
+   porque el teal claro sobre blanco no llega a contraste de texto, y el
+   dorado pasa al #926702 accesible. */
+@media (prefers-color-scheme: light) {
+  :root {
+    color-scheme: light;
+    --verde-claro: #00897B;
+    --dorado-texto: #926702;
+    --fondo: #F2F7F6;
+    --superficie: #FFFFFF;
+    --superficie-alta: #FFFFFF;
+    --borde: #E4EDEC;
+    --texto: #1A2E2B;
+    --apagado: #4A6360;
+    --tenue: #7A938F;
+    --hero-glow: rgba(0, 137, 123, 0.15);
+    --glass-bg: rgba(15, 40, 35, 0.05);
+    --glass-borde: rgba(15, 40, 35, 0.10);
+    --glass-borde-avatar: rgba(15, 40, 35, 0.15);
+  }
 }
 
 body {
@@ -60,7 +89,7 @@ img { max-width: 100%; display: block; }
   text-align: center;
   padding: 56px 24px 44px;
   background:
-    radial-gradient(120% 90% at 50% 0%, rgba(0,137,123,0.30) 0%, rgba(0,137,123,0) 62%),
+    radial-gradient(120% 90% at 50% 0%, var(--hero-glow) 0%, rgba(0,137,123,0) 62%),
     var(--fondo);
 }
 .hero .logo {
@@ -80,7 +109,7 @@ img { max-width: 100%; display: block; }
 .hero h1 {
   font-size: clamp(30px, 8vw, 46px);
   font-weight: 800;
-  color: #fff;
+  color: var(--texto);
   letter-spacing: -0.02em;
   margin: 10px 0 14px;
 }
@@ -161,7 +190,7 @@ img { max-width: 100%; display: block; }
   border-radius: 14px;
   padding: 18px 20px;
 }
-.que-hace h3 { font-size: 16px; font-weight: 700; color: #fff; margin-bottom: 4px; }
+.que-hace h3 { font-size: 16px; font-weight: 700; color: var(--texto); margin-bottom: 4px; }
 .que-hace p { font-size: 15px; color: var(--apagado); }
 
 /* ---------- cierre ---------- */
@@ -206,7 +235,7 @@ footer span { margin: 0 8px; }
   text-decoration: none;
   font-weight: 700;
   font-size: 15px;
-  color: #fff;
+  color: var(--texto);
   letter-spacing: -0.01em;
 }
 .nav-marca img {
@@ -214,7 +243,7 @@ footer span { margin: 0 8px; }
 }
 
 /* "Time" en dorado, como en el logotipo. */
-.wordmark-time { color: var(--dorado); }
+.wordmark-time { color: var(--dorado-texto); }
 .nav-acciones {
   display: flex;
   align-items: center;
@@ -244,7 +273,7 @@ footer span { margin: 0 8px; }
   letter-spacing: 0.01em;
   color: #3c4043;
   background: #fff;
-  border: 1px solid rgba(255, 255, 255, 0.9);
+  border: 1px solid #dadce0;
   border-radius: 999px;
   cursor: pointer;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 4px 14px rgba(0, 0, 0, 0.18);
@@ -266,26 +295,26 @@ footer span { margin: 0 8px; }
   gap: 9px;
   height: 38px;
   padding: 0 12px 0 5px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-borde);
   border-radius: 999px;
 }
 .auth-avatar {
   width: 30px; height: 30px; border-radius: 50%;
   overflow: hidden; flex: 0 0 auto;
-  border: 1px solid rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--glass-borde-avatar);
   display: flex; align-items: center; justify-content: center;
   background: var(--superficie-alta); color: var(--verde-claro);
   font-size: 12px; font-weight: 700;
 }
 .auth-avatar img { width: 100%; height: 100%; object-fit: cover; }
 .auth-nombre {
-  font-size: 13px; color: #fff; font-weight: 500;
+  font-size: 13px; color: var(--texto); font-weight: 500;
   max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
 }
 .auth-xp {
   font-size: 11.5px; font-weight: 700;
-  color: var(--dorado);
+  color: var(--dorado-texto);
   background: rgba(252, 196, 64, 0.14);
   border: 1px solid rgba(252, 196, 64, 0.38);
   border-radius: 999px;
@@ -306,7 +335,7 @@ footer span { margin: 0 8px; }
   text-decoration: none;
   transition: color 0.15s ease;
 }
-.nav-link:hover { color: #fff; }
+.nav-link:hover { color: var(--texto); }
 .nav-btn-mapa {
   display: inline-flex;
   align-items: center;
@@ -315,7 +344,7 @@ footer span { margin: 0 8px; }
   padding: 0 15px;
   font-size: 13.5px;
   font-weight: 600;
-  color: #fff;
+  color: var(--texto);
   background: rgba(38, 166, 154, 0.12);
   border: 1px solid rgba(38, 166, 154, 0.35);
   border-radius: 999px;

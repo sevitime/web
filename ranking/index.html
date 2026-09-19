@@ -33,7 +33,7 @@
   .ranking-intro h1 {
     font-size: clamp(28px, 7vw, 40px);
     font-weight: 800;
-    color: #fff;
+    color: var(--texto);
     letter-spacing: -0.02em;
     margin-bottom: 10px;
   }
@@ -69,7 +69,7 @@
     color: var(--tenue);
     font-variant-numeric: tabular-nums;
   }
-  .fila.top3 .puesto { color: var(--dorado); }
+  .fila.top3 .puesto { color: var(--dorado-texto); }
   .fila.top3 .avatar { box-shadow: 0 0 0 2px var(--dorado); }
   .fila.mia {
     background: rgba(38, 166, 154, 0.10);
@@ -96,6 +96,7 @@
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; overflow: hidden;
     background: var(--superficie-alta); color: var(--verde-claro); font-weight: 700;
+    border: 1px solid var(--borde);
     text-decoration: none;
   }
   .avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -103,7 +104,7 @@
 
   .quien { flex: 1; min-width: 0; }
   .quien .nombre {
-    font-size: 16px; font-weight: 600; color: #fff;
+    font-size: 16px; font-weight: 600; color: var(--texto);
     overflow-wrap: anywhere;
   }
   .quien .nombre a { color: inherit; text-decoration: none; }
