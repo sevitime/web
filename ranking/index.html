@@ -17,6 +17,7 @@
 <meta name="theme-color" content="#00897B">
 <link rel="icon" href="/icono.png">
 <link rel="apple-touch-icon" href="/icono.png">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
@@ -68,9 +69,10 @@
     color: var(--tenue);
     font-variant-numeric: tabular-nums;
   }
-  .fila.top3 .puesto { color: #fff; }
+  .fila.top3 .puesto { color: var(--dorado); }
+  .fila.top3 .avatar { box-shadow: 0 0 0 2px var(--dorado); }
   .fila.mia {
-    background: rgba(0, 191, 165, 0.08);
+    background: rgba(38, 166, 154, 0.10);
     border-radius: 12px;
     padding-left: 10px;
     padding-right: 10px;
@@ -93,7 +95,7 @@
     flex: 0 0 auto;
     display: flex; align-items: center; justify-content: center;
     font-size: 18px; overflow: hidden;
-    background: #26302e; color: var(--verde-claro); font-weight: 700;
+    background: var(--superficie-alta); color: var(--verde-claro); font-weight: 700;
     text-decoration: none;
   }
   .avatar img { width: 100%; height: 100%; object-fit: cover; }

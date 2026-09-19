@@ -3,21 +3,40 @@
    independiente del estilo.css de sevitime.github.io, que lo comparten las
    páginas de /perfil/ y /ruta/ y no conviene tocar desde aquí. */
 
+/* Inter, la tipografía de la app, autohospedada: sin depender de Google
+   Fonts (una petición menos y nada que declarar sobre terceros). Es la
+   variable, así que un solo fichero cubre todos los pesos. */
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fuentes/inter-var.woff2') format('woff2');
+}
+
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
+  /* Misma paleta que la app (lib/theme/app_colors.dart): verde de marca y
+     dorado como segundo color, sobre negros con matiz verde y no grises
+     neutros. El verde claro es el que usa la app en tema oscuro (#26A69A),
+     no el teal #00BFA5 que se había colado aquí. */
   --verde: #00897B;
-  --verde-claro: #00BFA5;
-  --fondo: #0f0f13;
-  --superficie: #16161c;
-  --borde: #26262f;
-  --texto: #e8e8ea;
-  --apagado: #a0a0a8;
-  --tenue: #7a7a84;
+  --verde-claro: #26A69A;
+  --verde-profundo: #004C45;
+  --dorado: #FCC440;
+  --dorado-texto: #926702;
+  --fondo: #0F1C1A;
+  --superficie: #1A2B29;
+  --superficie-alta: #223634;
+  --borde: #243533;
+  --texto: #E8F0EF;
+  --apagado: #8AADAA;
+  --tenue: #6E9591;
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   background: var(--fondo);
   color: var(--texto);
   line-height: 1.6;
@@ -156,7 +175,7 @@ footer {
   text-align: center;
   padding: 24px;
   font-size: 13px;
-  color: #6a6a74;
+  color: var(--tenue);
   border-top: 1px solid var(--borde);
 }
 footer a { color: var(--verde-claro); text-decoration: none; }
@@ -193,6 +212,9 @@ footer span { margin: 0 8px; }
 .nav-marca img {
   border-radius: 7px;
 }
+
+/* "Time" en dorado, como en el logotipo. */
+.wordmark-time { color: var(--dorado); }
 .nav-acciones {
   display: flex;
   align-items: center;
@@ -253,7 +275,7 @@ footer span { margin: 0 8px; }
   overflow: hidden; flex: 0 0 auto;
   border: 1px solid rgba(255, 255, 255, 0.25);
   display: flex; align-items: center; justify-content: center;
-  background: #26302e; color: var(--verde-claro);
+  background: var(--superficie-alta); color: var(--verde-claro);
   font-size: 12px; font-weight: 700;
 }
 .auth-avatar img { width: 100%; height: 100%; object-fit: cover; }
@@ -263,9 +285,9 @@ footer span { margin: 0 8px; }
 }
 .auth-xp {
   font-size: 11.5px; font-weight: 700;
-  color: var(--verde-claro);
-  background: rgba(0, 191, 165, 0.14);
-  border: 1px solid rgba(0, 191, 165, 0.35);
+  color: var(--dorado);
+  background: rgba(252, 196, 64, 0.14);
+  border: 1px solid rgba(252, 196, 64, 0.38);
   border-radius: 999px;
   padding: 3px 9px; white-space: nowrap;
 }
@@ -294,8 +316,8 @@ footer span { margin: 0 8px; }
   font-size: 13.5px;
   font-weight: 600;
   color: #fff;
-  background: rgba(0, 191, 165, 0.12);
-  border: 1px solid rgba(0, 191, 165, 0.35);
+  background: rgba(38, 166, 154, 0.12);
+  border: 1px solid rgba(38, 166, 154, 0.35);
   border-radius: 999px;
   text-decoration: none;
   transition: all 0.2s ease;
