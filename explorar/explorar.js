@@ -173,6 +173,23 @@
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
 
+  // La web muestra toda la provincia. Solo encuadramos una vez al cargar los
+  // datos para que los lugares no queden fuera de la vista inicial.
+  let mapaEncuadrado = false;
+  function encuadrarResultados(r) {
+    if (mapaEncuadrado || !r.length) return;
+    const bounds = new maplibregl.LngLatBounds();
+    r.forEach((p) => bounds.extend([p.lon, p.lat]));
+    if (bounds.isEmpty()) return;
+    const ajustar = () => {
+      if (mapaEncuadrado) return;
+      map.fitBounds(bounds, { padding: 40, maxZoom: 11 });
+      mapaEncuadrado = true;
+    };
+    if (map.loaded()) ajustar();
+    else map.once('load', ajustar);
+  }
+
   // Tu punto. Se pinta a mano en vez de con el control de MapLibre porque ese
   // arrastra la cámara a donde estés, y si estás lejos de Sevilla dejaría el
   // mapa sin un solo sitio a la vista.
@@ -449,7 +466,9 @@
     }
 
     // Mapa
-    const features = r.slice(0, 200).map((p) => ({
+    // No limitar por distancia: el mapa web debe cubrir toda la provincia.
+    // La lista sí conserva su límite visual independiente del mapa.
+    const features = r.map((p) => ({
       type: 'Feature',
       geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
       properties: {
@@ -459,6 +478,7 @@
     }));
     const src = map.getSource('sitios');
     if (src) src.setData({ type: 'FeatureCollection', features });
+    encuadrarResultados(r);
   }
 
   function ficha(p) {
