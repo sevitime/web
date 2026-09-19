@@ -156,6 +156,7 @@
   const chips = document.getElementById('chips');
   const lista = document.getElementById('lista');
   const resumen = document.getElementById('resumen');
+  const mapaResumen = document.getElementById('mapa-resumen');
   const aviso = document.getElementById('aviso-ubicacion');
   const coleccionVacia = { type: 'FeatureCollection', features: [] };
 
@@ -456,10 +457,13 @@
     lista.textContent = '';
     if (!r.length) {
       resumen.textContent = 'Nada por aquí con esos filtros.';
+      mapaResumen.textContent = 'No hay lugares con esos filtros';
     } else {
       resumen.textContent = r.length.toLocaleString('es-ES') +
         (r.length === 1 ? ' sitio' : ' sitios') +
         (estado.texto ? ' para «' + estado.texto.trim() + '»' : '');
+      mapaResumen.textContent = r.length.toLocaleString('es-ES') +
+        (r.length === 1 ? ' sitio en el mapa' : ' sitios en el mapa');
       const frag = document.createDocumentFragment();
       r.slice(0, 60).forEach((p) => frag.appendChild(ficha(p)));
       lista.appendChild(frag);
