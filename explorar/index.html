@@ -97,6 +97,15 @@
 
   .mapa-caja { flex: 1; min-width: 0; position: relative; }
   #map { position: absolute; inset: 0; }
+  .mapa-resumen {
+    position: absolute; z-index: 2; top: 14px; left: 14px;
+    max-width: calc(100% - 74px); padding: 8px 12px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--superficie) 92%, transparent);
+    color: var(--texto); box-shadow: 0 3px 14px rgba(15, 28, 26, .14);
+    font-size: var(--t-etiqueta); font-weight: 600; pointer-events: none;
+    backdrop-filter: blur(8px);
+  }
 
   /* Tu punto en el mapa, como el de la app. */
   .yo {
@@ -167,6 +176,7 @@
     <ul id="lista" class="lista"></ul>
   </aside>
   <div class="mapa-caja">
+    <div id="mapa-resumen" class="mapa-resumen" aria-live="polite">Cargando lugares…</div>
     <div id="map"></div>
   </div>
 </main>
