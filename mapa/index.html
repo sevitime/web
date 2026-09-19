@@ -40,6 +40,7 @@
 <script src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script src="/mapa/estilo-mapa.js"></script>
+<script src="/lugares.js"></script>
 <style>
   /* La paleta y la tipografía vienen de /estilo.css, el mismo que usan la
      portada y el cuadro de honor. Así el mapa también cambia a tema oscuro y
@@ -150,6 +151,15 @@
     background: var(--superficie-alta); color: var(--texto); font-weight: 600;
   }
   #barra button.btn-aportaciones:hover { background: var(--borde); }
+  /* Mostrar/ocultar los pines de SeviTime (los mismos que Explorar). Apagado
+     por defecto: el editor arranca limpio y el JSON de sitios solo se descarga
+     si se pide. */
+  #barra button.btn-sitios {
+    background: var(--superficie-alta); color: var(--texto); font-weight: 600;
+  }
+  #barra button.btn-sitios:hover { background: var(--borde); }
+  #barra button.btn-sitios[aria-pressed="true"] { background: var(--verde); color: #fff; }
+  #barra button.btn-sitios:disabled { opacity: .6; cursor: default; }
   .panel.ancho { width: 340px; }
 
   .ap-xp-caja {
@@ -220,6 +230,7 @@
     <img src="/icono.png" alt="" width="24" height="24" />
   </a>
   <span id="ayuda">👉 Toca un sitio para avisar de un cambio, o un hueco para añadir uno nuevo</span>
+  <button id="btn-sitios" class="btn-sitios" aria-pressed="false">Mostrar sitios</button>
   <a href="/explorar/" class="link-explorar">Ver los sitios</a>
   <div id="auth-seccion">
     <button id="btn-mis-aportaciones" class="btn-aportaciones">Mis aportaciones</button>
@@ -309,6 +320,10 @@
   // ---- Config ----
   const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
+
+  // Lugares compartidos con /explorar/ (lugares.js): mismo snapshot, mismos
+  // tipos y mismos colores.
+  const { cargar } = window.sevitimeLugares;
 
   // Mismos tipos que en la app (lib/data/tipos_de_sitio.dart), para no
   // guardar el mismo sitio con dos vocabularios distintos.
@@ -637,6 +652,110 @@
     map.setStyle(sevitimeEstiloMapa(e.matches));
   });
 
+  // ---- Pines de SeviTime (los mismos sitios que Explorar) ----
+  // El editor arranca limpio: el JSON de sitios (1,9 MB) solo se descarga si se
+  // piden. Con los pines a la vista, tocar uno avisa de un cambio sobre el
+  // sitio real de SeviTime, no sobre el POI suelto del basemap, así el nombre y
+  // las coordenadas coinciden con los de la app y la nota enlaza el elemento
+  // exacto de OSM.
+  const btnSitios = document.getElementById('btn-sitios');
+  const COLECCION_VACIA = { type: 'FeatureCollection', features: [] };
+  let lugaresCargados = null;
+  let sitiosVisibles = false;
+
+  function pintarSitios() {
+    const src = map.getSource('sitios');
+    if (!src) return;
+    const features = (lugaresCargados || []).map((p) => ({
+      type: 'Feature',
+      geometry: { type: 'Point', coordinates: [p.lon, p.lat] },
+      properties: {
+        nombre: p.nombre, tipo: p.tipo, label: p.label,
+        color: p.color, emoji: p.emoji,
+        osmType: p.osmType, osmId: p.osmId, lat: p.lat, lon: p.lon,
+      },
+    }));
+    src.setData({ type: 'FeatureCollection', features });
+  }
+
+  function montarCapaSitios() {
+    if (!sitiosVisibles || map.getSource('sitios')) return;
+    // Si el estilo aún no está listo (un clic nada más abrir), no se monta
+    // todavía: el `load`/`styledata` siguiente lo hace.
+    if (!map.isStyleLoaded()) return;
+    map.addSource('sitios', { type: 'geojson', data: COLECCION_VACIA });
+    map.addLayer({
+      id: 'sitios', type: 'circle', source: 'sitios',
+      paint: {
+        'circle-radius': 6,
+        'circle-color': ['get', 'color'],
+        'circle-stroke-width': 2,
+        'circle-stroke-color': 'rgba(255,255,255,0.9)',
+      },
+    });
+    map.addLayer({
+      id: 'sitios-label', type: 'symbol', source: 'sitios', minzoom: 15,
+      filter: ['==', ['geometry-type'], 'Point'],
+      layout: {
+        'text-field': ['get', 'nombre'],
+        'text-font': ['Open Sans Regular'],
+        'text-size': 11,
+        'text-anchor': 'top',
+        'text-offset': [0, 1.1],
+        'text-max-width': 8,
+        'text-optional': true,
+      },
+      paint: {
+        'text-color': prefiereOscuro.matches ? '#E8F0EF' : '#2c2c2c',
+        'text-halo-color': prefiereOscuro.matches ? '#0F1C1A' : '#ffffff',
+        'text-halo-width': 1.4,
+      },
+    });
+    pintarSitios();
+  }
+
+  function quitarCapaSitios() {
+    if (map.getLayer('sitios-label')) map.removeLayer('sitios-label');
+    if (map.getLayer('sitios')) map.removeLayer('sitios');
+    if (map.getSource('sitios')) map.removeSource('sitios');
+  }
+
+  // setStyle (cambio de tema) borra las capas añadidas a mano: se vuelven a
+  // montar, como en /explorar/.
+  map.on('load', montarCapaSitios);
+  map.on('styledata', montarCapaSitios);
+
+  btnSitios.addEventListener('click', async () => {
+    if (sitiosVisibles) {
+      sitiosVisibles = false;
+      quitarCapaSitios();
+      btnSitios.textContent = 'Mostrar sitios';
+      btnSitios.setAttribute('aria-pressed', 'false');
+      return;
+    }
+    sitiosVisibles = true;
+    btnSitios.setAttribute('aria-pressed', 'true');
+    if (lugaresCargados) {
+      btnSitios.textContent = 'Ocultar sitios';
+      montarCapaSitios();
+      return;
+    }
+    btnSitios.disabled = true;
+    btnSitios.textContent = 'Cargando…';
+    try {
+      lugaresCargados = await cargar();
+      btnSitios.textContent = 'Ocultar sitios';
+      montarCapaSitios();
+    } catch (err) {
+      sitiosVisibles = false;
+      btnSitios.setAttribute('aria-pressed', 'false');
+      btnSitios.textContent = 'Mostrar sitios';
+      alert('No se pudieron cargar los sitios. Inténtalo de nuevo.');
+    } finally {
+      btnSitios.disabled = false;
+    }
+  });
+
   // ---- Chips de tipo (sugerir) y de motivo (reportar) ----
   const TIPOS_EMOJI = {
     bar: '🍻', restaurant: '🍽️', cafe: '☕', fast_food: '🍔',
@@ -727,9 +846,24 @@
       [e.point.x - radio, e.point.y - radio],
       [e.point.x + radio, e.point.y + radio],
     ];
-    const feats = map.queryRenderedFeatures(caja, { layers: ['poi'] });
-    const sitio = feats.find((f) => f.properties && f.properties.name);
+    // Los pines de SeviTime mandan sobre los POIs del basemap: si el lugar real
+    // está a la vista, se reporta ese (nombre, coordenadas y elemento OSM
+    // exactos, los mismos que usa la app).
+    const capas = ['poi'];
+    if (sitiosVisibles && map.getLayer('sitios')) capas.unshift('sitios');
+    const feats = map.queryRenderedFeatures(caja, { layers: capas });
     if (marker) marker.remove();
+    const curado = feats.find((f) => f.layer.id === 'sitios');
+    if (curado) {
+      const p = curado.properties;
+      const [lng, lat] = curado.geometry.coordinates;
+      marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#FF6B6B' : '#d64545' }).setLngLat([lng, lat]).addTo(map);
+      abrirPanelReportar(p.nombre, lat, lng, {
+        tipoLugar: p.label, osmType: p.osmType, osmId: p.osmId,
+      });
+      return;
+    }
+    const sitio = feats.find((f) => f.properties && f.properties.name);
     if (sitio) {
       const [lng, lat] = sitio.geometry.coordinates;
       marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#FF6B6B' : '#d64545' }).setLngLat([lng, lat]).addTo(map);
@@ -742,6 +876,8 @@
 
   map.on('mouseenter', 'poi', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'poi', () => { map.getCanvas().style.cursor = ''; });
+  map.on('mouseenter', 'sitios', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'sitios', () => { map.getCanvas().style.cursor = ''; });
 
   function limpiarMensajes(panel) {
     panel.querySelector('.error').style.display = 'none';
@@ -760,11 +896,17 @@
     panelSugerir.classList.add('visible');
   }
 
-  function abrirPanelReportar(nombre, lat, lng) {
+  function abrirPanelReportar(nombre, lat, lng, extra) {
     panelSugerir.classList.remove('visible');
     panelReportar.dataset.nombre = nombre;
     panelReportar.dataset.lat = lat;
     panelReportar.dataset.lng = lng;
+    // Solo llegan cuando el sitio es un pin de SeviTime; con el POI del basemap
+    // no hay elemento OSM que enlazar. Se limpian siempre para no arrastrar los
+    // datos del reporte anterior.
+    panelReportar.dataset.tipoLugar = (extra && extra.tipoLugar) || '';
+    panelReportar.dataset.osmType = (extra && extra.osmType) || '';
+    panelReportar.dataset.osmId = (extra && extra.osmId != null) ? String(extra.osmId) : '';
     document.getElementById('r-titulo').textContent = '📍 ' + nombre;
     document.getElementById('r-subtitulo').textContent = '¿Qué le pasa a este sitio?';
     rMotivoChips.seleccionar('cerrado');
@@ -856,6 +998,12 @@
     };
     if (notas) fila.notas = notas;
     if (motivo === 'renombrado') fila.nombre_nuevo = nombreNuevo;
+    // Datos del lugar real (solo al reportar un pin de SeviTime): la app manda
+    // estos mismos campos, y con ellos la nota a OSM enlaza el elemento exacto
+    // en vez de quedarse en coordenadas.
+    if (panelReportar.dataset.tipoLugar) fila.tipo_lugar = panelReportar.dataset.tipoLugar;
+    if (panelReportar.dataset.osmType) fila.osm_type = panelReportar.dataset.osmType;
+    if (panelReportar.dataset.osmId) fila.osm_id = parseInt(panelReportar.dataset.osmId, 10);
 
     const { error } = await sb.from('reportes_lugares').insert(fila);
     if (error) {
