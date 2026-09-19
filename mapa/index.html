@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SeviTime | Mapa colaborativo de Sevilla</title>
+<meta name="description" content="Ayuda a mejorar SeviTime: sugiere lugares nuevos de Sevilla o avisa de cambios en el mapa colaborativo." />
+<meta name="robots" content="index, follow" />
+<link rel="canonical" href="https://sevitime.com/mapa/" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="es_ES" />
+<meta property="og:site_name" content="SeviTime" />
+<meta property="og:title" content="SeviTime | Mapa colaborativo de Sevilla" />
+<meta property="og:description" content="Sugiere sitios nuevos y ayuda a mantener actualizado el mapa de Sevilla." />
+<meta property="og:url" content="https://sevitime.com/mapa/" />
+<meta name="twitter:card" content="summary" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "SeviTime",
+  "url": "https://sevitime.com/mapa/",
+  "inLanguage": "es",
+  "applicationCategory": "TravelApplication",
+  "operatingSystem": "Web",
+  "description": "Mapa colaborativo para descubrir y mejorar la información sobre lugares de Sevilla."
+}
+</script>
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  /* Inter, la tipografía de la app, autohospedada (sin Google Fonts). */
+  @font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('/fuentes/inter-var.woff2') format('woff2');
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; font-family: 'Inter', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  #map { position: absolute; inset: 0; }
+
+  #barra {
+    position: absolute; top: 12px; left: 12px; z-index: 5;
+    background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.15);
+    padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 90vw;
+  }
+  #barra button {
+    border: none; background: #00897B; color: #fff; font-size: 14px;
+    padding: 9px 16px; border-radius: 8px; cursor: pointer; white-space: nowrap;
+  }
+  #barra span { font-size: 13px; color: #444; }
+
+  .panel {
+    position: absolute; top: 12px; right: 12px; width: 300px; z-index: 5;
+    background: #fff; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,.15);
+    padding: 16px; display: none;
+  }
+  .panel.visible { display: block; }
+  .panel h3 { margin: 0 0 4px; font-size: 15px; }
+  .panel .subtitulo { font-size: 12px; color: #888; margin-bottom: 8px; }
+  .panel label { display: block; font-size: 12px; color: #666; margin: 10px 0 4px; }
+  .panel input, .panel select, .panel textarea {
+    width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 14px;
+  }
+  .panel input[readonly] { background: #f5f5f5; color: #333; }
+  .panel textarea { resize: vertical; min-height: 50px; }
+  .panel .acciones { display: flex; gap: 8px; margin-top: 14px; }
+  .panel .acciones button {
+    flex: 1; padding: 9px; border: none; border-radius: 8px; font-size: 14px; cursor: pointer;
+  }
+  .btn-enviar { background: #00897B; color: #fff; }
+  .btn-cancelar { background: #eee; color: #333; }
+  .btn-cerrar { background: #eee; color: #333; }
+  .panel .error { color: #d64545; font-size: 12px; margin-top: 6px; display: none; }
+  .panel .ok { color: #00897B; font-size: 13px; margin-top: 8px; display: none; font-weight: 600; }
+  .oculto { display: none !important; }
+
+  @keyframes panel-in { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
+  .panel.visible { animation: panel-in .18s ease; }
+  @keyframes celebrar { 0% { transform: scale(.7); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
+  .panel .ok { animation: celebrar .35s ease; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    border: 1.5px solid #ddd; background: #fff; color: #444;
+    font-size: 13px; padding: 7px 11px; border-radius: 999px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px; transition: background .15s, border-color .15s, color .15s;
+  }
+  .chip:hover { border-color: #00897B; }
+  .chip.seleccionado { background: #00897B; border-color: #00897B; color: #fff; font-weight: 600; }
+
+  /* Auth & XP */
+  #barra #auth-seccion {
+    margin-left: auto; display: flex; align-items: center; gap: 8px;
+    border-left: 1px solid #e0e0e0; padding-left: 10px;
+  }
+  #barra button.btn-google {
+    background: #fff; color: #3c4043; border: 1px solid #dadce0;
+    display: inline-flex; align-items: center; gap: 6px; font-weight: 500;
+    padding: 7px 12px; font-size: 13px;
+  }
+  #barra button.btn-google:hover { background: #f8f9fa; border-color: #c0c2c5; }
+  #user-info {
+    display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #333;
+  }
+  #user-avatar {
+    width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid #ddd;
+  }
+  .badge-xp {
+    background: #FFF4D6; color: #926702; font-weight: 700; font-size: 11px;
+    padding: 2px 7px; border-radius: 10px; border: 1px solid #F0D48A;
+  }
+  #barra #btn-logout {
+    background: transparent; color: #888; border: none; padding: 4px 6px;
+    font-size: 12px; cursor: pointer; text-decoration: underline;
+  }
+  #barra #btn-logout:hover { color: #d64545; }
+  .aviso-xp {
+    margin-top: 10px; font-size: 11px; color: #555; line-height: 1.4;
+    padding: 6px 8px; background: #f8f9fa; border-radius: 6px; border-left: 3px solid #00897B;
+  }
+  .aviso-xp.anon { border-left-color: #bbb; }
+  .aviso-xp a { color: #00897B; text-decoration: underline; cursor: pointer; }
+
+  /* Mis aportaciones */
+  #barra button.btn-aportaciones {
+    background: #eef1f0; color: #37474f; font-weight: 600;
+  }
+  #barra button.btn-aportaciones:hover { background: #e2e7e5; }
+  .panel.ancho { width: 340px; }
+
+  .ap-xp-caja {
+    margin: 10px 0 2px; padding: 10px 12px; border-radius: 10px;
+    background: linear-gradient(135deg, rgba(252,196,64,.16), rgba(252,196,64,.03));
+    border: 1px solid rgba(252,196,64,.42);
+  }
+  .ap-xp { font-size: 20px; font-weight: 800; color: #926702; }
+  .ap-nivel { font-size: 12px; color: #4a5a58; margin-top: 2px; }
+  .ap-pos {
+    display: inline-block; margin-top: 6px; font-size: 12px;
+    color: #00897B; text-decoration: underline;
+  }
+  .ap-lista { max-height: 46vh; overflow-y: auto; margin-top: 4px; }
+  .ap { padding: 9px 0; border-bottom: 1px solid #eee; }
+  .ap:last-child { border-bottom: none; }
+  .ap-titulo { font-size: 13.5px; font-weight: 600; color: #222; line-height: 1.35; }
+  .ap-meta { display: flex; align-items: center; gap: 8px; margin-top: 3px; }
+  .ap-estado { font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 999px; }
+  .ap-estado.publicada { background: #e8f5e9; color: #2e7d32; }
+  .ap-estado.pendiente { background: #f1f1f1; color: #777; }
+  .ap-estado.descartada { background: #f1f1f1; color: #999; }
+  .ap-fecha { font-size: 11.5px; color: #999; }
+  .ap-vacio { font-size: 13px; color: #888; padding: 10px 0; }
+
+  @media (max-width: 650px) {
+    #barra #auth-seccion {
+      width: 100%; border-left: none; border-top: 1px solid #e0e0e0;
+      padding-left: 0; padding-top: 8px; justify-content: flex-end;
+    }
+    .panel.ancho { width: auto; left: 12px; right: 12px; }
+  }
+
+  #atribucion {
+    position: absolute; bottom: 6px; left: 8px; z-index: 5;
+    font-size: 11px; color: #333; background: rgba(255,255,255,.75);
+    padding: 2px 6px; border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+
+<div id="map"></div>
+
+<div id="barra">
+  <span id="ayuda">👉 Toca un sitio para avisar de un cambio, o un hueco para añadir uno nuevo</span>
+  <div id="auth-seccion">
+    <button id="btn-mis-aportaciones" class="btn-aportaciones">Mis aportaciones</button>
+    <button id="btn-login-google" class="btn-google">
+      <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
+      <span>Entrar con Google</span>
+    </button>
+    <div id="user-info" class="oculto">
+      <img id="user-avatar" alt="Avatar" />
+      <span id="user-name"></span>
+      <span class="badge-xp" title="Tus aportaciones sumarán XP a tu cuenta de SeviTime">+XP</span>
+      <button id="btn-logout" title="Cerrar sesión">Salir</button>
+    </div>
+  </div>
+</div>
+
+<!-- Sugerir sitio nuevo -->
+<div id="panel-sugerir" class="panel">
+  <h3>✨ Nuevo sitio</h3>
+  <label>Cómo se llama</label>
+  <input id="s-nombre" type="text" maxlength="120" />
+
+  <label>Qué es</label>
+  <div id="s-tipo-chips" class="chips"></div>
+
+  <label>Notas (opcional)</label>
+  <textarea id="s-notas" maxlength="300"></textarea>
+
+  <div class="acciones">
+    <button class="btn-cancelar">Cancelar</button>
+    <button class="btn-enviar" id="btn-enviar-sugerir">Enviar</button>
+  </div>
+  <div class="error"></div>
+  <div class="ok">🎉 ¡Genial, gracias! Lo revisamos pronto.</div>
+  <div class="aviso-xp" id="s-aviso-xp"></div>
+</div>
+
+<!-- Reportar problema en sitio existente -->
+<div id="panel-reportar" class="panel">
+  <h3 id="r-titulo">Reportar sitio</h3>
+  <div class="subtitulo" id="r-subtitulo"></div>
+
+  <label>Qué pasa</label>
+  <div id="r-motivo-chips" class="chips"></div>
+
+  <div id="r-nombre-nuevo-caja" class="oculto">
+    <label>Nuevo nombre</label>
+    <input id="r-nombre-nuevo" type="text" maxlength="120" />
+  </div>
+
+  <label>Notas (opcional)</label>
+  <textarea id="r-notas" maxlength="300"></textarea>
+
+  <div class="acciones">
+    <button class="btn-cancelar">Cancelar</button>
+    <button class="btn-enviar" id="btn-enviar-reportar">Enviar</button>
+  </div>
+  <div class="error"></div>
+  <div class="ok">🎉 ¡Genial, gracias! Lo revisamos pronto.</div>
+  <div class="aviso-xp" id="r-aviso-xp"></div>
+</div>
+
+<!-- Mis aportaciones -->
+<div id="panel-aportaciones" class="panel ancho">
+  <h3>Mis aportaciones</h3>
+  <div class="subtitulo" id="a-subtitulo">Cargando…</div>
+  <div id="a-xp"></div>
+  <div id="a-lista" class="ap-lista"></div>
+  <div class="acciones">
+    <button class="btn-cerrar" id="a-cerrar">Cerrar</button>
+  </div>
+</div>
+
+<div id="atribucion">© OpenMapTiles © OpenStreetMap contributors</div>
+
+<script>
+  // ---- Config ----
+  const TILES_URL = 'https://sevitime-tiles.sevitime-app.workers.dev/sevilla-provincia.pmtiles';
+  const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
+
+  // Mismos tipos que en la app (lib/data/tipos_de_sitio.dart), para no
+  // guardar el mismo sitio con dos vocabularios distintos.
+  const TIPOS = {
+    bar: 'Bar / Pub',
+    restaurant: 'Restaurante',
+    cafe: 'Café',
+    fast_food: 'Comida rápida',
+    attraction: 'Atracción / Mirador',
+    museum: 'Museo / Galería',
+    monument: 'Monumento',
+    parking: 'Parking',
+    pharmacy: 'Farmacia',
+    atm: 'Cajero',
+    otro: 'Otro',
+  };
+
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+  // ---- Autenticación (Google / Supabase) ----
+  let usuarioActual = null;
+
+  const btnLoginGoogle = document.getElementById('btn-login-google');
+  const userInfo = document.getElementById('user-info');
+  const userAvatar = document.getElementById('user-avatar');
+  const userName = document.getElementById('user-name');
+  const btnLogout = document.getElementById('btn-logout');
+
+  function actualizarUIAuth(user) {
+    usuarioActual = user;
+    if (user) {
+      btnLoginGoogle.classList.add('oculto');
+      userInfo.classList.remove('oculto');
+      const nombre = user.user_metadata?.full_name
+        || user.user_metadata?.name
+        || (user.email ? user.email.split('@')[0] : 'Usuario');
+      userName.textContent = nombre;
+      const foto = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+      if (foto) {
+        userAvatar.src = foto;
+        userAvatar.style.display = 'block';
+      } else {
+        userAvatar.style.display = 'none';
+      }
+    } else {
+      btnLoginGoogle.classList.remove('oculto');
+      userInfo.classList.add('oculto');
+    }
+    actualizarAvisosXp();
+    cargarMiXP();
+    const panelAp = document.getElementById('panel-aportaciones');
+    if (panelAp && panelAp.classList.contains('visible')) cargarMisAportaciones();
+  }
+
+  function actualizarAvisosXp() {
+    document.querySelectorAll('.aviso-xp').forEach((el) => {
+      if (usuarioActual) {
+        el.className = 'aviso-xp';
+        el.innerHTML = '✨ <b>Conectado con cuenta</b>. Sumarás XP en SeviTime si se aprueba tu aportación.';
+      } else {
+        el.className = 'aviso-xp anon';
+        el.innerHTML = 'ℹ️ <b>Modo anónimo</b> (sin XP). <a href="#" class="link-login">Entra con Google</a> para sumar puntos en la app.';
+      }
+    });
+    document.querySelectorAll('.link-login').forEach((a) => {
+      a.onclick = (e) => {
+        e.preventDefault();
+        iniciarSesionGoogle();
+      };
+    });
+  }
+
+  async function iniciarSesionGoogle() {
+    const { error } = await sb.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: window.location.origin + window.location.pathname,
+      },
+    });
+    if (error) {
+      console.error('Error al iniciar sesión:', error);
+      alert('No se pudo conectar con Google: ' + error.message);
+    }
+  }
+
+  btnLoginGoogle.addEventListener('click', iniciarSesionGoogle);
+  btnLogout.addEventListener('click', async () => {
+    await sb.auth.signOut();
+  });
+
+  // El mapa vive en sevitime.com/mapa/, el mismo origen que la portada y el
+  // cuadro de honor, así que comparte con ellos la sesión de Supabase: quien
+  // entra en la web llega aquí ya conectado y no hay nada que traspasar. Por
+  // eso no queda rastro del viejo `?login=1`, que existía solo mientras esto
+  // se servía en editor.sevitime.com y era otro origen para el navegador.
+  sb.auth.onAuthStateChange((_event, session) => {
+    actualizarUIAuth(session ? session.user : null);
+  });
+
+  sb.auth.getSession().then(({ data: { session } }) => {
+    actualizarUIAuth(session ? session.user : null);
+    if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
+      window.history.replaceState(null, '', window.location.pathname);
+    }
+  });
+
+  function deviceId() {
+    if (usuarioActual && usuarioActual.id) {
+      return usuarioActual.id;
+    }
+    let id = localStorage.getItem('sevitime_device_id');
+    if (!id) {
+      id = crypto.randomUUID();
+      localStorage.setItem('sevitime_device_id', id);
+    }
+    return id;
+  }
+
+  // ---- Mis aportaciones ----
+  // El mismo recorrido que en la app: lo mandado, en qué quedó y el XP que
+  // lleva. Cierra el círculo de quien aporta desde la web: antes mandaba un
+  // sitio y no volvía a saber nada.
+  const btnMisAportaciones = document.getElementById('btn-mis-aportaciones');
+  const panelAportaciones = document.getElementById('panel-aportaciones');
+  const aSubtitulo = document.getElementById('a-subtitulo');
+  const aXp = document.getElementById('a-xp');
+  const aLista = document.getElementById('a-lista');
+
+  let miXP = null;
+
+  async function cargarMiXP() {
+    const badge = document.querySelector('.badge-xp');
+    if (!badge) return;
+    if (!usuarioActual) {
+      miXP = null;
+      badge.textContent = '+XP';
+      return;
+    }
+    badge.textContent = '…';
+    const { data, error } = await sb.rpc('fn_mis_puntos');
+    if (error || !data || !data.length) {
+      badge.textContent = '+XP';
+      miXP = null;
+      return;
+    }
+    miXP = data[0];
+    badge.textContent = miXP.xp.toLocaleString('es-ES') + ' XP';
+    badge.title = 'Nivel ' + miXP.nivel + (miXP.titulo ? ' · ' + miXP.titulo : '');
+  }
+
+  function estadoLabel(e) {
+    if (e === 'enviado') return 'Publicada';
+    // "Rechazada" suena a suspenso; casi siempre es que no se pudo confirmar.
+    if (e === 'descartado') return 'No se pudo aplicar';
+    return 'En revisión';
+  }
+
+  function estadoClase(e) {
+    if (e === 'enviado') return 'publicada';
+    if (e === 'descartado') return 'descartada';
+    return 'pendiente';
+  }
+
+  function enumerar(partes) {
+    if (partes.length === 1) return partes[0];
+    return partes.slice(0, -1).join(', ') + ' y ' + partes[partes.length - 1];
+  }
+
+  // Mismo criterio que lib/utils/aportaciones_labels.dart de la app.
+  function tituloAportacion(a) {
+    const sitio = (a.nombre || '').trim() || 'un sitio';
+    if (a.origen === 'sugerencia') return sitio + ', sitio nuevo';
+    if (a.origen === 'resena') return 'Tu reseña de ' + sitio;
+    if (a.origen === 'ruta') return '«' + sitio + '»';
+    if (a.motivo === 'datos') {
+      const datos = [];
+      if (a.aporto_horario) datos.push('el horario');
+      if (a.aporto_telefono) datos.push('el teléfono');
+      if (a.aporto_web) datos.push('la web');
+      if (a.con_foto) datos.push('una foto');
+      if (!datos.length) return 'Datos de ' + sitio;
+      const lista = enumerar(datos);
+      return lista.charAt(0).toUpperCase() + lista.slice(1) + ' de ' + sitio;
+    }
+    const motivos = {
+      cerrado: ': ha cerrado',
+      no_existe: ': ya no existe',
+      renombrado: ': cambió de nombre',
+      foto_erronea: ': la foto no era de ahí',
+    };
+    return motivos[a.motivo] ? sitio + motivos[a.motivo] : 'Aviso sobre ' + sitio;
+  }
+
+  function fechaCorta(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return '';
+    return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'short' });
+  }
+
+  function pintarResumenXP(p) {
+    aXp.textContent = '';
+    const caja = document.createElement('div');
+    caja.className = 'ap-xp-caja';
+
+    const xp = document.createElement('div');
+    xp.className = 'ap-xp';
+    xp.textContent = p.xp.toLocaleString('es-ES') + ' XP';
+    caja.appendChild(xp);
+
+    const nivel = document.createElement('div');
+    nivel.className = 'ap-nivel';
+    nivel.textContent = 'Nivel ' + p.nivel + (p.titulo ? ' · ' + p.titulo : '');
+    caja.appendChild(nivel);
+
+    if (p.tiene_nombre && p.posicion) {
+      const pos = document.createElement('a');
+      pos.className = 'ap-pos';
+      pos.href = 'https://sevitime.com/ranking/';
+      pos.target = '_blank';
+      pos.rel = 'noopener';
+      pos.textContent = 'Puesto #' + p.posicion + ' en el cuadro de honor';
+      caja.appendChild(pos);
+    }
+    aXp.appendChild(caja);
+  }
+
+  function pintarAportaciones(lista) {
+    aLista.textContent = '';
+    if (!lista.length) {
+      const vacio = document.createElement('div');
+      vacio.className = 'ap-vacio';
+      vacio.textContent = 'Todavía no has mandado nada desde este navegador.';
+      aLista.appendChild(vacio);
+      return;
+    }
+    lista.forEach((a) => {
+      const item = document.createElement('div');
+      item.className = 'ap';
+
+      const titulo = document.createElement('div');
+      titulo.className = 'ap-titulo';
+      titulo.textContent = tituloAportacion(a);
+      item.appendChild(titulo);
+
+      const meta = document.createElement('div');
+      meta.className = 'ap-meta';
+      const chip = document.createElement('span');
+      chip.className = 'ap-estado ' + estadoClase(a.estado);
+      chip.textContent = estadoLabel(a.estado);
+      meta.appendChild(chip);
+      const fecha = document.createElement('span');
+      fecha.className = 'ap-fecha';
+      fecha.textContent = fechaCorta(a.moderado_at || a.created_at);
+      meta.appendChild(fecha);
+      item.appendChild(meta);
+
+      aLista.appendChild(item);
+    });
+  }
+
+  async function cargarMisAportaciones() {
+    aSubtitulo.textContent = 'Cargando…';
+    aLista.textContent = '';
+    aXp.textContent = '';
+
+    if (usuarioActual) {
+      if (!miXP) await cargarMiXP();
+      if (miXP) pintarResumenXP(miXP);
+    }
+
+    const { data, error } = await sb.rpc('fn_mis_aportaciones', {
+      p_device_id: deviceId(),
+    });
+    if (error) {
+      aSubtitulo.textContent = 'No se pudo cargar. Vuelve a intentarlo.';
+      return;
+    }
+    const lista = data || [];
+    aSubtitulo.textContent = lista.length === 0
+      ? 'Todavía no has mandado nada'
+      : lista.length + (lista.length === 1 ? ' aportación' : ' aportaciones');
+    pintarAportaciones(lista);
+  }
+
+  function abrirPanelAportaciones() {
+    apagarModos();
+    panelAportaciones.classList.add('visible');
+    cargarMisAportaciones();
+  }
+
+  function cerrarPanelAportaciones() {
+    panelAportaciones.classList.remove('visible');
+  }
+
+  btnMisAportaciones.addEventListener('click', () => {
+    if (panelAportaciones.classList.contains('visible')) {
+      cerrarPanelAportaciones();
+    } else {
+      abrirPanelAportaciones();
+    }
+  });
+  document.getElementById('a-cerrar').addEventListener('click', cerrarPanelAportaciones);
+
+  // ---- Mapa ----
+  const protocol = new pmtiles.Protocol();
+  maplibregl.addProtocol('pmtiles', protocol.tile);
+
+  const map = new maplibregl.Map({
+    container: 'map',
+    style: {
+      version: 8,
+      sources: {
+        openmaptiles: { type: 'vector', url: `pmtiles://${TILES_URL}` },
+      },
+      glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+      layers: [
+        { id: 'background', type: 'background', paint: { 'background-color': '#f8f4f0' } },
+        { id: 'water', type: 'fill', source: 'openmaptiles', 'source-layer': 'water', paint: { 'fill-color': '#a0c8f0' } },
+        { id: 'landcover', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', paint: { 'fill-color': '#d8e8c8' } },
+        { id: 'landuse', type: 'fill', source: 'openmaptiles', 'source-layer': 'landuse', paint: { 'fill-color': '#e6e0d8' } },
+        { id: 'buildings', type: 'fill', source: 'openmaptiles', 'source-layer': 'building', paint: { 'fill-color': '#d9d0c7' } },
+        { id: 'roads', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', paint: { 'line-color': '#ffffff', 'line-width': 1.2 } },
+        { id: 'boundary', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', paint: { 'line-color': '#a56cc1', 'line-width': 1 } },
+        {
+          id: 'poi', type: 'circle', source: 'openmaptiles', 'source-layer': 'poi',
+          paint: {
+            'circle-radius': 4,
+            'circle-color': '#00897B',
+            'circle-stroke-width': 1,
+            'circle-stroke-color': '#ffffff',
+          },
+        },
+        {
+          id: 'poi-label', type: 'symbol', source: 'openmaptiles', 'source-layer': 'poi',
+          filter: ['has', 'name'],
+          minzoom: 15,
+          layout: {
+            'text-field': ['get', 'name'],
+            'text-font': ['Open Sans Regular'],
+            'text-size': 11,
+            'text-anchor': 'top',
+            'text-offset': [0, 0.6],
+            'text-max-width': 8,
+          },
+          paint: { 'text-color': '#2c2c2c', 'text-halo-color': '#ffffff', 'text-halo-width': 1.4 },
+        },
+      ],
+    },
+    center: [-5.9945, 37.3891],
+    zoom: 13,
+  });
+  map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+
+  // ---- Chips de tipo (sugerir) y de motivo (reportar) ----
+  const TIPOS_EMOJI = {
+    bar: '🍻', restaurant: '🍽️', cafe: '☕', fast_food: '🍔',
+    attraction: '🎡', museum: '🖼️', monument: '🗿', parking: '🅿️',
+    pharmacy: '💊', atm: '🏧', otro: '➕',
+  };
+  const MOTIVOS = {
+    cerrado: { emoji: '😕', etiqueta: 'Ha cerrado' },
+    no_existe: { emoji: '❌', etiqueta: 'Ya no existe' },
+    renombrado: { emoji: '✏️', etiqueta: 'Cambió de nombre' },
+  };
+
+  function pintarChips(contenedor, opciones, valorInicial, alElegir) {
+    contenedor.textContent = '';
+    let seleccionado = valorInicial;
+    for (const [valor, { emoji, etiqueta }] of Object.entries(opciones)) {
+      const chip = document.createElement('button');
+      chip.type = 'button';
+      chip.className = 'chip' + (valor === valorInicial ? ' seleccionado' : '');
+      chip.dataset.valor = valor;
+      chip.innerHTML = `<span>${emoji}</span>${etiqueta}`;
+      chip.addEventListener('click', () => {
+        seleccionado = valor;
+        contenedor.querySelectorAll('.chip').forEach((c) => c.classList.toggle('seleccionado', c.dataset.valor === valor));
+        alElegir(valor);
+      });
+      contenedor.appendChild(chip);
+    }
+    contenedor.valorSeleccionado = () => seleccionado;
+    contenedor.seleccionar = (valor) => {
+      seleccionado = valor;
+      contenedor.querySelectorAll('.chip').forEach((c) => c.classList.toggle('seleccionado', c.dataset.valor === valor));
+    };
+  }
+
+  const sTipoChips = document.getElementById('s-tipo-chips');
+  const opcionesTipo = Object.fromEntries(
+    Object.entries(TIPOS).map(([valor, etiqueta]) => [valor, { emoji: TIPOS_EMOJI[valor] || '📍', etiqueta }])
+  );
+  pintarChips(sTipoChips, opcionesTipo, 'bar', () => {});
+
+  const rMotivoChips = document.getElementById('r-motivo-chips');
+  const cajaNombreNuevo = document.getElementById('r-nombre-nuevo-caja');
+  pintarChips(rMotivoChips, MOTIVOS, 'cerrado', (valor) => {
+    cajaNombreNuevo.classList.toggle('oculto', valor !== 'renombrado');
+  });
+
+  // ---- Interacción con el mapa: un solo gesto ----
+  // Tocar un sitio que ya existe = reportar un cambio. Tocar un hueco = añadir uno nuevo.
+  const ayuda = document.getElementById('ayuda');
+  const ayudaTexto = ayuda.textContent;
+  const panelSugerir = document.getElementById('panel-sugerir');
+  const panelReportar = document.getElementById('panel-reportar');
+  let marker = null;
+
+  function apagarModos() {
+    ayuda.textContent = ayudaTexto;
+    panelSugerir.classList.remove('visible');
+    panelReportar.classList.remove('visible');
+    panelAportaciones.classList.remove('visible');
+    if (marker) { marker.remove(); marker = null; }
+  }
+
+  map.on('click', (e) => {
+    const radio = 8; // píxeles de tolerancia alrededor del clic
+    const caja = [
+      [e.point.x - radio, e.point.y - radio],
+      [e.point.x + radio, e.point.y + radio],
+    ];
+    const feats = map.queryRenderedFeatures(caja, { layers: ['poi'] });
+    const sitio = feats.find((f) => f.properties && f.properties.name);
+    if (marker) marker.remove();
+    if (sitio) {
+      const [lng, lat] = sitio.geometry.coordinates;
+      marker = new maplibregl.Marker({ color: '#d64545' }).setLngLat([lng, lat]).addTo(map);
+      abrirPanelReportar(sitio.properties.name, lat, lng);
+    } else {
+      marker = new maplibregl.Marker({ color: '#00897B' }).setLngLat(e.lngLat).addTo(map);
+      abrirPanelSugerir(e.lngLat);
+    }
+  });
+
+  map.on('mouseenter', 'poi', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'poi', () => { map.getCanvas().style.cursor = ''; });
+
+  function limpiarMensajes(panel) {
+    panel.querySelector('.error').style.display = 'none';
+    panel.querySelector('.ok').style.display = 'none';
+    actualizarAvisosXp();
+  }
+
+  function abrirPanelSugerir(lngLat) {
+    panelReportar.classList.remove('visible');
+    panelSugerir.dataset.lat = lngLat.lat;
+    panelSugerir.dataset.lng = lngLat.lng;
+    document.getElementById('s-nombre').value = '';
+    document.getElementById('s-notas').value = '';
+    sTipoChips.seleccionar('bar');
+    limpiarMensajes(panelSugerir);
+    panelSugerir.classList.add('visible');
+  }
+
+  function abrirPanelReportar(nombre, lat, lng) {
+    panelSugerir.classList.remove('visible');
+    panelReportar.dataset.nombre = nombre;
+    panelReportar.dataset.lat = lat;
+    panelReportar.dataset.lng = lng;
+    document.getElementById('r-titulo').textContent = '📍 ' + nombre;
+    document.getElementById('r-subtitulo').textContent = '¿Qué le pasa a este sitio?';
+    rMotivoChips.seleccionar('cerrado');
+    document.getElementById('r-nombre-nuevo').value = '';
+    cajaNombreNuevo.classList.add('oculto');
+    document.getElementById('r-notas').value = '';
+    limpiarMensajes(panelReportar);
+    panelReportar.classList.add('visible');
+  }
+
+  document.querySelectorAll('.btn-cancelar').forEach((b) => b.addEventListener('click', apagarModos));
+
+  document.getElementById('btn-enviar-sugerir').addEventListener('click', async () => {
+    const nombre = document.getElementById('s-nombre').value.trim();
+    const tipo = sTipoChips.valorSeleccionado();
+    const notas = document.getElementById('s-notas').value.trim();
+    const errorEl = panelSugerir.querySelector('.error');
+    const okEl = panelSugerir.querySelector('.ok');
+    errorEl.style.display = 'none';
+
+    if (!nombre) {
+      errorEl.textContent = 'Ponle un nombre al sitio.';
+      errorEl.style.display = 'block';
+      return;
+    }
+    if (tipo === 'otro' && notas.length < 3) {
+      errorEl.textContent = 'Cuéntanos qué es en las notas.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const fila = {
+      nombre,
+      tipo,
+      lat: parseFloat(panelSugerir.dataset.lat),
+      lon: parseFloat(panelSugerir.dataset.lng),
+      device_id: deviceId(),
+      punto_origen: 'mapa',
+    };
+    if (notas) fila.notas = notas;
+
+    const { error } = await sb.from('sugerencias').insert(fila);
+    if (error) {
+      errorEl.textContent = error.code === '23505'
+        ? 'Ya sugeriste este sitio antes.'
+        : 'No se pudo enviar. Inténtalo de nuevo.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    okEl.style.display = 'block';
+    setTimeout(apagarModos, 1400);
+  });
+
+  document.getElementById('btn-enviar-reportar').addEventListener('click', async () => {
+    const motivo = rMotivoChips.valorSeleccionado();
+    const nombreNuevo = document.getElementById('r-nombre-nuevo').value.trim();
+    const notas = document.getElementById('r-notas').value.trim();
+    const errorEl = panelReportar.querySelector('.error');
+    const okEl = panelReportar.querySelector('.ok');
+    errorEl.style.display = 'none';
+
+    if (motivo === 'renombrado' && !nombreNuevo) {
+      errorEl.textContent = 'Dinos el nuevo nombre.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const fila = {
+      nombre_lugar: panelReportar.dataset.nombre,
+      motivo,
+      lat: parseFloat(panelReportar.dataset.lat),
+      lon: parseFloat(panelReportar.dataset.lng),
+      device_id: deviceId(),
+    };
+    if (notas) fila.notas = notas;
+    if (motivo === 'renombrado') fila.nombre_nuevo = nombreNuevo;
+
+    const { error } = await sb.from('reportes_lugares').insert(fila);
+    if (error) {
+      errorEl.textContent = error.code === '23505'
+        ? 'Ya reportaste este sitio hace poco.'
+        : 'No se pudo enviar. Inténtalo de nuevo.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    okEl.style.display = 'block';
+    setTimeout(apagarModos, 1400);
+  });
+</script>
+</body>
+</html>
