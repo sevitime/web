@@ -293,6 +293,16 @@
   </div>
 </div>
 
+<!-- Entrar para aportar: la web pide cuenta, como la app. -->
+<div id="panel-login" class="panel">
+  <h3>Entra para aportar</h3>
+  <div class="subtitulo">Para sugerir un sitio o avisar de un cambio hay que entrar con Google. Así cada aportación va con nombre y se puede moderar mejor.</div>
+  <div class="acciones">
+    <button class="btn-cancelar">Cancelar</button>
+    <button class="btn-enviar" id="btn-login-panel">Entrar con Google</button>
+  </div>
+</div>
+
 <div id="atribucion">© OpenMapTiles © OpenStreetMap contributors</div>
 
 <script>
@@ -347,6 +357,8 @@
       btnLoginGoogle.classList.remove('oculto');
       userInfo.classList.add('oculto');
     }
+    // Si se entra desde el aviso de aportar, se cierra solo.
+    if (user && panelLogin) panelLogin.classList.remove('visible');
     actualizarAvisosXp();
     cargarMiXP();
     const panelAp = document.getElementById('panel-aportaciones');
@@ -360,7 +372,7 @@
         el.innerHTML = '✨ <b>Conectado con cuenta</b>. Sumarás XP en SeviTime si se aprueba tu aportación.';
       } else {
         el.className = 'aviso-xp anon';
-        el.innerHTML = 'ℹ️ <b>Modo anónimo</b> (sin XP). <a href="#" class="link-login">Entra con Google</a> para sumar puntos en la app.';
+        el.innerHTML = 'ℹ️ <b>Aportar pide cuenta.</b> <a href="#" class="link-login">Entra con Google</a> para sugerir o corregir sitios y sumar XP.';
       }
     });
     document.querySelectorAll('.link-login').forEach((a) => {
@@ -385,6 +397,7 @@
   }
 
   btnLoginGoogle.addEventListener('click', iniciarSesionGoogle);
+  document.getElementById('btn-login-panel').addEventListener('click', iniciarSesionGoogle);
   btnLogout.addEventListener('click', async () => {
     await sb.auth.signOut();
   });
@@ -688,6 +701,7 @@
   const ayudaTexto = ayuda.textContent;
   const panelSugerir = document.getElementById('panel-sugerir');
   const panelReportar = document.getElementById('panel-reportar');
+  const panelLogin = document.getElementById('panel-login');
   let marker = null;
 
   function apagarModos() {
@@ -695,10 +709,19 @@
     panelSugerir.classList.remove('visible');
     panelReportar.classList.remove('visible');
     panelAportaciones.classList.remove('visible');
+    panelLogin.classList.remove('visible');
     if (marker) { marker.remove(); marker = null; }
   }
 
+  // Aportar pide cuenta, como en la app: así cada aviso va firmado y se puede
+  // moderar mejor. Sin sesión, tocar el mapa abre este panel en vez del formulario.
+  function abrirPanelLogin() {
+    apagarModos();
+    panelLogin.classList.add('visible');
+  }
+
   map.on('click', (e) => {
+    if (!usuarioActual) { abrirPanelLogin(); return; }
     const radio = 8; // píxeles de tolerancia alrededor del clic
     const caja = [
       [e.point.x - radio, e.point.y - radio],
