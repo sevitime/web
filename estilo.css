@@ -484,6 +484,7 @@ footer span { margin: 0 8px; }
 
 @media (min-width: 1000px) {
   .que-hace ul { grid-template-columns: repeat(3, 1fr); }
+  .navegador ul { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
