@@ -135,6 +135,23 @@
   // --- Estado ---
   const estado = { todos: [], resultados: [], centro: { ...SEVILLA }, filtro: 'todo', texto: '' };
 
+  // Ubicación puesta a mano. Sin GPS en un PC, la del navegador cae donde la
+  // red (Madrid, típicamente), así que se deja corregir y se recuerda.
+  const CLAVE_UBIC = 'sevitime_ubicacion';
+  function leerUbicGuardada() {
+    try {
+      const v = JSON.parse(localStorage.getItem(CLAVE_UBIC) || 'null');
+      if (v && isFinite(v.lat) && isFinite(v.lon)) return { lat: v.lat, lon: v.lon };
+    } catch (e) { /* sin almacén o JSON roto: se ignora */ }
+    return null;
+  }
+  function guardarUbic(p) {
+    try { localStorage.setItem(CLAVE_UBIC, JSON.stringify({ lat: p.lat, lon: p.lon })); } catch (e) { /* da igual */ }
+  }
+  function borrarUbic() {
+    try { localStorage.removeItem(CLAVE_UBIC); } catch (e) { /* da igual */ }
+  }
+
   const q = document.getElementById('q');
   const chips = document.getElementById('chips');
   const lista = document.getElementById('lista');
@@ -206,7 +223,23 @@
   map.on('styledata', montarCapas);
   prefiereOscuro.addEventListener('change', (e) => map.setStyle(sevitimeEstiloMapa(e.matches)));
 
+  let colocando = false;
+
+  // Clic en el mapa: si estamos en modo «poner mi ubicación», fija el punto.
+  map.on('click', (e) => {
+    if (!colocando) return;
+    const punto = { lat: e.lngLat.lat, lon: e.lngLat.lng };
+    estado.centro = punto;
+    guardarUbic(punto);
+    colocando = false;
+    map.getCanvas().style.cursor = '';
+    marcarYo(punto.lat, punto.lon);
+    aplicar();
+    setAviso('Ubicación puesta a mano.', 'Quitar', quitarUbicacion);
+  });
+
   map.on('click', 'sitios', (e) => {
+    if (colocando) return;
     const f = e.features[0];
     new maplibregl.Popup({ offset: 12, closeButton: true, maxWidth: '260px' })
       .setLngLat(f.geometry.coordinates)
@@ -233,35 +266,133 @@
 
   // --- Búsqueda y ubicación ---
   q.addEventListener('input', () => { estado.texto = q.value; aplicar(); });
-  document.getElementById('usar-ubicacion').addEventListener('click', (e) => { e.preventDefault(); usarUbicacion(); });
 
+  // Mensaje del estado de la ubicación, con una acción opcional.
+  function setAviso(texto, accionTexto, accion) {
+    aviso.textContent = texto;
+    if (accionTexto) {
+      aviso.append(' ');
+      const a = document.createElement('a');
+      a.href = '#';
+      a.textContent = accionTexto;
+      a.addEventListener('click', (e) => { e.preventDefault(); accion(); });
+      aviso.appendChild(a);
+    }
+    aviso.hidden = false;
+  }
+
+  // Pedir la ubicación. El mapa es de Sevilla, así que una posición lejana no
+  // se da por buena: en un PC el navegador no usa GPS, la calcula por red y
+  // suele caer donde está el proveedor (Madrid, típicamente), no donde uno
+  // está. Por eso:
+  //  - si estás cerca, se pinta tu punto y la cámara va contigo;
+  //  - si sales lejos, se ignora (se sigue en Sevilla) y se invita a fijarla a mano;
+  //  - si falla o lo deniegas, se dice y se ofrece reintentar.
   function usarUbicacion() {
-    if (!navigator.geolocation) return;
-    // El navegador pregunta la primera vez. En un PC sin GPS la da por red y
-    // puede caer a kilómetros, así que solo movemos la cámara si estás cerca
-    // de Sevilla; si no, se deja el mapa donde está y se reordena la lista.
+    if (!navigator.geolocation) {
+      setAviso('Tu navegador no sabe darte la ubicación. Fíjala con el botón 📍 del mapa.', null, null);
+      return;
+    }
     navigator.geolocation.getCurrentPosition((pos) => {
       const punto = { lat: pos.coords.latitude, lon: pos.coords.longitude };
-      estado.centro = punto;
-      marcarYo(punto.lat, punto.lon);
-      aviso.hidden = true;
       if (metros(SEVILLA, punto) < 40000) {
+        estado.centro = punto;
+        marcarYo(punto.lat, punto.lon);
+        aplicar();
+        aviso.hidden = true;
         map.flyTo({ center: [punto.lon, punto.lat], zoom: 14 });
+        return;
       }
-      aplicar();
-    }, () => {
-      aviso.hidden = false;
+      const km = Math.round(metros(SEVILLA, punto) / 1000);
+      setAviso(
+        'Tu navegador te sitúa a ' + km + ' km de Sevilla (en un PC eso suele ser la ubicación de la red, no la tuya), así que se ordena desde Sevilla. Fija dónde estás con el botón 📍 del mapa.',
+        null, null);
+    }, (err) => {
+      setAviso(
+        err && err.code === 1
+          ? 'Le has dicho que no al navegador. Actívalo en el candado de la barra de direcciones.'
+          : 'No pudimos saber dónde estás.',
+        'Reintentar', usarUbicacion);
     }, { timeout: 8000, maximumAge: 600000 });
   }
 
+  // Poner la ubicación a mano: se entra en modo y el siguiente clic en el mapa
+  // la fija y la recuerda. Es la vía fiable en un PC.
+  function iniciarColocar() {
+    colocando = true;
+    map.getCanvas().style.cursor = 'crosshair';
+    setAviso('Toca en el mapa el sitio donde estás.', 'Cancelar', cancelarColocar);
+  }
+  function cancelarColocar() {
+    colocando = false;
+    map.getCanvas().style.cursor = '';
+    aviso.hidden = true;
+  }
+  function quitarUbicacion() {
+    borrarUbic();
+    if (yoMarker) { yoMarker.remove(); yoMarker = null; }
+    estado.centro = { ...SEVILLA };
+    aplicar();
+    aviso.hidden = true;
+    usarUbicacion();
+  }
+
+  // Botón «Mi ubicación» en el mapa: al pulsarlo, centra aunque estés lejos.
+  class BotonUbicacion {
+    onAdd(mapa) {
+      this._mapa = mapa;
+      const div = document.createElement('div');
+      div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.title = 'Mi ubicación';
+      b.setAttribute('aria-label', 'Mi ubicación');
+      b.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm8.94 3A9 9 0 0013 3.06V1h-2v2.06A9 9 0 003.06 11H1v2h2.06A9 9 0 0011 20.94V23h2v-2.06A9 9 0 0020.94 13H23v-2h-2.06zM12 19a7 7 0 110-14 7 7 0 010 14z"/></svg>';
+      b.addEventListener('click', usarUbicacion);
+      div.appendChild(b);
+      this._cont = div;
+      return div;
+    }
+    onRemove() { this._cont.parentNode.removeChild(this._cont); this._mapa = undefined; }
+  }
+  map.addControl(new BotonUbicacion(), 'top-right');
+
+  // Botón «Poner mi ubicación a mano»: un clic en el mapa y queda fijada.
+  class BotonColocar {
+    onAdd(mapa) {
+      this._mapa = mapa;
+      const div = document.createElement('div');
+      div.className = 'maplibregl-ctrl maplibregl-ctrl-group';
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.title = 'Poner mi ubicación en el mapa';
+      b.setAttribute('aria-label', 'Poner mi ubicación en el mapa');
+      b.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>';
+      b.addEventListener('click', iniciarColocar);
+      div.appendChild(b);
+      this._cont = div;
+      return div;
+    }
+    onRemove() { this._cont.parentNode.removeChild(this._cont); this._mapa = undefined; }
+  }
+  map.addControl(new BotonColocar(), 'top-right');
+
   // --- Carga ---
+  // Si hay ubicación puesta a mano, manda ella: no se molesta con el permiso
+  // del navegador.
+  const guardada = leerUbicGuardada();
+  if (guardada) {
+    estado.centro = guardada;
+    marcarYo(guardada.lat, guardada.lon);
+    setAviso('Ubicación puesta a mano.', 'Quitar', quitarUbicacion);
+  }
+
   fetch(SNAPSHOT_URL)
     .then((r) => r.json())
     .then((d) => {
       estado.todos = (d.elements || []).map(aLugar).filter(Boolean);
-      aviso.hidden = false;
       aplicar();
-      usarUbicacion();
+      if (!guardada) usarUbicacion();
     })
     .catch(() => {
       resumen.textContent = 'No se pudieron cargar los sitios. Recarga en un momento.';
