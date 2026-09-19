@@ -39,6 +39,7 @@
 <link rel="stylesheet" href="/estilo.css" />
 <script src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script src="/mapa/estilo-mapa.js"></script>
 <style>
   /* La paleta y la tipografía vienen de /estilo.css, el mismo que usan la
      portada y el cuadro de honor. Así el mapa también cambia a tema oscuro y
@@ -289,7 +290,6 @@
 
 <script>
   // ---- Config ----
-  const TILES_URL = 'https://sevitime-tiles.sevitime-app.workers.dev/sevilla-provincia.pmtiles';
   const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
 
@@ -601,69 +601,20 @@
   maplibregl.addProtocol('pmtiles', protocol.tile);
 
   // El basemap también sigue al tema: si no, la web entera se oscurece y el
-  // mapa se queda blanco. Se rehace el estilo si el sistema cambia de
-  // preferencia con la pestaña abierta.
+  // mapa se queda blanco. El estilo lo comparte /explorar/ (mapa/estilo-mapa.js)
+  // y se rehace si el sistema cambia de preferencia con la pestaña abierta.
   const prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)');
-
-  function estiloMapa(oscuro) {
-    const c = oscuro
-      ? { fondo: '#0F1C1A', agua: '#0E3034', vegetacion: '#12302C', suelo: '#1A2B29',
-          edificio: '#223634', via: '#3C514E', limite: '#6D4C9F',
-          poi: '#26A69A', poiBorde: '#0F1C1A', texto: '#E8F0EF', halo: '#0F1C1A' }
-      : { fondo: '#f8f4f0', agua: '#a0c8f0', vegetacion: '#d8e8c8', suelo: '#e6e0d8',
-          edificio: '#d9d0c7', via: '#ffffff', limite: '#a56cc1',
-          poi: '#00897B', poiBorde: '#ffffff', texto: '#2c2c2c', halo: '#ffffff' };
-    return {
-      version: 8,
-      sources: {
-        openmaptiles: { type: 'vector', url: `pmtiles://${TILES_URL}` },
-      },
-      glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
-      layers: [
-        { id: 'background', type: 'background', paint: { 'background-color': c.fondo } },
-        { id: 'water', type: 'fill', source: 'openmaptiles', 'source-layer': 'water', paint: { 'fill-color': c.agua } },
-        { id: 'landcover', type: 'fill', source: 'openmaptiles', 'source-layer': 'landcover', paint: { 'fill-color': c.vegetacion } },
-        { id: 'landuse', type: 'fill', source: 'openmaptiles', 'source-layer': 'landuse', paint: { 'fill-color': c.suelo } },
-        { id: 'buildings', type: 'fill', source: 'openmaptiles', 'source-layer': 'building', paint: { 'fill-color': c.edificio } },
-        { id: 'roads', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', paint: { 'line-color': c.via, 'line-width': 1.2 } },
-        { id: 'boundary', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', paint: { 'line-color': c.limite, 'line-width': 1 } },
-        {
-          id: 'poi', type: 'circle', source: 'openmaptiles', 'source-layer': 'poi',
-          paint: {
-            'circle-radius': 4,
-            'circle-color': c.poi,
-            'circle-stroke-width': 1,
-            'circle-stroke-color': c.poiBorde,
-          },
-        },
-        {
-          id: 'poi-label', type: 'symbol', source: 'openmaptiles', 'source-layer': 'poi',
-          filter: ['has', 'name'],
-          minzoom: 15,
-          layout: {
-            'text-field': ['get', 'name'],
-            'text-font': ['Open Sans Regular'],
-            'text-size': 11,
-            'text-anchor': 'top',
-            'text-offset': [0, 0.6],
-            'text-max-width': 8,
-          },
-          paint: { 'text-color': c.texto, 'text-halo-color': c.halo, 'text-halo-width': 1.4 },
-        },
-      ],
-    };
-  }
 
   const map = new maplibregl.Map({
     container: 'map',
-    style: estiloMapa(prefiereOscuro.matches),
+    style: sevitimeEstiloMapa(prefiereOscuro.matches),
     center: [-5.9945, 37.3891],
     zoom: 13,
   });
   map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 
   prefiereOscuro.addEventListener('change', (e) => {
-    map.setStyle(estiloMapa(e.matches));
+    map.setStyle(sevitimeEstiloMapa(e.matches));
   });
 
   // ---- Chips de tipo (sugerir) y de motivo (reportar) ----

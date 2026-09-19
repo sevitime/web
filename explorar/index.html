@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Explorar — SeviTime</title>
+<meta name="description" content="Explora los sitios de Sevilla y su provincia en el navegador: bares, monumentos, parques y más, sobre el mapa.">
+<link rel="canonical" href="https://sevitime.com/explorar/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sevitime.com/explorar/">
+<meta property="og:site_name" content="SeviTime">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="Explorar — SeviTime">
+<meta property="og:description" content="Explora los sitios de Sevilla sobre el mapa, desde el navegador.">
+<meta property="og:image" content="https://sevitime.com/social.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/icono.png">
+<link rel="apple-touch-icon" href="/icono.png">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css">
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
+<script src="/mapa/estilo-mapa.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="/auth.js"></script>
+<style>
+  /* Explorar: la lista a la izquierda y el mapa a la derecha. Es la pantalla
+     que sostiene el «lo bueno pide pantalla grande»: la app te dice qué
+     tienes cerca, esto te deja mirarlo todo con calma. */
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; }
+  .top-nav { flex: 0 0 auto; }
+  .explorar { flex: 1; min-height: 0; display: flex; }
+
+  .panel-lateral {
+    flex: 0 0 400px; width: 400px;
+    display: flex; flex-direction: column; min-height: 0;
+    border-right: 1px solid var(--borde);
+    background: var(--fondo);
+  }
+  .buscador { padding: 14px 16px 8px; }
+  .buscador input {
+    width: 100%; height: 42px; padding: 0 16px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: var(--superficie); color: var(--texto);
+    font-family: inherit; font-size: var(--t-cuerpo);
+  }
+  .buscador input:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 1px; }
+  .buscador input::placeholder { color: var(--tenue); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 16px 10px; }
+  .chip {
+    border: 1.5px solid var(--borde); background: var(--superficie); color: var(--apagado);
+    font-family: inherit; font-size: var(--t-etiqueta);
+    padding: 6px 11px; border-radius: var(--r-pill); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .chip:hover { border-color: var(--verde-claro); }
+  .chip.seleccionado { background: var(--verde); border-color: var(--verde); color: #fff; font-weight: 600; }
+
+  .resumen { padding: 0 16px 8px; font-size: var(--t-etiqueta); color: var(--tenue); }
+
+  .lista { list-style: none; flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 16px; }
+  .ficha {
+    display: flex; gap: 12px; align-items: flex-start;
+    padding: 12px; border-radius: var(--r-lg); cursor: pointer;
+    transition: background .15s ease;
+  }
+  .ficha:hover { background: var(--superficie); }
+  .ficha:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: -2px; }
+  .ficha .punto {
+    width: 38px; height: 38px; flex: 0 0 auto;
+    border-radius: var(--r-sm); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-size: 18px;
+  }
+  .ficha .texto { min-width: 0; }
+  .ficha .nombre { display: block; font-size: var(--t-item); font-weight: 600; color: var(--texto); }
+  .ficha .meta { display: block; font-size: var(--t-etiqueta); color: var(--tenue); margin-top: 1px; }
+
+  .aviso { padding: 4px 16px 12px; font-size: var(--t-etiqueta); color: var(--tenue); }
+  .aviso a { color: var(--verde-claro); }
+
+  .mapa-caja { flex: 1; min-width: 0; position: relative; }
+  #map { position: absolute; inset: 0; }
+
+  /* Ficha emergente del mapa */
+  .popup { font-family: 'Inter', sans-serif; }
+  .popup .nombre { font-size: var(--t-item); font-weight: 700; color: var(--texto); }
+  .popup .meta { font-size: var(--t-etiqueta); color: var(--apagado); margin-top: 2px; }
+  .popup a { display: inline-block; margin-top: 8px; font-size: var(--t-etiqueta); color: var(--verde-claro); text-decoration: none; }
+  .popup a:hover { text-decoration: underline; }
+  .maplibregl-popup-content { background: var(--superficie) !important; border: 1px solid var(--borde); border-radius: var(--r-sm); }
+  .maplibregl-popup-tip { border-top-color: var(--superficie) !important; border-bottom-color: var(--superficie) !important; }
+
+  @media (max-width: 899px) {
+    body { display: block; }
+    .explorar { flex-direction: column; height: auto; }
+    .mapa-caja { order: -1; height: 52dvh; }
+    .panel-lateral { flex: none; width: auto; border-right: none; border-top: 1px solid var(--borde); }
+    .lista { overflow: visible; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <a href="/explorar/" class="nav-link" aria-current="page">Explorar</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Ver Mapa Web</span>
+      </a>
+      <div id="auth-seccion"></div>
+    </div>
+  </div>
+</nav>
+
+<main class="explorar">
+  <aside class="panel-lateral">
+    <form class="buscador" role="search" onsubmit="return false;">
+      <input id="q" type="search" placeholder="Busca un bar, un monumento, un parque…" autocomplete="off" aria-label="Buscar sitios">
+    </form>
+    <div id="chips" class="chips" role="group" aria-label="Filtrar por tipo"></div>
+    <p id="resumen" class="resumen">Cargando los sitios de Sevilla…</p>
+    <ul id="lista" class="lista"></ul>
+    <p id="aviso-ubicacion" class="aviso" hidden>
+      Ordenado desde el centro de Sevilla. <a href="#" id="usar-ubicacion">Usa mi ubicación</a> para ordenar a tu alrededor.
+    </p>
+  </aside>
+  <div class="mapa-caja">
+    <div id="map"></div>
+  </div>
+</main>
+
+<script src="/explorar/explorar.js"></script>
+</body>
+</html>
