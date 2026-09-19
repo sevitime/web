@@ -60,6 +60,12 @@
     padding: 9px 16px; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
   }
   #barra span { font-size: var(--t-cuerpo); color: var(--apagado); }
+  /* Este mapa es para aportar; el de Explorar, para mirar. Se cruzan. */
+  .link-explorar {
+    font-size: var(--t-cuerpo); font-weight: 600;
+    color: var(--verde-claro); text-decoration: none; white-space: nowrap;
+  }
+  .link-explorar:hover { text-decoration: underline; }
   /* Vuelta a la web sin montar un cabecero entero, que aquí taparía el mapa. */
   .marca-mapa { display: inline-flex; align-items: center; flex: 0 0 auto; border-radius: var(--r-sm); }
   .marca-mapa img { border-radius: var(--r-sm); display: block; }
@@ -214,6 +220,7 @@
     <img src="/icono.png" alt="" width="24" height="24" />
   </a>
   <span id="ayuda">👉 Toca un sitio para avisar de un cambio, o un hueco para añadir uno nuevo</span>
+  <a href="/explorar/" class="link-explorar">Ver los sitios</a>
   <div id="auth-seccion">
     <button id="btn-mis-aportaciones" class="btn-aportaciones">Mis aportaciones</button>
     <button id="btn-login-google" class="btn-google">
