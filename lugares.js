@@ -22,6 +22,11 @@
     'https://kdqiwhvtovafugpcrumf.supabase.co/storage/v1/object/public/snapshots/lugares-sevilla.json';
   const SEVILLA = { lat: 37.3891, lon: -5.9845 };
 
+  // Para leer las altas manuales (lectura pública). Mismo proyecto y clave
+  // publicable que el resto de la web.
+  const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
+
   // ===== INICIO categorias-lugares (generado, no editar a mano) =====
 // Fuente: sevitime/lib/models/place_categories_data.dart. Para cambiar
 // un tipo o un filtro, edita ese fichero, ejecuta allí
@@ -527,11 +532,77 @@ const CATEGORIAS_LUGARES = {
     };
   }
 
-  // Devuelve una promesa con el array de lugares ya convertidos y sin nulos.
+  // Tipos en español de las altas manuales -> tipo canónico de la web. Los
+  // mismos que la app (`lib/services/manual_places_service.dart`).
+  const TIPO_ES = {
+    'restaurante': 'restaurant', 'cafetería': 'cafe', 'cafeteria': 'cafe',
+    'comida rápida': 'fast_food', 'comida rapida': 'fast_food',
+    'atracción': 'attraction', 'atraccion': 'attraction', 'mirador': 'viewpoint',
+    'museo': 'museum', 'galería': 'gallery', 'galeria': 'gallery',
+    'monumento': 'monument', 'castillo': 'castle', 'ruinas': 'ruins',
+    'patrimonio': 'heritage', 'heladería': 'ice_cream', 'heladeria': 'ice_cream',
+    'teatro': 'theatre', 'cine': 'cinema', 'biblioteca': 'library',
+    'centro cultural': 'arts_centre', 'mercado': 'marketplace',
+    'puente': 'bridge', 'torre': 'tower', 'puerta': 'city_gate',
+    'muralla': 'citywalls', 'acueducto': 'aqueduct',
+    'edificio histórico': 'building', 'edificio historico': 'building',
+    'yacimiento': 'archaeological_site', 'aparcamiento': 'parking',
+    'farmacia': 'pharmacy', 'cajero': 'atm', 'banco': 'bank',
+  };
+
+  function normalizarTipo(t) {
+    const k = (t || 'bar').toLowerCase().trim();
+    return TIPO_ES[k] || k;
+  }
+
+  // Altas manuales (`lugares_manuales`): lo que se crea al aprobar una
+  // sugerencia o un renombrado, para que el sitio aparezca ya sin esperar a
+  // OSM. La app las mezcla en caliente; sin esto, la web no las veía y lo que
+  // se aprobaba en la app no coincidía aquí. Son de lectura pública.
+  function manuales() {
+    const cabeceras = {
+      apikey: SUPABASE_KEY,
+      Authorization: 'Bearer ' + SUPABASE_KEY,
+    };
+    const url = SUPABASE_URL +
+      '/rest/v1/lugares_manuales?activo=eq.true' +
+      '&select=nombre,tipo,lat,lon,telefono,web,horario';
+    return fetch(url, { headers: cabeceras })
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => []);
+  }
+
+  // Un alta manual -> lugar con la misma forma que los de la foto.
+  function aLugarManual(m) {
+    const nombre = (m.nombre || '').trim();
+    if (!nombre || m.lat == null || m.lon == null) return null;
+    const tipo = normalizarTipo(m.tipo);
+    return {
+      nombre, lat: m.lat, lon: m.lon, tipo,
+      color: colorFor(tipo), emoji: emojiFor(tipo), label: labelFor(tipo),
+      telefono: m.telefono || '', web: m.web || '', horario: m.horario || '',
+      osm: '', osmType: null, osmId: null,
+    };
+  }
+
+  // Devuelve una promesa con el array de lugares ya convertidos y sin nulos:
+  // la foto diaria de OSM (la misma que lee la app) **más las altas manuales**.
   function cargar() {
-    return fetch(SNAPSHOT_URL)
-      .then((r) => r.json())
-      .then((d) => (d.elements || []).map(aLugar).filter(Boolean));
+    return Promise.all([
+      fetch(SNAPSHOT_URL)
+        .then((r) => r.json())
+        .then((d) => (d.elements || []).map(aLugar).filter(Boolean)),
+      manuales().then((filas) => filas.map(aLugarManual).filter(Boolean)),
+    ]).then(([snap, man]) => {
+      const vistos = new Set(snap.map((p) => claveDe(p.lat, p.lon)));
+      for (const m of man) {
+        const k = claveDe(m.lat, m.lon);
+        if (vistos.has(k)) continue; // ya está en la foto (p. ej. ya en OSM)
+        vistos.add(k);
+        snap.push(m);
+      }
+      return snap;
+    });
   }
 
   window.sevitimeLugares = {
