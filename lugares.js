@@ -135,6 +135,14 @@
     return (m / 1000).toFixed(1).replace('.', ',') + ' km';
   }
 
+  // La clave de un lugar, `"lat_lon"` con 5 decimales. Replica
+  // `Place.placeKey` de la app (`toStringAsFixed(5)`): es lo que guardan las
+  // paradas de ruta y las reseñas para reconocer un sitio aunque le cambien
+  // el nombre.
+  function claveDe(lat, lon) {
+    return lat.toFixed(5) + '_' + lon.toFixed(5);
+  }
+
   // Un elemento del snapshot -> lugar listo para pintar o reportar. Se guardan
   // también `osmType`/`osmId` (no solo la URL) porque el editor los manda a
   // `reportes_lugares` para que la nota enlace el elemento exacto en OSM.
@@ -169,6 +177,6 @@
 
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
-    tipoDe, colorFor, emojiFor, labelFor, normalizar, metros, formatDist, aLugar, cargar,
+    tipoDe, colorFor, emojiFor, labelFor, normalizar, metros, formatDist, claveDe, aLugar, cargar,
   };
 })();
