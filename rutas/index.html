@@ -56,6 +56,12 @@
   .intro { padding: 16px 16px 4px; }
   .intro h1 { margin: 0; font-size: var(--t-titulo); color: var(--texto); }
   .intro p { margin: 6px 0 0; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .btn-crear {
+    display: inline-block; margin-top: 10px; padding: 8px 14px;
+    background: var(--verde); color: #fff; border-radius: var(--r-sm);
+    font-size: var(--t-cuerpo); font-weight: 600; text-decoration: none;
+  }
+  .btn-crear:hover { filter: brightness(1.08); }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px 6px; }
   .chip {
@@ -177,6 +183,7 @@
     <div class="intro">
       <h1>Rutas de Sevilla</h1>
       <p>Itinerarios a pie con sus paradas. Toca uno para verlo en el mapa.</p>
+      <a class="btn-crear" href="/rutas/crear/">Crear una ruta</a>
     </div>
     <div id="chips" class="chips" role="group" aria-label="Filtrar rutas"></div>
     <p id="resumen" class="resumen">Cargando las rutas…</p>
