@@ -3,11 +3,18 @@
 // Los sitios NO se piden a Overpass: se leen de la misma «foto diaria» que usa
 // la app (tool/snapshot_lugares.mjs -> Storage). Es un JSON público con los
 // sitios de Sevilla, CORS abierto y caché de una hora, así que se pide una vez
-// y se filtra en local. Las categorías, colores y emojis están calcados de
-// lib/models/place_types.dart y lib/theme/app_colors.dart para que web y app no
-// se separen. Vive aquí, y no repetido en cada página, para que Explorar y el
-// editor no se vayan separando con el tiempo —igual que se hizo con el estilo
-// del mapa (mapa/estilo-mapa.js).
+// y se filtra en local.
+//
+// Las categorías, colores y emojis (bloque CATEGORIAS_LUGARES, más abajo) ya
+// no se escriben a mano: los genera `dart run
+// tool/generar_categorias_lugares.dart` en el repo de la app, desde
+// lib/models/place_categories_data.dart, y `tool/actualizar_categorias.mjs`
+// (en este repo) los copia aquí. Antes había que mantener dos copias
+// calcadas a mano, una en Dart y otra en JS, y se separaban sin avisar.
+//
+// Vive aquí, y no repetido en cada página, para que Explorar y el editor no
+// se vayan separando con el tiempo —igual que se hizo con el estilo del mapa
+// (mapa/estilo-mapa.js).
 (function () {
   'use strict';
 
@@ -15,26 +22,418 @@
     'https://kdqiwhvtovafugpcrumf.supabase.co/storage/v1/object/public/snapshots/lugares-sevilla.json';
   const SEVILLA = { lat: 37.3891, lon: -5.9845 };
 
-  // --- Tipos y categorías (espejo de place_types.dart) ---
-  const HISTORIA = ['monument', 'memorial', 'castle', 'ruins', 'heritage', 'building',
-    'heritage_building', 'manor', 'city_gate', 'citywalls', 'tower', 'watchtower',
-    'aqueduct', 'bridge', 'archaeological_site', 'wayside_cross'];
-  const CULTURA = ['museum', 'artwork', 'gallery', 'theatre', 'cinema', 'arts_centre', 'library'];
-  const PARQUES = ['park', 'garden', 'nature_reserve'];
-  const IGLESIAS = ['place_of_worship', 'mosque', 'synagogue'];
+  // ===== INICIO categorias-lugares (generado, no editar a mano) =====
+// Fuente: sevitime/lib/models/place_categories_data.dart. Para cambiar
+// un tipo o un filtro, edita ese fichero, ejecuta allí
+// "dart run tool/generar_categorias_lugares.dart" y luego aquí
+// "node tool/actualizar_categorias.mjs".
+const CATEGORIAS_LUGARES = {
+  "version": 1,
+  "tipos": {
+    "bar": {
+      "categoria": "hosteleria",
+      "etiqueta": "Bar",
+      "emoji": "🍺",
+      "color": "#5C6BC0"
+    },
+    "pub": {
+      "categoria": "hosteleria",
+      "etiqueta": "Bar",
+      "emoji": "🍻",
+      "color": "#5C6BC0"
+    },
+    "biergarten": {
+      "categoria": "hosteleria",
+      "etiqueta": "Terraza",
+      "emoji": "🍻",
+      "color": "#5C6BC0"
+    },
+    "restaurant": {
+      "categoria": "hosteleria",
+      "etiqueta": "Restaurante",
+      "emoji": "🍽️",
+      "color": "#EF6C00"
+    },
+    "fast_food": {
+      "categoria": "hosteleria",
+      "etiqueta": "Comida",
+      "emoji": "🍔",
+      "color": "#EF6C00"
+    },
+    "cafe": {
+      "categoria": "hosteleria",
+      "etiqueta": "Café",
+      "emoji": "☕",
+      "color": "#6D4C41"
+    },
+    "ice_cream": {
+      "categoria": "hosteleria",
+      "etiqueta": "Heladería",
+      "emoji": "🍨",
+      "color": "#6D4C41"
+    },
+    "parking": {
+      "categoria": "servicios",
+      "etiqueta": "Parking",
+      "emoji": "🅿️",
+      "color": "#3D6A7A"
+    },
+    "pharmacy": {
+      "categoria": "servicios",
+      "etiqueta": "Farmacia",
+      "emoji": "💊",
+      "color": "#2E7D32"
+    },
+    "atm": {
+      "categoria": "servicios",
+      "etiqueta": "Cajero",
+      "emoji": "🏧",
+      "color": "#2E7D32"
+    },
+    "bank": {
+      "categoria": "servicios",
+      "etiqueta": "Banco",
+      "emoji": "🏦",
+      "color": "#2E7D32"
+    },
+    "toilets": {
+      "categoria": "aseos",
+      "etiqueta": "Aseos",
+      "emoji": "🚻",
+      "color": "#0277BD"
+    },
+    "drinking_water": {
+      "categoria": "aseos",
+      "etiqueta": "Fuente de agua",
+      "emoji": "🚰",
+      "color": "#0277BD"
+    },
+    "park": {
+      "categoria": "parques",
+      "etiqueta": "Parque",
+      "emoji": "🌳",
+      "color": "#558B2F"
+    },
+    "garden": {
+      "categoria": "parques",
+      "etiqueta": "Jardín",
+      "emoji": "🌳",
+      "color": "#558B2F"
+    },
+    "nature_reserve": {
+      "categoria": "parques",
+      "etiqueta": "Espacio natural",
+      "emoji": "🌳",
+      "color": "#558B2F"
+    },
+    "place_of_worship": {
+      "categoria": "iglesias",
+      "etiqueta": "Iglesia",
+      "emoji": "⛪",
+      "color": "#8E6C3A"
+    },
+    "mosque": {
+      "categoria": "iglesias",
+      "etiqueta": "Mezquita",
+      "emoji": "⛪",
+      "color": "#8E6C3A"
+    },
+    "synagogue": {
+      "categoria": "iglesias",
+      "etiqueta": "Sinagoga",
+      "emoji": "⛪",
+      "color": "#8E6C3A"
+    },
+    "museum": {
+      "categoria": "cultura",
+      "etiqueta": "Museo",
+      "emoji": "🖼️",
+      "color": "#9C27B0"
+    },
+    "artwork": {
+      "categoria": "cultura",
+      "etiqueta": "Arte",
+      "emoji": "🖼️",
+      "color": "#9C27B0"
+    },
+    "gallery": {
+      "categoria": "cultura",
+      "etiqueta": "Galería",
+      "emoji": "🖼️",
+      "color": "#9C27B0"
+    },
+    "theatre": {
+      "categoria": "cultura",
+      "etiqueta": "Teatro",
+      "emoji": "🎭",
+      "color": "#9C27B0"
+    },
+    "cinema": {
+      "categoria": "cultura",
+      "etiqueta": "Cine",
+      "emoji": "🎬",
+      "color": "#9C27B0"
+    },
+    "arts_centre": {
+      "categoria": "cultura",
+      "etiqueta": "Centro cultural",
+      "emoji": "🎨",
+      "color": "#9C27B0"
+    },
+    "library": {
+      "categoria": "cultura",
+      "etiqueta": "Biblioteca",
+      "emoji": "📚",
+      "color": "#9C27B0"
+    },
+    "monument": {
+      "categoria": "historia",
+      "etiqueta": "Monumento",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "memorial": {
+      "categoria": "historia",
+      "etiqueta": "Memorial",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "castle": {
+      "categoria": "historia",
+      "etiqueta": "Castillo",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "ruins": {
+      "categoria": "historia",
+      "etiqueta": "Ruinas",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "heritage": {
+      "categoria": "historia",
+      "etiqueta": "Patrimonio",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "building": {
+      "categoria": "historia",
+      "etiqueta": "Edificio histórico",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "heritage_building": {
+      "categoria": "historia",
+      "etiqueta": "Edificio protegido",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "manor": {
+      "categoria": "historia",
+      "etiqueta": "Casa señorial",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "city_gate": {
+      "categoria": "historia",
+      "etiqueta": "Puerta",
+      "emoji": "🏰",
+      "color": "#795548"
+    },
+    "citywalls": {
+      "categoria": "historia",
+      "etiqueta": "Muralla",
+      "emoji": "🏰",
+      "color": "#795548"
+    },
+    "tower": {
+      "categoria": "historia",
+      "etiqueta": "Torre",
+      "emoji": "🏰",
+      "color": "#795548"
+    },
+    "watchtower": {
+      "categoria": "historia",
+      "etiqueta": "Torre",
+      "emoji": "🏰",
+      "color": "#795548"
+    },
+    "aqueduct": {
+      "categoria": "historia",
+      "etiqueta": "Acueducto",
+      "emoji": "🌉",
+      "color": "#795548"
+    },
+    "bridge": {
+      "categoria": "historia",
+      "etiqueta": "Puente",
+      "emoji": "🌉",
+      "color": "#795548"
+    },
+    "archaeological_site": {
+      "categoria": "historia",
+      "etiqueta": "Yacimiento",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "wayside_cross": {
+      "categoria": "historia",
+      "etiqueta": "Cruz",
+      "emoji": "🏛️",
+      "color": "#795548"
+    },
+    "attraction": {
+      "categoria": "atracciones",
+      "etiqueta": "Atracción",
+      "emoji": "📸",
+      "color": "#00897B"
+    },
+    "viewpoint": {
+      "categoria": "atracciones",
+      "etiqueta": "Mirador",
+      "emoji": "📸",
+      "color": "#00897B"
+    },
+    "marketplace": {
+      "categoria": "atracciones",
+      "etiqueta": "Mercado",
+      "emoji": "🛍️",
+      "color": "#00897B"
+    },
+    "stadium": {
+      "categoria": "atracciones",
+      "etiqueta": "Estadio",
+      "emoji": "🏟️",
+      "color": "#00897B"
+    }
+  },
+  "otros": {
+    "categoria": "otros",
+    "etiqueta": "Sitio",
+    "emoji": "📍",
+    "color": "#00897B"
+  },
+  "filtros": [
+    {
+      "id": "todo",
+      "etiqueta": "Todo",
+      "emoji": "📍",
+      "tipos": null
+    },
+    {
+      "id": "bares",
+      "etiqueta": "Bares",
+      "emoji": "🍻",
+      "tipos": [
+        "bar",
+        "pub",
+        "biergarten"
+      ]
+    },
+    {
+      "id": "restaurantes",
+      "etiqueta": "Restaurantes",
+      "emoji": "🍽️",
+      "tipos": [
+        "restaurant",
+        "fast_food"
+      ]
+    },
+    {
+      "id": "cafes",
+      "etiqueta": "Cafés",
+      "emoji": "☕",
+      "tipos": [
+        "cafe",
+        "ice_cream"
+      ]
+    },
+    {
+      "id": "monumentos",
+      "etiqueta": "Monumentos",
+      "emoji": "🏛️",
+      "tipos": [
+        "monument",
+        "memorial",
+        "castle",
+        "ruins",
+        "heritage",
+        "building",
+        "heritage_building",
+        "manor",
+        "city_gate",
+        "citywalls",
+        "tower",
+        "watchtower",
+        "aqueduct",
+        "bridge",
+        "archaeological_site",
+        "wayside_cross"
+      ]
+    },
+    {
+      "id": "cultura",
+      "etiqueta": "Cultura",
+      "emoji": "🖼️",
+      "tipos": [
+        "museum",
+        "artwork",
+        "gallery",
+        "theatre",
+        "cinema",
+        "arts_centre",
+        "library"
+      ]
+    },
+    {
+      "id": "iglesias",
+      "etiqueta": "Iglesias",
+      "emoji": "⛪",
+      "tipos": [
+        "place_of_worship",
+        "mosque",
+        "synagogue"
+      ]
+    },
+    {
+      "id": "parques",
+      "etiqueta": "Parques",
+      "emoji": "🌳",
+      "tipos": [
+        "park",
+        "garden",
+        "nature_reserve"
+      ]
+    }
+  ],
+  "genericos": {
+    "atm": "Cajero automático",
+    "bank": "Banco",
+    "toilets": "Aseos públicos",
+    "drinking_water": "Fuente de agua potable"
+  }
+};
+// ===== FIN categorias-lugares =====
 
-  const GENERICOS = { atm: 'Cajero automático', bank: 'Banco', toilets: 'Aseos públicos', drinking_water: 'Fuente de agua potable' };
+  const GENERICOS = CATEGORIAS_LUGARES.genericos;
 
-  const FILTROS = [
-    { id: 'todo', etiqueta: 'Todo', emoji: '📍', tipos: null },
-    { id: 'bares', etiqueta: 'Bares', emoji: '🍻', tipos: ['bar', 'pub', 'biergarten'] },
-    { id: 'restaurantes', etiqueta: 'Restaurantes', emoji: '🍽️', tipos: ['restaurant', 'fast_food'] },
-    { id: 'cafes', etiqueta: 'Cafés', emoji: '☕', tipos: ['cafe', 'ice_cream'] },
-    { id: 'monumentos', etiqueta: 'Monumentos', emoji: '🏛️', tipos: HISTORIA },
-    { id: 'cultura', etiqueta: 'Cultura', emoji: '🖼️', tipos: CULTURA },
-    { id: 'iglesias', etiqueta: 'Iglesias', emoji: '⛪', tipos: IGLESIAS },
-    { id: 'parques', etiqueta: 'Parques', emoji: '🌳', tipos: PARQUES },
-  ];
+  const FILTROS = CATEGORIAS_LUGARES.filtros;
+
+  function tiposDeCategoria(categoria) {
+    return Object.keys(CATEGORIAS_LUGARES.tipos)
+      .filter((t) => CATEGORIAS_LUGARES.tipos[t].categoria === categoria);
+  }
+
+  // Se mantienen como arrays sueltos porque los usa el editor de rutas para
+  // agrupar el mapa por familia, igual que antes.
+  const HISTORIA = tiposDeCategoria('historia');
+  const CULTURA = tiposDeCategoria('cultura');
+  const PARQUES = tiposDeCategoria('parques');
+  const IGLESIAS = tiposDeCategoria('iglesias');
+
+  function infoDe(tipo) {
+    return CATEGORIAS_LUGARES.tipos[tipo] || CATEGORIAS_LUGARES.otros;
+  }
 
   function tipoDe(tags) {
     if (tags.amenity === 'place_of_worship') {
@@ -50,75 +449,21 @@
     return 'otro';
   }
 
-  // Colores calcados de AppColors (lib/theme/app_colors.dart).
   function colorFor(tipo) {
-    switch (tipo) {
-      case 'bar': case 'pub': case 'biergarten': return '#5C6BC0';
-      case 'restaurant': case 'fast_food': return '#EF6C00';
-      case 'cafe': case 'ice_cream': return '#6D4C41';
-      case 'parking': return '#3D6A7A';
-      case 'pharmacy': case 'atm': case 'bank': return '#2E7D32';
-      case 'toilets': case 'drinking_water': return '#0277BD';
-      case 'park': case 'garden': case 'nature_reserve': return '#558B2F';
-      case 'place_of_worship': case 'mosque': case 'synagogue': return '#8E6C3A';
-      case 'museum': case 'artwork': case 'gallery': case 'theatre':
-      case 'cinema': case 'arts_centre': case 'library': return '#9C27B0';
-      default:
-        if (HISTORIA.indexOf(tipo) >= 0) return '#795548';
-        return '#00897B';
-    }
+    return infoDe(tipo).color;
   }
 
   function emojiFor(tipo) {
-    switch (tipo) {
-      case 'bar': return '🍺';
-      case 'pub': case 'biergarten': return '🍻';
-      case 'restaurant': return '🍽️';
-      case 'fast_food': return '🍔';
-      case 'cafe': return '☕';
-      case 'ice_cream': return '🍨';
-      case 'parking': return '🅿️';
-      case 'pharmacy': return '💊';
-      case 'atm': return '🏧';
-      case 'bank': return '🏦';
-      case 'toilets': return '🚻';
-      case 'drinking_water': return '🚰';
-      case 'park': case 'garden': case 'nature_reserve': return '🌳';
-      case 'place_of_worship': case 'mosque': case 'synagogue': return '⛪';
-      case 'museum': case 'gallery': case 'artwork': return '🖼️';
-      case 'theatre': return '🎭';
-      case 'cinema': return '🎬';
-      case 'library': return '📚';
-      case 'monument': case 'memorial': case 'castle': case 'ruins': return '🏛️';
-      case 'city_gate': case 'citywalls': case 'tower': case 'watchtower': return '🏰';
-      case 'bridge': case 'aqueduct': return '🌉';
-      case 'attraction': case 'viewpoint': return '📸';
-      default: return '📍';
-    }
+    return infoDe(tipo).emoji;
   }
 
   function labelFor(tipo) {
-    const etiquetas = {
-      bar: 'Bar', pub: 'Bar', biergarten: 'Terraza', restaurant: 'Restaurante',
-      fast_food: 'Comida', cafe: 'Café', ice_cream: 'Heladería', parking: 'Parking',
-      museum: 'Museo', artwork: 'Arte', gallery: 'Galería', theatre: 'Teatro',
-      cinema: 'Cine', arts_centre: 'Centro cultural', library: 'Biblioteca',
-      marketplace: 'Mercado', stadium: 'Estadio', park: 'Parque', garden: 'Jardín',
-      nature_reserve: 'Espacio natural', toilets: 'Aseos', drinking_water: 'Fuente de agua',
-      monument: 'Monumento', memorial: 'Memorial', castle: 'Castillo', ruins: 'Ruinas',
-      heritage: 'Patrimonio', building: 'Edificio histórico', heritage_building: 'Edificio protegido',
-      manor: 'Casa señorial', city_gate: 'Puerta', citywalls: 'Muralla', tower: 'Torre',
-      watchtower: 'Torre', aqueduct: 'Acueducto', bridge: 'Puente',
-      archaeological_site: 'Yacimiento', wayside_cross: 'Cruz', attraction: 'Atracción',
-      pharmacy: 'Farmacia', atm: 'Cajero', bank: 'Banco', viewpoint: 'Mirador',
-      place_of_worship: 'Iglesia', mosque: 'Mezquita', synagogue: 'Sinagoga',
-    };
-    return etiquetas[tipo] || 'Sitio';
+    return infoDe(tipo).etiqueta;
   }
 
   // --- Utilidades ---
   function normalizar(s) {
-    return (s || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+    return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
   }
 
   function metros(a, b) {
