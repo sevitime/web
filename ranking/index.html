@@ -42,12 +42,14 @@
     font-weight: 800;
     color: var(--texto);
     letter-spacing: -0.02em;
+    text-wrap: balance;
     margin-bottom: 10px;
   }
   .ranking-intro p {
     color: var(--apagado);
     font-size: var(--t-item);
     max-width: 46ch;
+    text-wrap: pretty;
     margin: 0 auto;
   }
   .ranking-intro .etiqueta {
@@ -129,7 +131,7 @@
     text-align: center;
     color: var(--apagado);
     padding: 40px 24px;
-    font-size: 15px;
+    font-size: var(--t-item);
   }
 
   @media (min-width: 720px) {

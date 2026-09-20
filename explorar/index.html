@@ -57,15 +57,6 @@
   .buscador input::placeholder { color: var(--tenue); }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 4px 16px 10px; }
-  .chip {
-    border: 1.5px solid var(--borde); background: var(--superficie); color: var(--apagado);
-    font-family: inherit; font-size: var(--t-etiqueta);
-    padding: 6px 11px; border-radius: var(--r-pill); cursor: pointer;
-    display: inline-flex; align-items: center; gap: 5px;
-    transition: background .15s, border-color .15s, color .15s;
-  }
-  .chip:hover { border-color: var(--verde-claro); }
-  .chip.seleccionado { background: var(--verde-solido); border-color: var(--verde-solido); color: #fff; font-weight: 600; }
 
   .resumen { padding: 0 16px 8px; font-size: var(--t-etiqueta); color: var(--tenue); }
 
@@ -107,7 +98,7 @@
     max-width: calc(100% - 74px); padding: 8px 12px;
     border: 1px solid var(--borde); border-radius: var(--r-pill);
     background: color-mix(in srgb, var(--superficie) 92%, transparent);
-    color: var(--texto); box-shadow: 0 3px 14px rgba(15, 28, 26, .14);
+    color: var(--texto); box-shadow: var(--sombra-1);
     font-size: var(--t-etiqueta); font-weight: 600; pointer-events: none;
     backdrop-filter: blur(8px);
   }

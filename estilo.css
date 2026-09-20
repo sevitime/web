@@ -16,6 +16,12 @@
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* El suavizado de fuente va en la raíz, no en body: aplica a todo el árbol. */
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 :root {
   /* Misma paleta que la app (lib/theme/app_colors.dart): verde de marca y
      dorado como segundo color, sobre negros con matiz verde y no grises
@@ -68,6 +74,11 @@
   --r-sm: 10px;
   --r-lg: 16px;
   --r-pill: 999px;
+  /* Elevación: tres niveles compartidos, en vez de una sombra a ojo por cada
+     página. En claro se rebajan y se tiñen (ver el bloque de tema claro). */
+  --sombra-1: 0 2px 12px rgba(0, 0, 0, 0.30);
+  --sombra-2: 0 6px 20px rgba(0, 0, 0, 0.35);
+  --sombra-3: 0 14px 36px rgba(0, 0, 0, 0.50);
 }
 
 /* Claro: la escala clara de la app. El verde de acento baja a #00897B
@@ -100,6 +111,10 @@
     --gris-tenue: #5A6B68;
     --atrib-bg: rgba(255, 255, 255, 0.78);
     --nav-bg: rgba(242, 247, 246, 0.85);
+    /* Sombras del tema claro: más suaves y con tinte verde, nunca negro puro. */
+    --sombra-1: 0 2px 10px rgba(20, 40, 35, 0.10);
+    --sombra-2: 0 6px 18px rgba(20, 40, 35, 0.14);
+    --sombra-3: 0 14px 32px rgba(20, 40, 35, 0.18);
   }
 }
 
@@ -108,7 +123,6 @@ body {
   background: var(--fondo);
   color: var(--texto);
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
 }
 
 img { max-width: 100%; display: block; }
@@ -160,7 +174,7 @@ img { max-width: 100%; display: block; }
   height: 76px;
   border-radius: var(--r-lg);
   margin: 0 auto 14px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  box-shadow: var(--sombra-3);
 }
 /* El rótulo «SEVITIME» que iba aquí repetía la marca que ya lleva el nav y el
    propio icono; el hero respira mejor sin la triple mención. */
@@ -227,7 +241,7 @@ img { max-width: 100%; display: block; }
      dentro y no suma tamaño. */
   outline: 1px solid oklch(1 0 0 / 0.1);
   outline-offset: -1px;
-  box-shadow: 0 18px 40px rgba(0,0,0,0.55);
+  box-shadow: var(--sombra-3);
 }
 .capturas figcaption {
   margin-top: 12px;
@@ -475,6 +489,38 @@ footer span { margin: 0 8px; }
   box-shadow: 0 4px 14px rgba(0, 137, 123, 0.4);
 }
 
+/* ---------- chip de filtro (compartido) ---------- */
+
+/* Los chips de filtro de explorar, eventos, rutas y el mapa estaban copiados
+   en cada página y ya habían divergido: el del mapa salía más grande. */
+.chip {
+  border: 1.5px solid var(--borde);
+  background: var(--superficie);
+  color: var(--apagado);
+  font-family: inherit;
+  font-size: var(--t-etiqueta);
+  padding: 6px 11px;
+  border-radius: var(--r-pill);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  transition: background-color .15s ease, border-color .15s ease, color .15s ease;
+}
+@media (hover: hover) and (pointer: fine) {
+  .chip:hover { border-color: var(--verde-claro); }
+}
+.chip.seleccionado {
+  background: var(--verde-solido);
+  border-color: var(--verde-solido);
+  color: #fff;
+  font-weight: 600;
+}
+/* En táctil, el chip sube al área mínima recomendada. */
+@media (pointer: coarse) {
+  .chip { min-height: 44px; padding-left: 14px; padding-right: 14px; }
+}
+
 /* ---------- pantallas grandes ---------- */
 
 @media (max-width: 719px) {
@@ -496,11 +542,16 @@ footer span { margin: 0 8px; }
   .nav-enlaces {
     position: absolute; z-index: 11; top: calc(100% + 6px); right: 16px;
     min-width: 220px; padding: 8px;
-    display: none; gap: 2px;
+    display: grid; gap: 2px;
+    visibility: hidden; opacity: 0; transform: translateY(-6px);
     background: var(--superficie); border: 1px solid var(--borde);
-    border-radius: var(--r-lg); box-shadow: 0 12px 28px rgba(0,0,0,.28);
+    border-radius: var(--r-lg); box-shadow: var(--sombra-2);
+    transition: opacity .15s ease, transform .15s ease, visibility 0s .15s;
   }
-  .nav-acciones.menu-abierto .nav-enlaces { display: grid; }
+  .nav-acciones.menu-abierto .nav-enlaces {
+    visibility: visible; opacity: 1; transform: none;
+    transition: opacity .15s ease, transform .15s ease, visibility 0s;
+  }
   .nav-link, .nav-btn-mapa {
     min-height: 44px; padding: 0 12px; border-radius: var(--r-sm);
     display: flex; align-items: center;
@@ -602,7 +653,7 @@ footer span { margin: 0 8px; }
   color: var(--texto);
   border: 1px solid var(--borde);
   border-radius: var(--r-sm);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  box-shadow: var(--sombra-2);
   font-size: var(--t-cuerpo);
   line-height: 1.35;
 }
