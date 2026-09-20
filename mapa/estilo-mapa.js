@@ -33,7 +33,7 @@ function sevitimeEstiloMapa(oscuro) {
     sources: {
       openmaptiles: { type: 'vector', url: `pmtiles://${SEVITIME_TILES_URL}` },
     },
-    glyphs: 'https://fonts.openmaptiles.org/{fontstack}/{range}.pbf',
+    glyphs: '/libs/fonts/{fontstack}/{range}.pbf',
     layers: [
       { id: 'background', type: 'background', paint: { 'background-color': c.fondo } },
       { id: 'water', type: 'fill', source: 'openmaptiles', 'source-layer': 'water', paint: { 'fill-color': c.agua } },
@@ -57,7 +57,7 @@ function sevitimeEstiloMapa(oscuro) {
         minzoom: 15,
         layout: {
           'text-field': ['get', 'name'],
-          'text-font': ['Open Sans Regular'],
+          'text-font': ['OpenSansRegular'],
           'text-size': 11,
           'text-anchor': 'top',
           'text-offset': [0, 0.6],

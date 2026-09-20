@@ -36,21 +36,20 @@ que automatizarlo.
 
 ## Librerías propias y terceros (privacidad)
 
-Las librerías pesadas están **autohospedadas** en `libs/`, no vienen de un CDN
-de terceros: `maplibre-gl` 4.7.1, `pmtiles` 3.2.1 y `@supabase/supabase-js`
-2.116.0. Los tiles también son propios (Worker de Cloudflare). Al actualizar
-una, descarga la versión fijada, guárdala en `libs/` y actualiza esta nota.
-Motivo: un CDN de terceros recibe la IP del visitante y obliga a declararlo en
+Las librerías y las fuentes del mapa están **autohospedadas** en `libs/`, no
+vienen de un CDN de terceros: `maplibre-gl` 4.7.1, `pmtiles` 3.2.1 y
+`@supabase/supabase-js` 2.116.0, más las tipografías de las etiquetas del mapa
+en `libs/fonts/OpenSansRegular/` (rangos PBF de Open Sans Regular, de
+OpenMapTiles). Los tiles también son propios (Worker de Cloudflare). Al
+actualizar una, descarga la versión fijada, guárdala en `libs/` y actualiza esta
+nota. Motivo: un tercero que recibe la IP del visitante obliga a declararlo en
 la política de privacidad.
 
-Pendiente (anotado el 21 de septiembre de 2026):
+Con esto la web no habla con ningún tercero para pintar el mapa. Ojo: el nombre
+de `text-font` en el estilo es el de la **carpeta**, no el de la fuente real
+(véase `libs/fonts/OpenSansRegular/`). Si se cambia, hay que cambiar el nombre a
+la vez en `mapa/estilo-mapa.js`, `mapa/index.html` y `explorar/explorar.js`.
 
-- `mapa/estilo-mapa.js` aún carga las tipografías de las etiquetas del mapa
-  desde `fonts.openmaptiles.org` (tercero). Autohospedarlas si se quiere cerrar
-  del todo el apartado de terceros.
-- La política de privacidad vive en el repo `sevitime/privacidad` y se publica
-  en `https://sevitime.github.io/privacidad/`. Es **un solo documento y está
-  escrito para la app**; la web enlaza a él pero no se menciona. Conviene
-  ampliarlo para cubrir también sevitime.com (login de Google y envíos a
-  Supabase) y, si no se autohospedan, los terceros de la web. La app ya declara
-  Nominatim, Open-Meteo, Overpass, MapTiler, Wikimedia y Sentry.
+La política de privacidad vive en el repo `sevitime/privacidad` y se publica en
+`https://sevitime.github.io/privacidad/`. Es un solo documento; desde el 21 de
+septiembre de 2026 cubre también la web (`sevitime.com`).

@@ -105,7 +105,7 @@
       filter: ['==', ['geometry-type'], 'Point'],
       layout: {
         'text-field': ['get', 'nombre'],
-        'text-font': ['Open Sans Regular'],
+        'text-font': ['OpenSansRegular'],
         'text-size': 11,
         'text-anchor': 'top',
         'text-offset': [0, 1.1],
