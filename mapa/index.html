@@ -46,9 +46,21 @@
      portada y el cuadro de honor. Así el mapa también cambia a tema oscuro y
      no se queda en blanco cuando el resto del sitio se oscurece. */
   * { box-sizing: border-box; }
-  html, body { height: 100%; margin: 0; font-family: 'Inter', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
+  /* 100% no cuenta las barras del navegador en móvil y dejaba una franja
+     blanca abajo; 100dvh sí. El ResizeObserver de más abajo llama a
+     map.resize() por si el cambio de alto no le llega solo al mapa. */
+  html, body { height: 100dvh; margin: 0; font-family: 'Inter', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
   body { background: var(--fondo); color: var(--texto); }
   #map { position: absolute; inset: 0; }
+
+  /* Fondo oscurecido detrás de la hoja inferior (solo móvil, ver abajo).
+     Tocarlo cierra el panel, como en cualquier bottom sheet. */
+  #scrim {
+    position: fixed; inset: 0; z-index: 5;
+    background: rgba(0,0,0,.4); opacity: 0; pointer-events: none;
+    transition: opacity .18s ease;
+  }
+  #scrim.visible { opacity: 1; pointer-events: auto; }
 
   #barra {
     position: absolute; top: 12px; left: 12px; z-index: 5;
@@ -72,13 +84,33 @@
   .marca-mapa img { border-radius: var(--r-sm); display: block; }
   .marca-mapa:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 2px; }
 
+  /* Hoja inferior en móvil: antes era una caja flotante de 300px fijos que,
+     a 390px de ancho, ocupaba el 75% de la pantalla y podía solaparse con la
+     barra de arriba si esta pasaba a dos filas (auth-seccion). Anclada abajo,
+     dejando el mapa a la vista, no puede solaparse con la barra nunca: viven
+     en extremos opuestos. Es como ya lo resuelve la app y como lo hacen
+     Instagram/Google Maps en móvil. El escritorio (900px+, más abajo) vuelve
+     al panel lateral flotante de siempre. */
   .panel {
-    position: absolute; top: 12px; right: 12px; width: 300px; z-index: 5;
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto; z-index: 6;
+    width: 100%; max-width: none;
+    max-height: min(75vh, 75dvh);
+    overflow-y: auto;
     background: var(--superficie); color: var(--texto);
-    border: 1px solid var(--borde); border-radius: var(--r-sm); box-shadow: 0 2px 12px rgba(0,0,0,.3);
-    padding: 16px; display: none;
+    border: 1px solid var(--borde); border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    box-shadow: 0 -6px 24px rgba(0,0,0,.35);
+    padding: 10px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    display: none;
   }
   .panel.visible { display: block; }
+  /* Agarradera visual: por CSS y no en cada uno de los 4 <div class="panel">,
+     para no repetirla cuatro veces. Solo decorativa, no arrastra: con el
+     scrim y los botones de Cancelar/Cerrar de siempre basta para cerrar. */
+  .panel::before {
+    content: ''; display: block; width: 36px; height: 4px; border-radius: 2px;
+    background: var(--borde); margin: 0 auto 10px;
+  }
   .panel h3 { margin: 0 0 4px; font-size: var(--t-item); }
   .panel .subtitulo { font-size: var(--t-etiqueta); color: var(--tenue); margin-bottom: 8px; }
   .panel label { display: block; font-size: var(--t-etiqueta); color: var(--apagado); margin: 10px 0 4px; }
@@ -99,8 +131,9 @@
   .panel .ok { color: var(--ok-fg); font-size: var(--t-cuerpo); margin-top: 8px; display: none; font-weight: 600; }
   .oculto { display: none !important; }
 
+  @keyframes hoja-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
   @keyframes panel-in { from { opacity: 0; transform: translateY(-6px) scale(.98); } to { opacity: 1; transform: none; } }
-  .panel.visible { animation: panel-in .18s ease; }
+  .panel.visible { animation: hoja-in .22s cubic-bezier(.2,.8,.2,1); }
   @keyframes celebrar { 0% { transform: scale(.7); opacity: 0; } 60% { transform: scale(1.12); opacity: 1; } 100% { transform: scale(1); } }
   .panel .ok { animation: celebrar .35s ease; }
 
@@ -160,7 +193,6 @@
   #barra button.btn-sitios:hover { background: var(--borde); }
   #barra button.btn-sitios[aria-pressed="true"] { background: var(--verde); color: #fff; }
   #barra button.btn-sitios:disabled { opacity: .6; cursor: default; }
-  .panel.ancho { width: 340px; }
 
   .ap-xp-caja {
     margin: 10px 0 2px; padding: 10px 12px; border-radius: var(--r-sm);
@@ -190,12 +222,13 @@
       width: 100%; border-left: none; border-top: 1px solid var(--borde);
       padding-left: 0; padding-top: 8px; justify-content: flex-end;
     }
-    .panel.ancho { width: auto; left: 12px; right: 12px; }
   }
 
-  /* Escritorio: la barra se pega arriba a todo el ancho y los formularios
-     pasan a un panel lateral alto, como una herramienta de verdad. En móvil
-     siguen flotando, que ahí es lo correcto. */
+  /* Escritorio: la barra se pega arriba a todo el ancho, el scrim no hace
+     falta (nada se solapa) y los formularios vuelven al panel lateral
+     flotante de siempre, en vez de la hoja inferior de móvil: hay que
+     deshacer aquí cada propiedad que puso la hoja (posición, bordes, sombra,
+     relleno, animación), no solo las que cambian. */
   @media (min-width: 900px) {
     #barra {
       top: 0; left: 0; right: 0;
@@ -205,13 +238,19 @@
       padding: 12px 24px;
     }
     #barra #ayuda { flex: 1; }
+    #scrim { display: none; }
     .panel {
-      top: 78px; right: 16px;
-      width: 380px;
+      position: absolute; top: 78px; right: 16px; left: auto; bottom: auto;
+      width: 380px; max-width: 380px;
       max-height: calc(100dvh - 170px);
       overflow-y: auto;
+      border: 1px solid var(--borde); border-radius: var(--r-sm);
+      box-shadow: 0 2px 12px rgba(0,0,0,.3);
+      padding: 16px;
     }
-    .panel.ancho { width: 420px; }
+    .panel::before { display: none; }
+    .panel.visible { animation: panel-in .18s ease; }
+    .panel.ancho { width: 420px; max-width: 420px; }
   }
 
   #atribucion {
@@ -224,6 +263,7 @@
 <body>
 
 <div id="map"></div>
+<div id="scrim"></div>
 
 <div id="barra">
   <a href="/" class="marca-mapa" title="Volver a sevitime.com" aria-label="Volver a sevitime.com">
@@ -615,11 +655,13 @@
   function abrirPanelAportaciones() {
     apagarModos();
     panelAportaciones.classList.add('visible');
+    actualizarScrim();
     cargarMisAportaciones();
   }
 
   function cerrarPanelAportaciones() {
     panelAportaciones.classList.remove('visible');
+    actualizarScrim();
   }
 
   btnMisAportaciones.addEventListener('click', () => {
@@ -649,6 +691,13 @@
     maxBounds: SEVITIME_PROVINCIA_BOUNDS,
   });
   map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+
+  // Por si 100dvh cambia sin que el mapa se entere (rotar el móvil, la barra
+  // del navegador que aparece/desaparece al hacer scroll): MapLibre calcula su
+  // tamaño una vez y no vuelve a mirarlo solo.
+  if ('ResizeObserver' in window) {
+    new ResizeObserver(() => map.resize()).observe(document.getElementById('map'));
+  }
 
   prefiereOscuro.addEventListener('change', (e) => {
     map.setStyle(sevitimeEstiloMapa(e.matches));
@@ -825,12 +874,32 @@
   const panelLogin = document.getElementById('panel-login');
   let marker = null;
 
-  function apagarModos() {
-    ayuda.textContent = ayudaTexto;
+  // Scrim de la hoja inferior (solo móvil, ver CSS): oscurece el mapa
+  // mientras hay un panel abierto y tocarlo cierra, como cualquier bottom
+  // sheet. En escritorio #scrim se oculta por CSS y esto no se nota.
+  const scrim = document.getElementById('scrim');
+  function actualizarScrim() {
+    scrim.classList.toggle('visible', !!document.querySelector('.panel.visible'));
+  }
+  scrim.addEventListener('click', apagarModos);
+
+  // Cierra los cuatro paneles sin tocar el marcador del mapa: antes de abrir
+  // uno hay que pasar siempre por aquí, o dos pueden quedar visibles a la
+  // vez (p. ej. abrir "Nuevo sitio" con "Mis aportaciones" ya abierta). Con
+  // el panel flotante de antes no se notaba porque los dos ocupaban la misma
+  // cajita y uno tapaba al otro entero; con la hoja inferior, al no medir lo
+  // mismo, se veían las dos superpuestas.
+  function ocultarPaneles() {
     panelSugerir.classList.remove('visible');
     panelReportar.classList.remove('visible');
     panelAportaciones.classList.remove('visible');
     panelLogin.classList.remove('visible');
+    actualizarScrim();
+  }
+
+  function apagarModos() {
+    ayuda.textContent = ayudaTexto;
+    ocultarPaneles();
     if (marker) { marker.remove(); marker = null; }
   }
 
@@ -839,6 +908,7 @@
   function abrirPanelLogin() {
     apagarModos();
     panelLogin.classList.add('visible');
+    actualizarScrim();
   }
 
   map.on('click', (e) => {
@@ -888,7 +958,7 @@
   }
 
   function abrirPanelSugerir(lngLat) {
-    panelReportar.classList.remove('visible');
+    ocultarPaneles();
     panelSugerir.dataset.lat = lngLat.lat;
     panelSugerir.dataset.lng = lngLat.lng;
     document.getElementById('s-nombre').value = '';
@@ -896,10 +966,11 @@
     sTipoChips.seleccionar('bar');
     limpiarMensajes(panelSugerir);
     panelSugerir.classList.add('visible');
+    actualizarScrim();
   }
 
   function abrirPanelReportar(nombre, lat, lng, extra) {
-    panelSugerir.classList.remove('visible');
+    ocultarPaneles();
     panelReportar.dataset.nombre = nombre;
     panelReportar.dataset.lat = lat;
     panelReportar.dataset.lng = lng;
@@ -917,6 +988,7 @@
     document.getElementById('r-notas').value = '';
     limpiarMensajes(panelReportar);
     panelReportar.classList.add('visible');
+    actualizarScrim();
   }
 
   document.querySelectorAll('.btn-cancelar').forEach((b) => b.addEventListener('click', apagarModos));
