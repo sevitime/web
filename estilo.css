@@ -279,7 +279,7 @@ img { max-width: 100%; display: block; }
   max-width: 52ch;
   margin: -14px auto 26px;
 }
-.navegador ul { list-style: none; display: grid; gap: 14px; }
+.navegador ul { list-style: none; display: grid; gap: 14px; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); }
 .navegador a {
   display: block;
   text-decoration: none;
@@ -509,13 +509,11 @@ footer span { margin: 0 8px; }
   .capturas li { flex: 0 0 205px; }
   .que-hace { padding-top: 48px; }
   .que-hace ul { grid-template-columns: 1fr 1fr; }
-  .navegador ul { grid-template-columns: 1fr 1fr; }
   .badge img { width: 215px; }
 }
 
 @media (min-width: 1000px) {
   .que-hace ul { grid-template-columns: repeat(3, 1fr); }
-  .navegador ul { grid-template-columns: repeat(3, 1fr); }
 }
 
 @media (prefers-reduced-motion: reduce) {
