@@ -77,6 +77,34 @@
     padding: 9px 16px; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
   }
   #barra span { font-size: var(--t-cuerpo); color: var(--apagado); }
+  /* Buscador: solo entre los sitios de SeviTime (el mismo lugares.js de
+     /explorar/), así que no pregunta a ningún servicio externo. Los selectores
+     van con #barra para ganar a `#barra button` y `#barra span`. */
+  #barra .buscar-caja { position: relative; flex: 0 1 230px; min-width: 150px; }
+  #barra .buscar-caja input {
+    width: 100%; padding: 8px 12px; border-radius: var(--r-sm);
+    border: 1px solid var(--borde); background: var(--superficie-alta); color: var(--texto);
+    font-family: inherit; font-size: var(--t-cuerpo);
+  }
+  #barra .buscar-caja input::placeholder { color: var(--tenue); }
+  #barra .buscar-resultados {
+    position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; right: 0;
+    list-style: none; margin: 0; padding: 6px; max-height: 46vh; overflow-y: auto;
+    background: var(--superficie); border: 1px solid var(--borde);
+    border-radius: var(--r-sm); box-shadow: var(--sombra-2);
+  }
+  #barra .buscar-resultados:empty { display: none; }
+  #barra .buscar-resultados button {
+    display: flex; flex-direction: column; gap: 1px; width: 100%; text-align: left;
+    padding: 8px 10px; border: none; background: transparent; color: var(--texto);
+    cursor: pointer; font-family: inherit; font-size: var(--t-cuerpo);
+    white-space: normal; border-radius: var(--r-sm);
+  }
+  #barra .buscar-resultados button:hover { background: var(--superficie-alta); }
+  #barra .buscar-resultados .b-nombre { color: var(--texto); }
+  #barra .buscar-resultados .b-tipo,
+  #barra .buscar-resultados .b-estado { color: var(--tenue); font-size: var(--t-etiqueta); }
+  #barra .buscar-resultados .b-estado { display: block; padding: 8px 10px; }
   /* Este mapa es para aportar; el de Explorar, para mirar. Se cruzan. */
   .link-explorar {
     font-size: var(--t-cuerpo); font-weight: 600;
@@ -292,6 +320,10 @@
     <img src="/icono.png" alt="" width="24" height="24" />
   </a>
   <span id="ayuda">👉 Toca un sitio para avisar de un cambio, o un hueco para añadir uno nuevo</span>
+  <div class="buscar-caja">
+    <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
+    <ul id="buscar-resultados" class="buscar-resultados"></ul>
+  </div>
   <button id="btn-sitios" class="btn-sitios" aria-pressed="false">Mostrar sitios</button>
   <a href="/explorar/" class="link-explorar">Ver los sitios</a>
   <div id="auth-seccion">
@@ -847,6 +879,107 @@ window.addEventListener('DOMContentLoaded', function () {
     } finally {
       btnSitios.disabled = false;
     }
+  });
+
+  // ---- Buscador de sitios de SeviTime ----
+  // Solo busca entre los sitios que ya conocemos (el lugares.js de /explorar/).
+  // No pregunta a ningún servicio externo: si no está en SeviTime, se añade
+  // tocando el mapa. Se descarga el listado la primera vez que se busca.
+  const inputBuscar = document.getElementById('buscar-sitio');
+  const listaBuscar = document.getElementById('buscar-resultados');
+  let temporizadorBuscar = null;
+
+  function normalizar(t) {
+    return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function cerrarBusqueda() { listaBuscar.textContent = ''; }
+
+  function elegirSitio(p) {
+    cerrarBusqueda();
+    inputBuscar.value = p.nombre;
+    inputBuscar.blur();
+    if (marker) { marker.remove(); marker = null; }
+    const centro = [p.lon, p.lat];
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      map.jumpTo({ center: centro, zoom: 17 });
+    } else {
+      map.flyTo({ center: centro, zoom: 17 });
+    }
+    // Mismo recorrido que tocar su pin: se reporta ese sitio (nombre, OSM y
+    // coordenadas reales); sin sesión, se invita a entrar.
+    if (!usuarioActual) { abrirPanelLogin(); return; }
+    marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#FF6B6B' : '#d64545' })
+      .setLngLat(centro).addTo(map);
+    abrirPanelReportar(p.nombre, p.lat, p.lon, {
+      tipoLugar: p.label, osmType: p.osmType, osmId: p.osmId,
+    });
+  }
+
+  function pintarResultados(q) {
+    listaBuscar.textContent = '';
+    const consulta = normalizar(q);
+    const encontrados = (lugaresCargados || [])
+      .filter((p) => normalizar(p.nombre).includes(consulta))
+      .slice(0, 8);
+    if (!encontrados.length) {
+      const vacio = document.createElement('li');
+      vacio.className = 'b-estado';
+      vacio.textContent = 'Ningún sitio de SeviTime coincide. Añádelo tocando el mapa.';
+      listaBuscar.appendChild(vacio);
+      return;
+    }
+    for (const p of encontrados) {
+      const li = document.createElement('li');
+      const b = document.createElement('button');
+      b.type = 'button';
+      const nombre = document.createElement('span');
+      nombre.className = 'b-nombre';
+      nombre.textContent = (p.emoji ? p.emoji + ' ' : '') + p.nombre;
+      const tipo = document.createElement('span');
+      tipo.className = 'b-tipo';
+      tipo.textContent = p.label || '';
+      b.append(nombre, tipo);
+      b.addEventListener('click', () => elegirSitio(p));
+      li.appendChild(b);
+      listaBuscar.appendChild(li);
+    }
+  }
+
+  inputBuscar.addEventListener('input', () => {
+    clearTimeout(temporizadorBuscar);
+    const q = inputBuscar.value.trim();
+    if (q.length < 2) { cerrarBusqueda(); return; }
+    if (lugaresCargados) { pintarResultados(q); return; }
+    listaBuscar.textContent = '';
+    const aviso = document.createElement('li');
+    aviso.className = 'b-estado';
+    aviso.textContent = 'Cargando sitios…';
+    listaBuscar.appendChild(aviso);
+    temporizadorBuscar = setTimeout(async () => {
+      try {
+        lugaresCargados = await cargar();
+        pintarResultados(q);
+      } catch (err) {
+        listaBuscar.textContent = '';
+        const fallo = document.createElement('li');
+        fallo.className = 'b-estado';
+        fallo.textContent = 'No se pudieron cargar los sitios.';
+        listaBuscar.appendChild(fallo);
+      }
+    }, 150);
+  });
+
+  inputBuscar.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') { cerrarBusqueda(); inputBuscar.blur(); }
+    if (e.key === 'Enter') {
+      const primero = listaBuscar.querySelector('button');
+      if (primero) { e.preventDefault(); primero.click(); }
+    }
+  });
+
+  document.addEventListener('click', (e) => {
+    if (!e.target.closest('.buscar-caja')) cerrarBusqueda();
   });
 
   // ---- Chips de tipo (sugerir) y de motivo (reportar) ----
