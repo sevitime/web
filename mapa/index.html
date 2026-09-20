@@ -150,6 +150,9 @@
   .btn-ubicacion:hover { background: var(--borde); }
   .panel .error { color: var(--error); font-size: var(--t-etiqueta); margin-top: 6px; display: none; }
   .panel .ok { color: var(--ok-fg); font-size: var(--t-cuerpo); margin-top: 8px; display: none; font-weight: 600; }
+  /* Estado de enviado: se queda solo el mensaje, el botón de cerrar y el aviso
+     de XP; los campos ya no pintan nada. */
+  .panel.exito > *:not(h3):not(.ok):not(.acciones):not(.aviso-xp) { display: none; }
   .oculto { display: none !important; }
 
   @keyframes hoja-in { from { transform: translateY(100%); } to { transform: translateY(0); } }
@@ -324,12 +327,12 @@
     <span>Usar mi ubicación</span>
   </button>
 
+  <div class="error"></div>
+  <div class="ok">🎉 <b>¡Gracias!</b> Entra en revisión. Sumarás XP cuando se apruebe; lo verás en «Mis aportaciones».</div>
   <div class="acciones">
     <button class="btn-cancelar">Cancelar</button>
     <button class="btn-enviar" id="btn-enviar-sugerir">Enviar</button>
   </div>
-  <div class="error"></div>
-  <div class="ok">🎉 ¡Genial, gracias! Lo revisamos pronto.</div>
   <div class="aviso-xp" id="s-aviso-xp"></div>
 </div>
 
@@ -349,12 +352,12 @@
   <label id="r-notas-label" for="r-notas">Notas (opcional)</label>
   <textarea id="r-notas" maxlength="300"></textarea>
 
+  <div class="error"></div>
+  <div class="ok">🎉 <b>¡Gracias!</b> Entra en revisión. Sumarás XP cuando se apruebe; lo verás en «Mis aportaciones».</div>
   <div class="acciones">
     <button class="btn-cancelar">Cancelar</button>
     <button class="btn-enviar" id="btn-enviar-reportar">Enviar</button>
   </div>
-  <div class="error"></div>
-  <div class="ok">🎉 ¡Genial, gracias! Lo revisamos pronto.</div>
   <div class="aviso-xp" id="r-aviso-xp"></div>
 </div>
 
@@ -1063,9 +1066,27 @@ window.addEventListener('DOMContentLoaded', function () {
   });
 
   function limpiarMensajes(panel) {
+    panel.classList.remove('exito');
     panel.querySelector('.error').style.display = 'none';
     panel.querySelector('.ok').style.display = 'none';
+    const enviar = panel.querySelector('.acciones .btn-enviar');
+    const cancelar = panel.querySelector('.acciones .btn-cancelar');
+    if (enviar) enviar.style.display = '';
+    if (cancelar) cancelar.textContent = 'Cancelar';
     actualizarAvisosXp();
+  }
+
+  // Al enviar no se cierra de golpe: se ocultan los campos (clase .exito), se
+  // deja el mensaje con lo que pasa ahora, se retira «Enviar» y «Cancelar»
+  // pasa a «Cerrar».
+  function mostrarExito(panel) {
+    panel.classList.add('exito');
+    panel.querySelector('.ok').style.display = 'block';
+    const enviar = panel.querySelector('.acciones .btn-enviar');
+    const cancelar = panel.querySelector('.acciones .btn-cancelar');
+    if (enviar) enviar.style.display = 'none';
+    if (cancelar) cancelar.textContent = 'Cerrar';
+    panel.scrollTop = 0;
   }
 
   function abrirPanelSugerir(lngLat) {
@@ -1113,7 +1134,6 @@ window.addEventListener('DOMContentLoaded', function () {
     const tipo = sTipoChips.valorSeleccionado();
     const notas = document.getElementById('s-notas').value.trim();
     const errorEl = panelSugerir.querySelector('.error');
-    const okEl = panelSugerir.querySelector('.ok');
     errorEl.style.display = 'none';
 
     if (!nombre) {
@@ -1152,8 +1172,7 @@ window.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    okEl.style.display = 'block';
-    setTimeout(apagarModos, 1400);
+    mostrarExito(panelSugerir);
   });
 
   document.getElementById('btn-enviar-reportar').addEventListener('click', async () => {
@@ -1161,7 +1180,6 @@ window.addEventListener('DOMContentLoaded', function () {
     const nombreNuevo = document.getElementById('r-nombre-nuevo').value.trim();
     const notas = document.getElementById('r-notas').value.trim();
     const errorEl = panelReportar.querySelector('.error');
-    const okEl = panelReportar.querySelector('.ok');
     errorEl.style.display = 'none';
 
     if (motivo === 'renombrado' && !nombreNuevo) {
@@ -1203,8 +1221,7 @@ window.addEventListener('DOMContentLoaded', function () {
       return;
     }
 
-    okEl.style.display = 'block';
-    setTimeout(apagarModos, 1400);
+    mostrarExito(panelReportar);
   });
 });
 </script>
