@@ -318,7 +318,7 @@
   <a href="/" class="marca-mapa" title="Volver a sevitime.com" aria-label="Volver a sevitime.com">
     <img src="/icono.png" alt="" width="24" height="24" />
   </a>
-  <span id="ayuda">👉 Toca un sitio para avisar de un cambio, o un hueco para añadir uno nuevo</span>
+  <span id="ayuda">👉 Busca un sitio para avisar de un cambio, o toca un hueco para añadir uno nuevo</span>
   <div class="buscar-caja">
     <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
     <ul id="buscar-resultados" class="buscar-resultados"></ul>
@@ -1120,12 +1120,12 @@ window.addEventListener('DOMContentLoaded', function () {
       [e.point.x - radio, e.point.y - radio],
       [e.point.x + radio, e.point.y + radio],
     ];
-    // Los pines de SeviTime mandan sobre los POIs del basemap: si el lugar real
-    // está a la vista, se reporta ese (nombre, coordenadas y elemento OSM
-    // exactos, los mismos que usa la app).
-    const capas = ['poi'];
-    if (sitiosVisibles && map.getLayer('sitios')) capas.unshift('sitios');
-    const feats = map.queryRenderedFeatures(caja, { layers: capas });
+    // Los únicos puntos del mapa son los de SeviTime: si tocas uno, se reporta
+    // ese sitio (nombre, coordenadas y elemento OSM exactos, los mismos que usa
+    // la app); si tocas un hueco, se añade uno nuevo.
+    const capas = [];
+    if (sitiosVisibles && map.getLayer('sitios')) capas.push('sitios');
+    const feats = capas.length ? map.queryRenderedFeatures(caja, { layers: capas }) : [];
     if (marker) marker.remove();
     const curado = feats.find((f) => f.layer.id === 'sitios');
     if (curado) {
@@ -1137,27 +1137,18 @@ window.addEventListener('DOMContentLoaded', function () {
       });
       return;
     }
-    const sitio = feats.find((f) => f.properties && f.properties.name);
-    if (sitio) {
-      const [lng, lat] = sitio.geometry.coordinates;
-      marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#FF6B6B' : '#d64545' }).setLngLat([lng, lat]).addTo(map);
-      abrirPanelReportar(sitio.properties.name, lat, lng);
-    } else {
-      // Arrastrable: acertar a la puerta con un toque es difícil, y este punto
-      // acaba en el mapa de todo el mundo.
-      marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#26A69A' : '#00897B', draggable: true })
-        .setLngLat(e.lngLat).addTo(map);
-      marker.on('dragend', () => {
-        const p = marker.getLngLat();
-        panelSugerir.dataset.lat = p.lat;
-        panelSugerir.dataset.lng = p.lng;
-      });
-      abrirPanelSugerir(e.lngLat);
-    }
+    // Arrastrable: acertar a la puerta con un toque es difícil, y este punto
+    // acaba en el mapa de todo el mundo.
+    marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#26A69A' : '#00897B', draggable: true })
+      .setLngLat(e.lngLat).addTo(map);
+    marker.on('dragend', () => {
+      const p = marker.getLngLat();
+      panelSugerir.dataset.lat = p.lat;
+      panelSugerir.dataset.lng = p.lng;
+    });
+    abrirPanelSugerir(e.lngLat);
   });
 
-  map.on('mouseenter', 'poi', () => { map.getCanvas().style.cursor = 'pointer'; });
-  map.on('mouseleave', 'poi', () => { map.getCanvas().style.cursor = ''; });
   map.on('mouseenter', 'sitios', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'sitios', () => { map.getCanvas().style.cursor = ''; });
 

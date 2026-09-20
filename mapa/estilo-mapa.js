@@ -42,29 +42,6 @@ function sevitimeEstiloMapa(oscuro) {
       { id: 'buildings', type: 'fill', source: 'openmaptiles', 'source-layer': 'building', paint: { 'fill-color': c.edificio } },
       { id: 'roads', type: 'line', source: 'openmaptiles', 'source-layer': 'transportation', paint: { 'line-color': c.via, 'line-width': 1.2 } },
       { id: 'boundary', type: 'line', source: 'openmaptiles', 'source-layer': 'boundary', paint: { 'line-color': c.limite, 'line-width': 1 } },
-      {
-        id: 'poi', type: 'circle', source: 'openmaptiles', 'source-layer': 'poi',
-        paint: {
-          'circle-radius': 4,
-          'circle-color': c.poi,
-          'circle-stroke-width': 1,
-          'circle-stroke-color': c.poiBorde,
-        },
-      },
-      {
-        id: 'poi-label', type: 'symbol', source: 'openmaptiles', 'source-layer': 'poi',
-        filter: ['has', 'name'],
-        minzoom: 15,
-        layout: {
-          'text-field': ['get', 'name'],
-          'text-font': ['OpenSansRegular'],
-          'text-size': 11,
-          'text-anchor': 'top',
-          'text-offset': [0, 0.6],
-          'text-max-width': 8,
-        },
-        paint: { 'text-color': c.texto, 'text-halo-color': c.halo, 'text-halo-width': 1.4 },
-      },
     ],
   };
 }

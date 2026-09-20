@@ -53,3 +53,13 @@ la vez en `mapa/estilo-mapa.js`, `mapa/index.html` y `explorar/explorar.js`.
 La política de privacidad vive en el repo `sevitime/privacidad` y se publica en
 `https://sevitime.github.io/privacidad/`. Es un solo documento; desde el 21 de
 septiembre de 2026 cubre también la web (`sevitime.com`).
+
+## Qué dibuja el mapa
+
+El estilo (`mapa/estilo-mapa.js`) **no** dibuja los POI del basemap de OSM a
+propósito: eran cientos de puntos que además duplicaban los sitios de SeviTime
+(que ya salen de OSM). Los únicos puntos del mapa son los de SeviTime —la capa
+`sitios`, con color por categoría— más su capa de etiquetas. En el editor los
+sitios solo aparecen si se pulsa «Mostrar sitios»; para avisar de un cambio se
+busca el sitio con el buscador (que abre su reporte) y para añadir uno se toca
+un hueco del mapa.
