@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Eventos en Sevilla — SeviTime</title>
+<meta name="description" content="Qué pasa en Sevilla y su provincia: conciertos, festivales, fiestas y deporte, con su fecha, su lugar y su enlace para las entradas.">
+<link rel="canonical" href="https://sevitime.com/eventos/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sevitime.com/eventos/">
+<meta property="og:site_name" content="SeviTime">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="Eventos en Sevilla — SeviTime">
+<meta property="og:description" content="Conciertos, festivales, fiestas y deporte en Sevilla, con fecha, lugar y entradas.">
+<meta property="og:image" content="https://sevitime.com/social.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css">
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="/auth.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Eventos en Sevilla — SeviTime",
+  "url": "https://sevitime.com/eventos/",
+  "inLanguage": "es-ES",
+  "description": "Agenda de eventos de Sevilla y su provincia."
+}
+</script>
+<style>
+  .eventos { max-width: 1120px; margin: 0 auto; padding: 8px 24px 60px; }
+  .eventos-intro { padding: 24px 0 6px; }
+  .eventos-intro h1 { margin: 0; font-size: var(--t-titulo); color: var(--texto); }
+  .eventos-intro p { margin: 6px 0 0; font-size: var(--t-cuerpo); color: var(--apagado); max-width: 640px; }
+
+  .filtros { display: flex; flex-wrap: wrap; gap: 6px; padding: 14px 0 4px; }
+  .chip {
+    border: 1.5px solid var(--borde); background: var(--superficie); color: var(--apagado);
+    font-family: inherit; font-size: var(--t-etiqueta);
+    padding: 6px 11px; border-radius: var(--r-pill); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .chip:hover { border-color: var(--verde-claro); }
+  .chip.seleccionado { background: var(--verde); border-color: var(--verde); color: #fff; font-weight: 600; }
+  .filtros .sep { width: 1px; align-self: stretch; background: var(--borde); margin: 2px 6px; }
+
+  .cuenta { padding: 4px 0 8px; font-size: var(--t-etiqueta); color: var(--tenue); }
+
+  .mes { margin: 26px 0 6px; font-size: var(--t-seccion); color: var(--texto); font-weight: 700; }
+  .rejilla { display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 14px; }
+
+  .evento {
+    display: flex; flex-direction: column; border: 1px solid var(--borde);
+    border-radius: var(--r-lg); background: var(--superficie); overflow: hidden;
+  }
+  .evento-enlace { display: flex; flex-direction: column; height: 100%; color: inherit; text-decoration: none; }
+  .evento-enlace:hover { border-color: var(--verde-claro); }
+  .evento-img {
+    aspect-ratio: 16 / 9; width: 100%; object-fit: cover; display: block;
+    background: var(--superficie-alta);
+  }
+  .evento-img-vacia {
+    aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center;
+    font-size: 40px; background: linear-gradient(135deg, var(--superficie-alta), var(--superficie));
+  }
+  .evento-cuerpo { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
+  .evento-fecha { font-size: var(--t-etiqueta); font-weight: 700; color: var(--verde-claro); text-transform: uppercase; letter-spacing: .02em; }
+  .evento-nombre { margin: 0; font-size: var(--t-item); font-weight: 700; color: var(--texto); line-height: 1.25; }
+  .evento-lugar { margin: 0; font-size: var(--t-etiqueta); color: var(--apagado); }
+  .evento-desc {
+    margin: 2px 0 0; font-size: var(--t-cuerpo); color: var(--apagado);
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;
+  }
+  .evento-cat {
+    margin-top: auto; padding-top: 8px; font-size: var(--t-etiqueta); color: var(--tenue);
+    display: inline-flex; align-items: center; gap: 5px;
+  }
+  .vacio { color: var(--tenue); font-size: var(--t-cuerpo); padding: 20px 0; }
+  .nota { margin-top: 30px; font-size: var(--t-etiqueta); color: var(--tenue); }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <a href="/explorar/" class="nav-link">Explorar</a>
+      <a href="/rutas/" class="nav-link">Rutas</a>
+      <a href="/eventos/" class="nav-link" aria-current="page">Eventos</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Ver Mapa Web</span>
+      </a>
+      <div id="auth-seccion"></div>
+    </div>
+  </div>
+</nav>
+
+<main class="eventos">
+  <div class="eventos-intro">
+    <h1>Qué pasa en Sevilla</h1>
+    <p>Conciertos, festivales, fiestas y deporte, con su fecha y su lugar. Se actualiza cada día.</p>
+  </div>
+
+  <div id="chips-cuando" class="filtros" role="group" aria-label="Filtrar por cuándo"></div>
+  <div id="chips-cat" class="filtros" role="group" aria-label="Filtrar por categoría"></div>
+
+  <p id="cuenta" class="cuenta">Cargando los eventos…</p>
+  <div id="lista"></div>
+  <p class="nota">Los datos vienen de las fuentes públicas que usa la app de SeviTime (Ayuntamiento, prensa y entradas). Los cambios de fecha o cancelaciones los manda cada fuente.</p>
+</main>
+
+<script defer src="/eventos/eventos.js"></script>
+</body>
+</html>
