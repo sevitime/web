@@ -69,15 +69,38 @@ function sevitimeEstiloMapa(oscuro) {
   };
 }
 
+// Registra el protocolo `pmtiles` de MapLibre y anota si alguna petición del
+// archivo de teselas falla. Es la señal fiable: MapLibre no siempre emite un
+// evento de error para el basemap, pero el protocolo sí ve la promesa rota.
+// `vigilarTeselas` es quien pinta el aviso; aquí solo se enciende la bandera.
+let _falloTeselas = false;
+let _alFallarTeselas = null;
+
+function usarProtocoloTeselas() {
+  const protocol = new pmtiles.Protocol();
+  const tileOriginal = protocol.tile.bind(protocol);
+  maplibregl.addProtocol('pmtiles', (params, abortController) => {
+    return Promise.resolve(tileOriginal(params, abortController)).catch((e) => {
+      // MapLibre cancela peticiones al mover o encuadrar el mapa; eso no es un
+      // fallo. Solo cuenta si el aborto no lo pidió el propio MapLibre.
+      const abortado =
+        (abortController && abortController.signal && abortController.signal.aborted) ||
+        (e && (e.name === 'AbortError' ||
+          (e.name === 'DOMException' && /abort/i.test(e.message || ''))));
+      if (!abortado) {
+        _falloTeselas = true;
+        if (_alFallarTeselas) _alFallarTeselas();
+      }
+      throw e;
+    });
+  });
+}
+
 // Aviso para cuando el mapa base no carga. Las teselas viven en Cloudflare y,
 // en España, durante los partidos de LaLiga los ISPs bloquean rangos de IPs de
 // Cloudflare por orden judicial: el .pmtiles no llega y el mapa se queda en
 // blanco, aunque los pines y las listas sí funcionan. En vez de dejar que el
 // usuario piense que la web está rota, se lo decimos.
-//
-// La web se apoya en `map.on('error')` para la fuente del basemap y, por si el
-// error no llegara etiquetado, en un temporizador: si a los 10 s la fuente
-// sigue sin cargar, se muestra el aviso.
 function vigilarTeselas(map) {
   const aviso = document.createElement('div');
   aviso.className = 'aviso-teselas';
@@ -107,6 +130,13 @@ function vigilarTeselas(map) {
     aviso.hidden = false;
   };
 
+  // Si la petición del archivo falló antes de llegar aquí, se muestra ya.
+  _alFallarTeselas = mostrar;
+  if (_falloTeselas) mostrar();
+
+  // Y por si el fallo llega después con un evento de MapLibre. Sin
+  // temporizadores: no hay forma fiable de distinguir «aún cargando» de
+  // «no va a llegar» sin marcar el mapa como roto cuando solo va lento.
   map.on('error', (e) => {
     const msg = (e && e.error && e.error.message) || '';
     if ((e && e.sourceId === 'openmaptiles') ||
@@ -114,10 +144,4 @@ function vigilarTeselas(map) {
       mostrar();
     }
   });
-
-  setTimeout(() => {
-    try {
-      if (!map.isSourceLoaded || !map.isSourceLoaded('openmaptiles')) mostrar();
-    } catch (e) { /* mapa ya destruido */ }
-  }, 10000);
 }

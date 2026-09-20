@@ -42,8 +42,7 @@
   const paradasUl = $('paradas');
 
   // --- Mapa ---
-  const protocol = new pmtiles.Protocol();
-  maplibregl.addProtocol('pmtiles', protocol.tile);
+  usarProtocoloTeselas();
   const prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)');
   const map = new maplibregl.Map({
     container: 'map',

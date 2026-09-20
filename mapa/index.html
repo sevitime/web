@@ -690,8 +690,7 @@ window.addEventListener('DOMContentLoaded', function () {
   document.getElementById('a-cerrar').addEventListener('click', cerrarPanelAportaciones);
 
   // ---- Mapa ----
-  const protocol = new pmtiles.Protocol();
-  maplibregl.addProtocol('pmtiles', protocol.tile);
+  usarProtocoloTeselas();
 
   // El basemap también sigue al tema: si no, la web entera se oscurece y el
   // mapa se queda blanco. El estilo lo comparte /explorar/ (mapa/estilo-mapa.js)
