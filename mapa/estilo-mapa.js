@@ -68,3 +68,56 @@ function sevitimeEstiloMapa(oscuro) {
     ],
   };
 }
+
+// Aviso para cuando el mapa base no carga. Las teselas viven en Cloudflare y,
+// en España, durante los partidos de LaLiga los ISPs bloquean rangos de IPs de
+// Cloudflare por orden judicial: el .pmtiles no llega y el mapa se queda en
+// blanco, aunque los pines y las listas sí funcionan. En vez de dejar que el
+// usuario piense que la web está rota, se lo decimos.
+//
+// La web se apoya en `map.on('error')` para la fuente del basemap y, por si el
+// error no llegara etiquetado, en un temporizador: si a los 10 s la fuente
+// sigue sin cargar, se muestra el aviso.
+function vigilarTeselas(map) {
+  const aviso = document.createElement('div');
+  aviso.className = 'aviso-teselas';
+  aviso.setAttribute('role', 'status');
+  aviso.hidden = true;
+
+  const texto = document.createElement('p');
+  texto.textContent =
+    'El mapa base no ha cargado. Puede ser el bloqueo temporal de IPs de ' +
+    'Cloudflare durante los partidos de LaLiga. Los sitios y las rutas siguen ' +
+    'funcionando.';
+
+  const cerrar = document.createElement('button');
+  cerrar.type = 'button';
+  cerrar.className = 'aviso-teselas-cerrar';
+  cerrar.setAttribute('aria-label', 'Cerrar aviso');
+  cerrar.textContent = '×';
+  cerrar.addEventListener('click', () => { aviso.hidden = true; });
+
+  aviso.append(texto, cerrar);
+  document.body.appendChild(aviso);
+
+  let mostrado = false;
+  const mostrar = () => {
+    if (mostrado) return;
+    mostrado = true;
+    aviso.hidden = false;
+  };
+
+  map.on('error', (e) => {
+    const msg = (e && e.error && e.error.message) || '';
+    if ((e && e.sourceId === 'openmaptiles') ||
+        /pmtiles|provincia\.pmtiles/i.test(msg)) {
+      mostrar();
+    }
+  });
+
+  setTimeout(() => {
+    try {
+      if (!map.isSourceLoaded || !map.isSourceLoaded('openmaptiles')) mostrar();
+    } catch (e) { /* mapa ya destruido */ }
+  }, 10000);
+}

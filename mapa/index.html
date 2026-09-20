@@ -707,6 +707,7 @@ window.addEventListener('DOMContentLoaded', function () {
     maxBounds: SEVITIME_PROVINCIA_BOUNDS,
   });
   map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+  vigilarTeselas(map);
 
   // Por si 100dvh cambia sin que el mapa se entere (rotar el móvil, la barra
   // del navegador que aparece/desaparece al hacer scroll): MapLibre calcula su

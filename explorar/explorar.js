@@ -55,6 +55,7 @@
     attributionControl: true,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  vigilarTeselas(map);
 
   // La web muestra toda la provincia. Solo encuadramos una vez al cargar los
   // datos para que los lugares no queden fuera de la vista inicial.

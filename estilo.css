@@ -587,3 +587,38 @@ footer span { margin: 0 8px; }
   text-align: center;
 }
 .noscript-aviso a { color: var(--verde-claro); }
+
+/* Aviso de que el mapa base no ha cargado (bloqueo de IPs de Cloudflare por
+   LaLiga en España). No bloquea el mapa: se puede cerrar y seguir usándolo. */
+.aviso-teselas {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 50;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  max-width: min(92vw, 460px);
+  padding: 10px 12px 10px 14px;
+  background: var(--superficie);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-sm);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+  font-size: var(--t-cuerpo);
+  line-height: 1.35;
+}
+.aviso-teselas[hidden] { display: none; }
+.aviso-teselas p { margin: 0; }
+.aviso-teselas-cerrar {
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  color: var(--apagado);
+  font-size: 18px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+.aviso-teselas-cerrar:hover { color: var(--texto); }
