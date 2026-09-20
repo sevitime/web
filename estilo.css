@@ -122,7 +122,11 @@ img { max-width: 100%; display: block; }
 }
 .badge img { width: 200px; height: auto; }
 .badge:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
-.badge:hover { transform: translateY(-2px); filter: brightness(1.06); }
+/* El realce solo donde hay puntero real: en táctil :hover se queda pegado
+   tras el toque. */
+@media (hover: hover) and (pointer: fine) {
+  .badge:hover { transform: translateY(-2px); filter: brightness(1.06); }
+}
 
 .hero-acciones {
   display: flex;
@@ -193,7 +197,7 @@ img { max-width: 100%; display: block; }
   /* 30ch partía el antetítulo en tres líneas con mal ragged en escritorio;
      con 46ch respira y sigue corto para móvil. */
   max-width: 46ch;
-  text-wrap: balance;
+  text-wrap: pretty;
   margin: 0 auto 26px;
 }
 
@@ -237,7 +241,11 @@ img { max-width: 100%; display: block; }
   object-fit: cover;
   object-position: center top;
   border-radius: var(--r-lg);
-  border: 1px solid var(--borde);
+  /* Outline neutro puro, no el neutro tintado del tema: un borde de color se
+     mezcla con la superficie y ensucia el canto de la imagen. Con -1px queda
+     dentro y no suma tamaño. */
+  outline: 1px solid oklch(1 0 0 / 0.1);
+  outline-offset: -1px;
   box-shadow: 0 18px 40px rgba(0,0,0,0.55);
 }
 .capturas figcaption {
@@ -245,6 +253,10 @@ img { max-width: 100%; display: block; }
   text-align: center;
   font-size: var(--t-etiqueta);
   color: var(--tenue);
+}
+
+@media (prefers-color-scheme: light) {
+  .capturas img { outline-color: oklch(0 0 0 / 0.1); }
 }
 
 /* ---------- qué hace ---------- */
@@ -260,6 +272,7 @@ img { max-width: 100%; display: block; }
   color: var(--texto);
   letter-spacing: -0.4px;
   text-align: center;
+  text-wrap: balance;
   margin-bottom: 26px;
 }
 .que-hace ul { list-style: none; display: grid; gap: 14px; }
@@ -294,8 +307,10 @@ img { max-width: 100%; display: block; }
   padding: 22px;
   transition: border-color 0.15s ease, transform 0.12s ease;
 }
-.navegador a:hover { border-color: var(--verde-claro); transform: translateY(-2px); }
 .navegador a:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+@media (hover: hover) and (pointer: fine) {
+  .navegador a:hover { border-color: var(--verde-claro); transform: translateY(-2px); }
+}
 .navegador .ico {
   width: 42px; height: 42px; margin-bottom: 14px;
   border-radius: var(--r-sm);
@@ -434,6 +449,7 @@ footer span { margin: 0 8px; }
 }
 .auth-xp {
   font-size: var(--t-etiqueta); font-weight: 700;
+  font-variant-numeric: tabular-nums;
   color: var(--dorado-texto);
   background: rgba(252, 196, 64, 0.14);
   border: 1px solid rgba(252, 196, 64, 0.38);
@@ -469,7 +485,7 @@ footer span { margin: 0 8px; }
   border: 1px solid rgba(38, 166, 154, 0.35);
   border-radius: var(--r-pill);
   text-decoration: none;
-  transition: all 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
 }
 .nav-btn-mapa:hover {
   background: var(--verde-solido);
