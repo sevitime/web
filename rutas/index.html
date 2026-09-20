@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rutas de Sevilla — SeviTime</title>
+<meta name="description" content="Itinerarios a pie por Sevilla y su provincia: monumentos, tapas, el río y miradores, con sus paradas y las notas de quien los ha hecho.">
+<link rel="canonical" href="https://sevitime.com/rutas/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sevitime.com/rutas/">
+<meta property="og:site_name" content="SeviTime">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="Rutas de Sevilla — SeviTime">
+<meta property="og:description" content="Itinerarios a pie por Sevilla, con sus paradas y las notas de quien los ha hecho.">
+<meta property="og:image" content="https://sevitime.com/social.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css">
+<link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet" />
+<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
+<script src="/mapa/estilo-mapa.js"></script>
+<script src="/lugares.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="/auth.js"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Rutas de Sevilla — SeviTime",
+  "url": "https://sevitime.com/rutas/",
+  "inLanguage": "es-ES",
+  "description": "Itinerarios a pie por Sevilla y su provincia, con sus paradas."
+}
+</script>
+<style>
+  /* Rutas: la lista a la izquierda y el mapa a la derecha, como Explorar.
+     Aquí el mapa no enseña todos los sitios, sino el itinerario elegido. */
+  html, body { height: 100%; }
+  body { display: flex; flex-direction: column; }
+  .top-nav { flex: 0 0 auto; }
+  .rutas { flex: 1; min-height: 0; display: flex; }
+
+  .panel-lateral {
+    flex: 0 0 420px; width: 420px;
+    display: flex; flex-direction: column; min-height: 0;
+    border-right: 1px solid var(--borde);
+    background: var(--fondo);
+  }
+  .intro { padding: 16px 16px 4px; }
+  .intro h1 { margin: 0; font-size: var(--t-titulo); color: var(--texto); }
+  .intro p { margin: 6px 0 0; font-size: var(--t-cuerpo); color: var(--apagado); }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; padding: 12px 16px 6px; }
+  .chip {
+    border: 1.5px solid var(--borde); background: var(--superficie); color: var(--apagado);
+    font-family: inherit; font-size: var(--t-etiqueta);
+    padding: 6px 11px; border-radius: var(--r-pill); cursor: pointer;
+    display: inline-flex; align-items: center; gap: 5px;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .chip:hover { border-color: var(--verde-claro); }
+  .chip.seleccionado { background: var(--verde); border-color: var(--verde); color: #fff; font-weight: 600; }
+
+  .resumen { padding: 0 16px 8px; font-size: var(--t-etiqueta); color: var(--tenue); }
+
+  .lista { list-style: none; margin: 0; flex: 1; min-height: 0; overflow-y: auto; padding: 0 8px 16px; }
+  .ruta {
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    margin: 8px; background: var(--superficie); overflow: hidden;
+  }
+  .ruta-cab {
+    display: flex; gap: 12px; align-items: flex-start; width: 100%; text-align: left;
+    padding: 12px; border: none; background: transparent; cursor: pointer; font-family: inherit;
+    color: var(--texto);
+  }
+  .ruta-cab:hover { background: var(--superficie-alta); }
+  .ruta-cab:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: -2px; }
+  .ruta.activa { border-color: var(--verde); box-shadow: 0 0 0 1px var(--verde); }
+  .ruta-ico {
+    width: 40px; height: 40px; flex: 0 0 auto; border-radius: var(--r-sm);
+    display: flex; align-items: center; justify-content: center; font-size: 20px;
+    background: var(--superficie-alta);
+  }
+  .ruta-texto { min-width: 0; flex: 1; }
+  .ruta-nombre { display: block; font-size: var(--t-item); font-weight: 700; color: var(--texto); }
+  .ruta-desc { display: block; font-size: var(--t-cuerpo); color: var(--apagado); margin-top: 2px; }
+  .ruta-meta {
+    display: flex; flex-wrap: wrap; gap: 4px 10px; margin-top: 8px;
+    font-size: var(--t-etiqueta); color: var(--tenue);
+  }
+  .ruta-meta b { color: var(--verde-claro); font-weight: 700; }
+  .sello {
+    display: inline-block; padding: 1px 8px; border-radius: var(--r-pill);
+    background: var(--gris-bg); color: var(--gris-fg); font-size: var(--t-etiqueta); font-weight: 600;
+  }
+  .sello.rec { background: var(--ok-bg); color: var(--ok-fg); }
+
+  .paradas { border-top: 1px solid var(--borde); }
+  .parada {
+    display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left;
+    padding: 10px 12px; border: none; border-bottom: 1px solid var(--borde);
+    background: transparent; cursor: pointer; font-family: inherit; color: var(--texto);
+  }
+  .parada:last-child { border-bottom: none; }
+  .parada:hover { background: var(--superficie-alta); }
+  .parada:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: -2px; }
+  .parada-num {
+    width: 22px; height: 22px; flex: 0 0 auto; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: var(--t-etiqueta); font-weight: 700; color: #fff;
+  }
+  .parada-texto { min-width: 0; }
+  .parada-nombre { display: block; font-size: var(--t-cuerpo); font-weight: 600; }
+  .parada-meta { display: block; font-size: var(--t-etiqueta); color: var(--tenue); margin-top: 1px; }
+  .parada-nota { display: block; font-size: var(--t-cuerpo); color: var(--apagado); margin-top: 4px; font-style: italic; }
+
+  .mapa-caja { flex: 1; min-width: 0; position: relative; }
+  #map { position: absolute; inset: 0; }
+  .mapa-resumen {
+    position: absolute; z-index: 2; top: 14px; left: 14px;
+    max-width: calc(100% - 74px); padding: 8px 12px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--superficie) 92%, transparent);
+    color: var(--texto); box-shadow: 0 3px 14px rgba(15, 28, 26, .14);
+    font-size: var(--t-etiqueta); font-weight: 600; pointer-events: none;
+    backdrop-filter: blur(8px);
+  }
+
+  .maplibregl-popup-content { background: var(--superficie) !important; border: 1px solid var(--borde); border-radius: var(--r-sm); }
+  .maplibregl-popup-tip { border-top-color: var(--superficie) !important; border-bottom-color: var(--superficie) !important; }
+  .popup { font-family: 'Inter', sans-serif; }
+  .popup .nombre { font-size: var(--t-item); font-weight: 700; color: var(--texto); }
+  .popup .meta { font-size: var(--t-etiqueta); color: var(--apagado); margin-top: 2px; }
+  .popup a { display: inline-block; margin-top: 8px; font-size: var(--t-etiqueta); color: var(--verde-claro); text-decoration: none; }
+  .popup a:hover { text-decoration: underline; }
+  .popup .nota { font-size: var(--t-cuerpo); color: var(--texto); margin-top: 6px; font-style: italic; }
+
+  @media (max-width: 899px) {
+    body { display: block; }
+    .rutas { flex-direction: column; height: auto; }
+    .mapa-caja { order: -1; flex: none; height: 48dvh; position: sticky; top: 0; z-index: 3; }
+    .panel-lateral { flex: none; width: auto; border-right: none; border-top: 1px solid var(--borde); }
+    .lista { overflow: visible; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <a href="/explorar/" class="nav-link">Explorar</a>
+      <a href="/rutas/" class="nav-link" aria-current="page">Rutas</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Ver Mapa Web</span>
+      </a>
+      <div id="auth-seccion"></div>
+    </div>
+  </div>
+</nav>
+
+<main class="rutas">
+  <aside class="panel-lateral">
+    <div class="intro">
+      <h1>Rutas de Sevilla</h1>
+      <p>Itinerarios a pie con sus paradas. Toca uno para verlo en el mapa.</p>
+    </div>
+    <div id="chips" class="chips" role="group" aria-label="Filtrar rutas"></div>
+    <p id="resumen" class="resumen">Cargando las rutas…</p>
+    <ul id="lista" class="lista"></ul>
+  </aside>
+  <div class="mapa-caja">
+    <div id="mapa-resumen" class="mapa-resumen" aria-live="polite">Elige una ruta</div>
+    <div id="map"></div>
+  </div>
+</main>
+
+<script defer src="/rutas/rutas.js"></script>
+</body>
+</html>
