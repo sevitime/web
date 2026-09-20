@@ -135,25 +135,6 @@ img { max-width: 100%; display: block; }
   flex-wrap: wrap;
   gap: 12px;
 }
-.hero-mapa {
-  min-height: 44px;
-  display: inline-flex;
-  align-items: center;
-  padding: 0 18px;
-  border: 1px solid var(--verde-claro);
-  border-radius: var(--r-sm);
-  color: var(--verde-claro) !important;
-  font-size: var(--t-cuerpo);
-  font-weight: 700;
-  text-decoration: none !important;
-  transition: background-color 0.18s ease, color 0.18s ease;
-}
-.hero-mapa:hover,
-.hero-mapa:focus-visible {
-  background: var(--verde-claro);
-  color: var(--fondo) !important;
-}
-.hero-mapa:focus-visible { outline: 3px solid var(--dorado); outline-offset: 2px; }
 
 /* Enlaces sueltos dentro de una sección (el «Ir al inicio» de la 404, por
    ejemplo). Antes la 404 llevaba un #00BFA5 a mano que ni era el verde de
