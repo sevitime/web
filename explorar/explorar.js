@@ -50,6 +50,8 @@
     style: sevitimeEstiloMapa(prefiereOscuro.matches),
     center: [SEVILLA.lon, SEVILLA.lat],
     zoom: 13,
+    minZoom: 8,
+    maxBounds: SEVITIME_PROVINCIA_BOUNDS,
     attributionControl: true,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
@@ -285,15 +287,36 @@
     setAviso('Ubicación puesta a mano.', 'Quitar', quitarUbicacion);
   }
 
-  cargar()
-    .then((lugares) => {
-      estado.todos = lugares;
-      aplicar();
-      if (!guardada) usarUbicacion();
-    })
-    .catch(() => {
-      resumen.textContent = 'No se pudieron cargar los sitios. Recarga en un momento.';
-    });
+  function cargarSitios() {
+    resumen.textContent = 'Cargando los sitios de Sevilla…';
+    mapaResumen.textContent = 'Cargando lugares…';
+    lista.textContent = '';
+
+    cargar()
+      .then((lugares) => {
+        estado.todos = lugares;
+        aplicar();
+        if (!guardada) usarUbicacion();
+      })
+      .catch(() => {
+        // Antes el panel lateral avisaba, pero el mapa seguía diciendo
+        // «Cargando». Ambos estados deben explicar el fallo y permitir salir
+        // de él sin obligar a recargar toda la página.
+        resumen.textContent = '';
+        const texto = document.createTextNode('No se pudieron cargar los sitios. ');
+        const reintentar = document.createElement('a');
+        reintentar.href = '#';
+        reintentar.textContent = 'Reintentar';
+        reintentar.addEventListener('click', (event) => {
+          event.preventDefault();
+          cargarSitios();
+        });
+        resumen.append(texto, reintentar);
+        mapaResumen.textContent = 'No se pudieron cargar los lugares';
+      });
+  }
+
+  cargarSitios();
 
   function aplicar() {
     const nq = normalizar(estado.texto);

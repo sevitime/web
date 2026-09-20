@@ -58,6 +58,8 @@
     style: sevitimeEstiloMapa(prefiereOscuro.matches),
     center: [SEVILLA.lon, SEVILLA.lat],
     zoom: 13,
+    minZoom: 8,
+    maxBounds: SEVITIME_PROVINCIA_BOUNDS,
     attributionControl: true,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');

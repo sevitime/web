@@ -645,6 +645,8 @@
     style: sevitimeEstiloMapa(prefiereOscuro.matches),
     center: [-5.9945, 37.3891],
     zoom: 13,
+    minZoom: 8,
+    maxBounds: SEVITIME_PROVINCIA_BOUNDS,
   });
   map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
 
