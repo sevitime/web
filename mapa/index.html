@@ -53,6 +53,9 @@
   html, body { height: 100dvh; margin: 0; font-family: 'Inter', -apple-system, "Segoe UI", Roboto, Arial, sans-serif; }
   body { background: var(--fondo); color: var(--texto); }
   #map { position: absolute; inset: 0; }
+  /* El foco vuelve aquí al cerrar un panel (tabindex="-1"): no entra en el
+     orden de tabulación, pero sí puede recibir foco por código. */
+  #map:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: -3px; }
 
   /* Fondo oscurecido detrás de la hoja inferior (solo móvil, ver abajo).
      Tocarlo cierra el panel, como en cualquier bottom sheet. */
@@ -70,7 +73,7 @@
     padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 90vw;
   }
   #barra button {
-    border: none; background: var(--verde); color: #fff; font-size: var(--t-cuerpo);
+    border: none; background: var(--verde-solido); color: #fff; font-size: var(--t-cuerpo);
     padding: 9px 16px; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
   }
   #barra span { font-size: var(--t-cuerpo); color: var(--apagado); }
@@ -114,7 +117,7 @@
   }
   .panel h3 { margin: 0 0 4px; font-size: var(--t-item); }
   .panel .subtitulo { font-size: var(--t-etiqueta); color: var(--tenue); margin-bottom: 8px; }
-  .panel label { display: block; font-size: var(--t-etiqueta); color: var(--apagado); margin: 10px 0 4px; }
+  .panel label, .panel .campo-label { display: block; font-size: var(--t-etiqueta); color: var(--apagado); margin: 10px 0 4px; }
   .panel input, .panel select, .panel textarea {
     width: 100%; padding: 8px; border: 1px solid var(--borde); border-radius: var(--r-sm); font-size: var(--t-cuerpo);
     background: var(--superficie-alta); color: var(--texto); font-family: inherit;
@@ -125,7 +128,7 @@
   .panel .acciones button {
     flex: 1; padding: 9px; border: none; border-radius: var(--r-sm); font-size: var(--t-cuerpo); cursor: pointer;
   }
-  .btn-enviar { background: var(--verde); color: #fff; }
+  .btn-enviar { background: var(--verde-solido); color: #fff; }
   .btn-cancelar { background: var(--superficie-alta); color: var(--texto); border: 1px solid var(--borde); }
   .btn-cerrar { background: var(--superficie-alta); color: var(--texto); border: 1px solid var(--borde); }
   .panel .error { color: var(--error); font-size: var(--t-etiqueta); margin-top: 6px; display: none; }
@@ -145,7 +148,7 @@
     display: inline-flex; align-items: center; gap: 5px; transition: background .15s, border-color .15s, color .15s;
   }
   .chip:hover { border-color: var(--verde-claro); }
-  .chip.seleccionado { background: var(--verde); border-color: var(--verde); color: #fff; font-weight: 600; }
+  .chip.seleccionado { background: var(--verde-solido); border-color: var(--verde-solido); color: #fff; font-weight: 600; }
 
   /* Auth & XP */
   #barra #auth-seccion {
@@ -192,7 +195,7 @@
     background: var(--superficie-alta); color: var(--texto); font-weight: 600;
   }
   #barra button.btn-sitios:hover { background: var(--borde); }
-  #barra button.btn-sitios[aria-pressed="true"] { background: var(--verde); color: #fff; }
+  #barra button.btn-sitios[aria-pressed="true"] { background: var(--verde-solido); color: #fff; }
   #barra button.btn-sitios:disabled { opacity: .6; cursor: default; }
 
   .ap-xp-caja {
@@ -268,7 +271,7 @@
   <p class="noscript-aviso">Este mapa necesita JavaScript para mostrarse. Puedes <a href="/">descargar la app de SeviTime</a> o <a href="/explorar/">ver los sitios</a>.</p>
 </noscript>
 
-<div id="map"></div>
+<div id="map" tabindex="-1"></div>
 <div id="scrim"></div>
 
 <div id="barra">
@@ -294,15 +297,15 @@
 </div>
 
 <!-- Sugerir sitio nuevo -->
-<div id="panel-sugerir" class="panel">
-  <h3>✨ Nuevo sitio</h3>
-  <label>Cómo se llama</label>
+<div id="panel-sugerir" class="panel" role="dialog" aria-labelledby="s-titulo">
+  <h3 id="s-titulo">✨ Nuevo sitio</h3>
+  <label for="s-nombre">Cómo se llama</label>
   <input id="s-nombre" type="text" maxlength="120" />
 
-  <label>Qué es</label>
-  <div id="s-tipo-chips" class="chips"></div>
+  <span id="s-tipo-label" class="campo-label">Qué es</span>
+  <div id="s-tipo-chips" class="chips" role="group" aria-labelledby="s-tipo-label"></div>
 
-  <label>Notas (opcional)</label>
+  <label for="s-notas">Notas (opcional)</label>
   <textarea id="s-notas" maxlength="300"></textarea>
 
   <div class="acciones">
@@ -315,19 +318,19 @@
 </div>
 
 <!-- Reportar problema en sitio existente -->
-<div id="panel-reportar" class="panel">
+<div id="panel-reportar" class="panel" role="dialog" aria-labelledby="r-titulo">
   <h3 id="r-titulo">Reportar sitio</h3>
   <div class="subtitulo" id="r-subtitulo"></div>
 
-  <label>Qué pasa</label>
-  <div id="r-motivo-chips" class="chips"></div>
+  <span id="r-motivo-label" class="campo-label">Qué pasa</span>
+  <div id="r-motivo-chips" class="chips" role="group" aria-labelledby="r-motivo-label"></div>
 
   <div id="r-nombre-nuevo-caja" class="oculto">
-    <label>Nuevo nombre</label>
+    <label for="r-nombre-nuevo">Nuevo nombre</label>
     <input id="r-nombre-nuevo" type="text" maxlength="120" />
   </div>
 
-  <label id="r-notas-label">Notas (opcional)</label>
+  <label id="r-notas-label" for="r-notas">Notas (opcional)</label>
   <textarea id="r-notas" maxlength="300"></textarea>
 
   <div class="acciones">
@@ -340,8 +343,8 @@
 </div>
 
 <!-- Mis aportaciones -->
-<div id="panel-aportaciones" class="panel ancho">
-  <h3>Mis aportaciones</h3>
+<div id="panel-aportaciones" class="panel ancho" role="dialog" aria-labelledby="a-titulo">
+  <h3 id="a-titulo">Mis aportaciones</h3>
   <div class="subtitulo" id="a-subtitulo">Cargando…</div>
   <div id="a-xp"></div>
   <div id="a-lista" class="ap-lista"></div>
@@ -351,8 +354,8 @@
 </div>
 
 <!-- Entrar para aportar: la web pide cuenta, como la app. -->
-<div id="panel-login" class="panel">
-  <h3>Entra para aportar</h3>
+<div id="panel-login" class="panel" role="dialog" aria-labelledby="l-titulo">
+  <h3 id="l-titulo">Entra para aportar</h3>
   <div class="subtitulo">Para sugerir un sitio o avisar de un cambio hay que entrar con Google. Así cada aportación va con nombre y se puede moderar mejor.</div>
   <div class="acciones">
     <button class="btn-cancelar">Cancelar</button>
@@ -667,12 +670,14 @@ window.addEventListener('DOMContentLoaded', function () {
     apagarModos();
     panelAportaciones.classList.add('visible');
     actualizarScrim();
+    recordarYEnfocar(panelAportaciones);
     cargarMisAportaciones();
   }
 
   function cerrarPanelAportaciones() {
     panelAportaciones.classList.remove('visible');
     actualizarScrim();
+    devolverFoco();
   }
 
   btnMisAportaciones.addEventListener('click', () => {
@@ -894,6 +899,32 @@ window.addEventListener('DOMContentLoaded', function () {
   }
   scrim.addEventListener('click', apagarModos);
 
+  // Foco de los paneles. Al abrir uno se lleva el foco a su primer campo y al
+  // cerrarlo vuelve a donde estaba —o al mapa, que es de donde salen casi
+  // siempre—. Escape también cierra, como cualquier diálogo. No hay trampa de
+  // foco: son hojas, no ventanas modales que bloqueen el resto.
+  let focoAntesDelPanel = null;
+  function recordarYEnfocar(panel) {
+    focoAntesDelPanel = document.activeElement;
+    const primero = panel.querySelector('input, textarea, button');
+    if (primero) primero.focus();
+  }
+  function devolverFoco() {
+    const destino = focoAntesDelPanel;
+    focoAntesDelPanel = null;
+    if (destino && destino !== document.body && document.contains(destino)) {
+      destino.focus();
+      return;
+    }
+    const mapa = document.getElementById('map');
+    if (mapa) mapa.focus();
+  }
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && document.querySelector('.panel.visible')) {
+      apagarModos();
+    }
+  });
+
   // Cierra los cuatro paneles sin tocar el marcador del mapa: antes de abrir
   // uno hay que pasar siempre por aquí, o dos pueden quedar visibles a la
   // vez (p. ej. abrir "Nuevo sitio" con "Mis aportaciones" ya abierta). Con
@@ -906,6 +937,7 @@ window.addEventListener('DOMContentLoaded', function () {
     panelAportaciones.classList.remove('visible');
     panelLogin.classList.remove('visible');
     actualizarScrim();
+    devolverFoco();
   }
 
   function apagarModos() {
@@ -920,6 +952,7 @@ window.addEventListener('DOMContentLoaded', function () {
     apagarModos();
     panelLogin.classList.add('visible');
     actualizarScrim();
+    recordarYEnfocar(panelLogin);
   }
 
   map.on('click', (e) => {
@@ -978,6 +1011,7 @@ window.addEventListener('DOMContentLoaded', function () {
     limpiarMensajes(panelSugerir);
     panelSugerir.classList.add('visible');
     actualizarScrim();
+    recordarYEnfocar(panelSugerir);
   }
 
   function abrirPanelReportar(nombre, lat, lng, extra) {
@@ -1000,6 +1034,7 @@ window.addEventListener('DOMContentLoaded', function () {
     limpiarMensajes(panelReportar);
     panelReportar.classList.add('visible');
     actualizarScrim();
+    recordarYEnfocar(panelReportar);
   }
 
   document.querySelectorAll('.btn-cancelar').forEach((b) => b.addEventListener('click', apagarModos));

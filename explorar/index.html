@@ -65,7 +65,7 @@
     transition: background .15s, border-color .15s, color .15s;
   }
   .chip:hover { border-color: var(--verde-claro); }
-  .chip.seleccionado { background: var(--verde); border-color: var(--verde); color: #fff; font-weight: 600; }
+  .chip.seleccionado { background: var(--verde-solido); border-color: var(--verde-solido); color: #fff; font-weight: 600; }
 
   .resumen { padding: 0 16px 8px; font-size: var(--t-etiqueta); color: var(--tenue); }
 
@@ -148,6 +148,8 @@
 </head>
 <body>
 
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
 <nav class="top-nav">
   <div class="top-nav-inner">
     <a href="/" class="nav-marca">
@@ -175,7 +177,7 @@
   <p class="noscript-aviso">Esta página necesita JavaScript para mostrar el mapa y la lista de sitios. Puedes <a href="/">descargar la app de SeviTime</a> o <a href="/mapa/">abrir el mapa web</a>.</p>
 </noscript>
 
-<main class="explorar">
+<main class="explorar" id="contenido" tabindex="-1">
   <h1 class="solo-lectores">Explorar los sitios de Sevilla y su provincia</h1>
   <aside class="panel-lateral">
     <form class="buscador" role="search" onsubmit="return false;">

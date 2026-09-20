@@ -25,6 +25,11 @@
   --verde: #00897B;
   --verde-claro: #26A69A;
   --verde-profundo: #004C45;
+  /* Relleno de botones y chips con texto blanco. El #00897B de marca se queda
+     en 4,32:1 con el blanco, por debajo del 4,5:1 de AA para texto normal; este
+     tono da 5,3:1 y casi no se distingue. El acento y los bordes siguen con
+     --verde. */
+  --verde-solido: #00796B;
   --dorado: #FCC440;
   --dorado-texto: #FCC440;
   --fondo: #0F1C1A;
@@ -467,7 +472,7 @@ footer span { margin: 0 8px; }
   transition: all 0.2s ease;
 }
 .nav-btn-mapa:hover {
-  background: var(--verde);
+  background: var(--verde-solido);
   border-color: var(--verde-claro);
   color: #fff;
   box-shadow: 0 4px 14px rgba(0, 137, 123, 0.4);
@@ -531,8 +536,29 @@ footer span { margin: 0 8px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  * { scroll-behavior: auto !important; transition-duration: 0.01ms !important; }
+  * {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
 }
+
+/* Enlace «saltar al contenido»: invisible hasta que recibe foco con el
+   teclado, y entonces aparece arriba a la izquierda. */
+.saltar {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 100;
+  padding: 10px 16px;
+  background: var(--verde-solido);
+  color: #fff;
+  border-radius: var(--r-sm);
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.saltar:focus { top: 8px; }
 
 /* Solo para lectores de pantalla y buscadores. Se usa en el <h1> de las
    páginas que no enseñan un titular a la vista (/explorar/ y /mapa/), para no

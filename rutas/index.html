@@ -60,7 +60,7 @@
   .intro p { margin: 6px 0 0; font-size: var(--t-cuerpo); color: var(--apagado); }
   .btn-crear {
     display: inline-block; margin-top: 10px; padding: 8px 14px;
-    background: var(--verde); color: #fff; border-radius: var(--r-sm);
+    background: var(--verde-solido); color: #fff; border-radius: var(--r-sm);
     font-size: var(--t-cuerpo); font-weight: 600; text-decoration: none;
   }
   .btn-crear:hover { filter: brightness(1.08); }
@@ -74,7 +74,7 @@
     transition: background .15s, border-color .15s, color .15s;
   }
   .chip:hover { border-color: var(--verde-claro); }
-  .chip.seleccionado { background: var(--verde); border-color: var(--verde); color: #fff; font-weight: 600; }
+  .chip.seleccionado { background: var(--verde-solido); border-color: var(--verde-solido); color: #fff; font-weight: 600; }
 
   .resumen { padding: 0 16px 8px; font-size: var(--t-etiqueta); color: var(--tenue); }
 
@@ -161,6 +161,8 @@
 </head>
 <body>
 
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
 <noscript>
   <p class="noscript-aviso">Esta página necesita JavaScript para mostrar las rutas. Puedes <a href="/">descargar la app de SeviTime</a>.</p>
 </noscript>
@@ -188,7 +190,7 @@
   </div>
 </nav>
 
-<main class="rutas">
+<main class="rutas" id="contenido" tabindex="-1">
   <aside class="panel-lateral">
     <div class="intro">
       <h1>Rutas de Sevilla</h1>

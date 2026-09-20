@@ -62,7 +62,7 @@
     display: inline-flex; align-items: center; gap: 5px;
   }
   .chip:hover { border-color: var(--verde-claro); }
-  .chip.seleccionado { background: var(--verde); border-color: var(--verde); color: #fff; font-weight: 600; }
+  .chip.seleccionado { background: var(--verde-solido); border-color: var(--verde-solido); color: #fff; font-weight: 600; }
 
   .buscador-caja { position: relative; }
   .resultados {
@@ -116,7 +116,7 @@
   .enviar-caja { margin-top: 16px; }
   .btn-principal {
     width: 100%; padding: 12px; border: none; border-radius: var(--r-sm);
-    background: var(--verde); color: #fff; font-family: inherit; font-size: var(--t-item); font-weight: 700; cursor: pointer;
+    background: var(--verde-solido); color: #fff; font-family: inherit; font-size: var(--t-item); font-weight: 700; cursor: pointer;
   }
   .btn-principal:disabled { opacity: .55; cursor: default; }
   .error { color: var(--error); font-size: var(--t-etiqueta); margin-top: 8px; display: none; }
@@ -173,6 +173,8 @@
 </head>
 <body>
 
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
 <nav class="top-nav">
   <div class="top-nav-inner">
     <a href="/" class="nav-marca">
@@ -196,7 +198,7 @@
   </div>
 </nav>
 
-<main class="crear">
+<main class="crear" id="contenido" tabindex="-1">
   <aside class="panel-lateral">
     <div class="scroll">
       <div class="intro">
