@@ -63,3 +63,32 @@ propósito: eran cientos de puntos que además duplicaban los sitios de SeviTime
 sitios solo aparecen si se pulsa «Mostrar sitios»; para avisar de un cambio se
 busca el sitio con el buscador (que abre su reporte) y para añadir uno se toca
 un hueco del mapa.
+
+## Consistencia de datos con la app
+
+Lo que se ve en la web tiene que coincidir con lo de la app. Cómo se consigue:
+
+- **Lugares de OSM:** los dos leen la **misma foto diaria**
+  (`lugares-sevilla.json` en Storage, generada por `tool/snapshot_lugares.mjs`
+  en el repo de la app). La web la pide en `lugares.js` (`SNAPSHOT_URL`).
+- **Altas manuales** (`lugares_manuales`): lo que se crea al aprobar una
+  sugerencia o un renombrado, para que el sitio salga al momento. La app las
+  mezcla en caliente y **la web también** las lee desde `lugares.js` (lectura
+  pública) y las mezcla, con el **mismo mapeo de tipos** que
+  `lib/services/manual_places_service.dart` (constante `TIPO_ES`). Si se añade
+  un tipo en español allí, hay que añadirlo también aquí.
+- **Categorías/colores/emojis:** una sola fuente en la app
+  (`lib/models/place_categories_data.dart`), copiada con
+  `tool/actualizar_categorias.mjs`.
+- **Aportaciones:** la web escribe en las mismas tablas (`sugerencias`,
+  `reportes_lugares`) que la app; se moderan en el panel de la app.
+- **Tiles del mapa:** el mismo `.pmtiles` propio.
+
+**Pendiente:** `curated_places` (descripción, foto, horario verificado, rating)
+la app lo usa para enriquecer fichas; la web **no** muestra esos campos, así que
+no se leen. Si algún día la web enseña descripción o foto curada, hay que
+leerlos también.
+
+**Latencia:** las altas manuales aparecen al momento (lectura directa). Los
+cambios que van solo a OSM (notas) aparecen cuando OSM los aplica y se regenera
+la foto diaria (hasta ~1 día).
