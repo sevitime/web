@@ -131,6 +131,14 @@
   .btn-enviar { background: var(--verde-solido); color: #fff; }
   .btn-cancelar { background: var(--superficie-alta); color: var(--texto); border: 1px solid var(--borde); }
   .btn-cerrar { background: var(--superficie-alta); color: var(--texto); border: 1px solid var(--borde); }
+  .btn-ubicacion {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    width: 100%; margin-top: 12px; padding: 9px; cursor: pointer;
+    background: var(--superficie-alta); color: var(--texto);
+    border: 1px solid var(--borde); border-radius: var(--r-sm);
+    font-family: inherit; font-size: var(--t-cuerpo);
+  }
+  .btn-ubicacion:hover { background: var(--borde); }
   .panel .error { color: var(--error); font-size: var(--t-etiqueta); margin-top: 6px; display: none; }
   .panel .ok { color: var(--ok-fg); font-size: var(--t-cuerpo); margin-top: 8px; display: none; font-weight: 600; }
   .oculto { display: none !important; }
@@ -292,6 +300,7 @@
 <!-- Sugerir sitio nuevo -->
 <div id="panel-sugerir" class="panel" role="dialog" aria-labelledby="s-titulo">
   <h3 id="s-titulo">✨ Nuevo sitio</h3>
+  <div class="subtitulo" id="s-ubicacion-ayuda">Arrastra el pin del mapa si el sitio no cae justo en la puerta.</div>
   <label for="s-nombre">Cómo se llama</label>
   <input id="s-nombre" type="text" maxlength="120" />
 
@@ -300,6 +309,11 @@
 
   <label for="s-notas">Notas (opcional)</label>
   <textarea id="s-notas" maxlength="300"></textarea>
+
+  <button type="button" class="btn-ubicacion" id="btn-usar-ubicacion">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 8a4 4 0 100 8 4 4 0 000-8zm8.94 3A9.01 9.01 0 0013 3.06V1h-2v2.06A9.01 9.01 0 003.06 11H1v2h2.06A9.01 9.01 0 0011 20.94V23h2v-2.06A9.01 9.01 0 0020.94 13H23v-2h-2.06zM12 19a7 7 0 110-14 7 7 0 010 14z"/></svg>
+    <span>Usar mi ubicación</span>
+  </button>
 
   <div class="acciones">
     <button class="btn-cancelar">Cancelar</button>
@@ -978,7 +992,15 @@ window.addEventListener('DOMContentLoaded', function () {
       marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#FF6B6B' : '#d64545' }).setLngLat([lng, lat]).addTo(map);
       abrirPanelReportar(sitio.properties.name, lat, lng);
     } else {
-      marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#26A69A' : '#00897B' }).setLngLat(e.lngLat).addTo(map);
+      // Arrastrable: acertar a la puerta con un toque es difícil, y este punto
+      // acaba en el mapa de todo el mundo.
+      marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#26A69A' : '#00897B', draggable: true })
+        .setLngLat(e.lngLat).addTo(map);
+      marker.on('dragend', () => {
+        const p = marker.getLngLat();
+        panelSugerir.dataset.lat = p.lat;
+        panelSugerir.dataset.lng = p.lng;
+      });
       abrirPanelSugerir(e.lngLat);
     }
   });
@@ -987,6 +1009,42 @@ window.addEventListener('DOMContentLoaded', function () {
   map.on('mouseleave', 'poi', () => { map.getCanvas().style.cursor = ''; });
   map.on('mouseenter', 'sitios', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'sitios', () => { map.getCanvas().style.cursor = ''; });
+
+  // «Usar mi ubicación»: lo mismo que «Estoy allí» en la app. Sirve para poner
+  // el pin donde estás sin tener que buscarte en el mapa. La ubicación la da
+  // el navegador, no un servicio externo.
+  const btnUsarUbicacion = document.getElementById('btn-usar-ubicacion');
+  const ayudaUbicacion = document.getElementById('s-ubicacion-ayuda');
+  btnUsarUbicacion.addEventListener('click', () => {
+    if (!navigator.geolocation) {
+      alert('Tu navegador no puede darnos tu ubicación.');
+      return;
+    }
+    ayudaUbicacion.textContent = 'Buscando tu ubicación…';
+    btnUsarUbicacion.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        btnUsarUbicacion.disabled = false;
+        const centro = { lng: pos.coords.longitude, lat: pos.coords.latitude };
+        if (marker) marker.setLngLat(centro);
+        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+          map.jumpTo({ center: centro, zoom: 17 });
+        } else {
+          map.flyTo({ center: centro, zoom: 17 });
+        }
+        panelSugerir.dataset.lat = centro.lat;
+        panelSugerir.dataset.lng = centro.lng;
+        const m = Math.round(pos.coords.accuracy || 0);
+        ayudaUbicacion.textContent = 'Punto puesto en tu ubicación' +
+          (m ? ' (±' + m + ' m).' : '.') + ' Arrástralo si hace falta.';
+      },
+      () => {
+        btnUsarUbicacion.disabled = false;
+        ayudaUbicacion.textContent = 'No hemos podido leer tu ubicación. Arrastra el pin del mapa.';
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  });
 
   function limpiarMensajes(panel) {
     panel.querySelector('.error').style.display = 'none';
@@ -998,6 +1056,8 @@ window.addEventListener('DOMContentLoaded', function () {
     ocultarPaneles();
     panelSugerir.dataset.lat = lngLat.lat;
     panelSugerir.dataset.lng = lngLat.lng;
+    document.getElementById('s-ubicacion-ayuda').textContent =
+      'Arrastra el pin del mapa si el sitio no cae justo en la puerta.';
     document.getElementById('s-nombre').value = '';
     document.getElementById('s-notas').value = '';
     sTipoChips.seleccionar('bar');
