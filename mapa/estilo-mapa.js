@@ -8,6 +8,15 @@
 const SEVITIME_TILES_URL =
   'https://sevitime-tiles.sevitime-app.workers.dev/sevilla-provincia.pmtiles';
 
+// El mapa deja un margen de unos 7–8 km alrededor del recorte de la provincia:
+// permite seleccionar aportaciones limítrofes sin que, al alejarse, se termine
+// mirando Andalucía o la península. Fuera del recorte puede no haber detalle
+// del basemap, pero el punto sigue pudiéndose situar y enviar.
+const SEVITIME_PROVINCIA_BOUNDS = [
+  [-6.6185147, 36.7771915],
+  [-4.5733503, 38.2620901],
+];
+
 // El basemap sigue al tema: si no, la web entera se oscurece y el mapa se
 // queda blanco. Devuelve un `style` de MapLibre listo para `new Map` o
 // `setStyle`.
