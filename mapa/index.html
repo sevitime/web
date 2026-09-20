@@ -34,13 +34,14 @@
   "description": "Mapa colaborativo para descubrir y mejorar la información sobre lugares de Sevilla."
 }
 </script>
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet" />
 <link rel="stylesheet" href="/estilo.css" />
-<script src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="/mapa/estilo-mapa.js"></script>
-<script src="/lugares.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<script defer src="/mapa/estilo-mapa.js"></script>
+<script defer src="/lugares.js"></script>
 <style>
   /* La paleta y la tipografía vienen de /estilo.css, el mismo que usan la
      portada y el cuadro de honor. Así el mapa también cambia a tema oscuro y
@@ -357,6 +358,11 @@
 <div id="atribucion">© OpenMapTiles © OpenStreetMap contributors</div>
 
 <script>
+// Los scripts externos (maplibre-gl, pmtiles, el estilo del mapa y lugares.js)
+// ahora se cargan con `defer`: no bloquean el primer pintado y se ejecutan, en
+// orden, justo antes de DOMContentLoaded. Este bloque los necesita ya
+// cargados, así que todo el arranque del mapa espera a ese evento.
+window.addEventListener('DOMContentLoaded', function () {
   // ---- Config ----
   const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
@@ -1091,6 +1097,7 @@
     okEl.style.display = 'block';
     setTimeout(apagarModos, 1400);
   });
+});
 </script>
 </body>
 </html>

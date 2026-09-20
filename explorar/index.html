@@ -16,16 +16,19 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
-<link rel="icon" href="/icono.png">
-<link rel="apple-touch-icon" href="/icono.png">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css">
 <script defer src="/nav.js"></script>
 <link href="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.css" rel="stylesheet" />
-<script src="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
-<script src="/mapa/estilo-mapa.js"></script>
-<script src="/lugares.js"></script>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<script defer src="https://cdn.jsdelivr.net/npm/maplibre-gl@4/dist/maplibre-gl.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/pmtiles@3/dist/pmtiles.js"></script>
+<script defer src="/mapa/estilo-mapa.js"></script>
+<script defer src="/lugares.js"></script>
 <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <script defer src="/auth.js"></script>
 <style>
@@ -188,6 +191,6 @@
   </div>
 </main>
 
-<script src="/explorar/explorar.js"></script>
+<script defer src="/explorar/explorar.js"></script>
 </body>
 </html>
