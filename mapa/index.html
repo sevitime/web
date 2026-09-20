@@ -117,6 +117,15 @@
   }
   .panel h3 { margin: 0 0 4px; font-size: var(--t-item); }
   .panel .subtitulo { font-size: var(--t-etiqueta); color: var(--tenue); margin-bottom: 8px; }
+  .panel .login-ventajas {
+    list-style: none; margin: 14px 0 2px; padding: 0;
+    display: grid; gap: 10px;
+  }
+  .panel .login-ventajas li {
+    display: flex; gap: 9px; align-items: flex-start;
+    font-size: var(--t-cuerpo); color: var(--texto); line-height: 1.35;
+  }
+  .panel .login-ventajas span { flex: 0 0 auto; }
   .panel label, .panel .campo-label { display: block; font-size: var(--t-etiqueta); color: var(--apagado); margin: 10px 0 4px; }
   .panel input, .panel select, .panel textarea {
     width: 100%; padding: 8px; border: 1px solid var(--borde); border-radius: var(--r-sm); font-size: var(--t-cuerpo);
@@ -360,12 +369,19 @@
   </div>
 </div>
 
-<!-- Entrar para aportar: la web pide cuenta, como la app. -->
+<!-- Entrar para aportar: la web pide cuenta, como la app. Se anuncia lo que
+     gana quien entra, no lo que ganamos nosotros. -->
 <div id="panel-login" class="panel" role="dialog" aria-labelledby="l-titulo">
-  <h3 id="l-titulo">Entra para aportar</h3>
-  <div class="subtitulo">Para sugerir un sitio o avisar de un cambio hay que entrar con Google. Así cada aportación va con nombre y se puede moderar mejor.</div>
+  <h3 id="l-titulo">Entra y sácale todo el partido</h3>
+  <div class="subtitulo">Con tu cuenta de Google, aportar tiene recompensa.</div>
+  <ul class="login-ventajas">
+    <li><span aria-hidden="true">🏆</span> Suma XP y sube en el cuadro de honor</li>
+    <li><span aria-hidden="true">✍️</span> Tus sitios y avisos quedan a tu nombre</li>
+    <li><span aria-hidden="true">📋</span> Sigue cómo van en «Mis aportaciones»</li>
+    <li><span aria-hidden="true">📱</span> La misma cuenta que en la app</li>
+  </ul>
   <div class="acciones">
-    <button class="btn-cancelar">Cancelar</button>
+    <button class="btn-cancelar">Ahora no</button>
     <button class="btn-enviar" id="btn-login-panel">Entrar con Google</button>
   </div>
 </div>
