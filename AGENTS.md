@@ -33,3 +33,24 @@ Para añadir o cambiar un tipo:
 No hay cron ni GitHub Actions detrás: los tipos cambian pocas veces al año y
 el resultado es un fichero estático, así que regenerarlo a mano es más barato
 que automatizarlo.
+
+## Librerías propias y terceros (privacidad)
+
+Las librerías pesadas están **autohospedadas** en `libs/`, no vienen de un CDN
+de terceros: `maplibre-gl` 4.7.1, `pmtiles` 3.2.1 y `@supabase/supabase-js`
+2.116.0. Los tiles también son propios (Worker de Cloudflare). Al actualizar
+una, descarga la versión fijada, guárdala en `libs/` y actualiza esta nota.
+Motivo: un CDN de terceros recibe la IP del visitante y obliga a declararlo en
+la política de privacidad.
+
+Pendiente (anotado el 21 de septiembre de 2026):
+
+- `mapa/estilo-mapa.js` aún carga las tipografías de las etiquetas del mapa
+  desde `fonts.openmaptiles.org` (tercero). Autohospedarlas si se quiere cerrar
+  del todo el apartado de terceros.
+- La política de privacidad vive en el repo `sevitime/privacidad` y se publica
+  en `https://sevitime.github.io/privacidad/`. Es **un solo documento y está
+  escrito para la app**; la web enlaza a él pero no se menciona. Conviene
+  ampliarlo para cubrir también sevitime.com (login de Google y envíos a
+  Supabase) y, si no se autohospedan, los terceros de la web. La app ya declara
+  Nominatim, Open-Meteo, Overpass, MapTiler, Wikimedia y Sentry.
