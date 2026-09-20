@@ -11,7 +11,7 @@
   const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-  const { SEVILLA, colorFor, emojiFor, labelFor } = window.sevitimeLugares;
+  const { SEVILLA, colorFor, emojiFor, labelFor, textoSobre } = window.sevitimeLugares;
 
   // El icono de una ruta llega como clave (`tapas`, `rio`…) desde la base.
   // Los ids viven en lib/data/iconos_ruta.dart; si se añade uno allí, se añade
@@ -63,6 +63,7 @@
     attributionControl: true,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  vigilarTeselas(map);
 
   function montarCapas() {
     if (map.getSource('ruta-sel') || !map.isStyleLoaded()) return;
@@ -100,6 +101,7 @@
       const el = document.createElement('div');
       el.className = 'parada-num';
       el.style.background = colorFor(p.tipo);
+      el.style.color = textoSobre(colorFor(p.tipo));
       el.style.cursor = 'pointer';
       el.textContent = String(i + 1);
       el.title = p.nombre;
@@ -244,6 +246,7 @@
       const num = document.createElement('span');
       num.className = 'parada-num';
       num.style.background = colorFor(p.tipo);
+      num.style.color = textoSobre(colorFor(p.tipo));
       num.textContent = String(i + 1);
       const texto = document.createElement('span');
       texto.className = 'parada-texto';

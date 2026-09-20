@@ -7,7 +7,7 @@
 (function () {
   'use strict';
 
-  const { SEVILLA, colorFor, emojiFor, labelFor, normalizar, metros, claveDe, cargar } = window.sevitimeLugares;
+  const { SEVILLA, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, claveDe, cargar } = window.sevitimeLugares;
 
   // Los iconos de una ruta, en el mismo orden y con las mismas claves que
   // lib/data/iconos_ruta.dart. Añadir uno allí es añadirlo aquí.
@@ -53,6 +53,7 @@
     attributionControl: true,
   });
   map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+  vigilarTeselas(map);
 
   function montarCapas() {
     if (map.getSource('ruta-nueva') || !map.isStyleLoaded()) return;
@@ -87,6 +88,7 @@
       const el = document.createElement('div');
       el.className = 'parada-num';
       el.style.background = colorFor(p.tipo);
+      el.style.color = textoSobre(colorFor(p.tipo));
       el.textContent = String(i + 1);
       marcadores.push(new maplibregl.Marker({ element: el }).setLngLat([p.lon, p.lat]).addTo(map));
     });
@@ -206,6 +208,7 @@
       const num = document.createElement('span');
       num.className = 'parada-num';
       num.style.background = colorFor(p.tipo);
+      num.style.color = textoSobre(colorFor(p.tipo));
       num.textContent = String(i + 1);
 
       const titulo = document.createElement('span');

@@ -461,6 +461,20 @@ const CATEGORIAS_LUGARES = {
     return infoDe(tipo).etiqueta;
   }
 
+  // Color de texto legible (blanco o negro) para poner sobre un fondo dado.
+  // Los colores de categoría no cambian con el tema, así que el mismo cálculo
+  // vale para claro y oscuro. Con el blanco, el naranja (#EF6C00, 3,08), el
+  // oliva (#558B2F, 4,10) y el verde de marca (#00897B, 4,32) se quedan por
+  // debajo del 4,5:1 que pide AA para texto menudo; en esos se pasa a negro.
+  function textoSobre(color) {
+    const m = /^#?([0-9a-f]{6})$/i.exec(color || '');
+    if (!m) return '#fff';
+    const n = parseInt(m[1], 16);
+    const lin = (c) => { c /= 255; return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4); };
+    const L = 0.2126 * lin((n >> 16) & 255) + 0.7152 * lin((n >> 8) & 255) + 0.0722 * lin(n & 255);
+    return 1.05 / (L + 0.05) >= 4.5 ? '#fff' : '#000';
+  }
+
   // --- Utilidades ---
   function normalizar(s) {
     return (s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
@@ -522,6 +536,6 @@ const CATEGORIAS_LUGARES = {
 
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
-    tipoDe, colorFor, emojiFor, labelFor, normalizar, metros, formatDist, claveDe, aLugar, cargar,
+    tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
   };
 })();
