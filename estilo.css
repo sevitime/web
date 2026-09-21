@@ -467,6 +467,8 @@ footer span { margin: 0 8px; }
   transition: color 0.15s ease;
 }
 .nav-link:hover { color: var(--texto); }
+/* Explorar y el antiguo «Mapa y editor» son ahora la misma pantalla. */
+.nav-btn-mapa { display: none !important; }
 .nav-btn-mapa {
   display: inline-flex;
   align-items: center;
