@@ -48,7 +48,7 @@ la política de privacidad.
 Con esto la web no habla con ningún tercero para pintar el mapa. Ojo: el nombre
 de `text-font` en el estilo es el de la **carpeta**, no el de la fuente real
 (véase `libs/fonts/OpenSansRegular/`). Si se cambia, hay que cambiar el nombre a
-la vez en `mapa/estilo-mapa.js`, `mapa/index.html` y `explorar/explorar.js`.
+la vez en `mapa/estilo-mapa.js` y `mapa/index.html`.
 
 La política de privacidad vive en el repo `sevitime/privacidad` y se publica en
 `https://sevitime.github.io/privacidad/`. Es un solo documento; desde el 21 de
@@ -63,7 +63,11 @@ propósito: eran cientos de puntos que además duplicaban los sitios de SeviTime
 sitios se cargan y aparecen al abrir el mapa, igual que en la app; el botón
 «Ocultar sitios» permite quitarlos temporalmente. Para avisar de un cambio se
 busca el sitio con el buscador (que abre su reporte) o se toca un sitio visible,
-y para añadir uno se toca un hueco del mapa.
+y para añadir uno se toca un hueco del mapa o el botón dorado «Añadir lugar».
+
+`/mapa/` es la implementación única de esta pantalla. `/explorar/` conserva la
+URL pública y redirige aquí, para que no vuelvan a aparecer dos mapas con
+comportamientos distintos.
 
 El estilo es **una copia** del de la app
 (`lib/widgets/mapa/estilo_mapa_vectorial.dart` en `sevitime/`): paleta, capas y
@@ -89,7 +93,7 @@ Lo que se ve en la web tiene que coincidir con lo de la app. Cómo se consigue:
   `reportes_lugares`) que la app; se moderan en el panel de la app.
 - **Tiles del mapa:** el mismo `.pmtiles` propio.
 
-**Datos curados:** tanto la app como la ficha emergente de `/explorar/` leen
+**Datos curados:** tanto la app como la ficha emergente de la pantalla unificada leen
 `curated_places` (descripción, foto, horario verificado, etiquetas y
 recomendación editorial). La web los pide solo al abrir un sitio y conserva la
 respuesta durante la visita, para no retrasar la carga del mapa.

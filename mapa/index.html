@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
-<title>SeviTime | Mapa colaborativo de Sevilla</title>
-<meta name="description" content="Ayuda a mejorar SeviTime: sugiere lugares nuevos de Sevilla o avisa de cambios en el mapa colaborativo." />
+<title>Explorar — SeviTime</title>
+<meta name="description" content="Explora los sitios de Sevilla y aporta cambios al mapa colaborativo de SeviTime." />
 <meta name="robots" content="index, follow" />
 <link rel="canonical" href="https://sevitime.com/mapa/" />
 <!-- Esta página no tenía favicon: en una pestaña salía la hoja en blanco
@@ -18,8 +18,8 @@
 <meta property="og:type" content="website" />
 <meta property="og:locale" content="es_ES" />
 <meta property="og:site_name" content="SeviTime" />
-<meta property="og:title" content="SeviTime | Mapa colaborativo de Sevilla" />
-<meta property="og:description" content="Sugiere sitios nuevos y ayuda a mantener actualizado el mapa de Sevilla." />
+<meta property="og:title" content="Explorar — SeviTime" />
+<meta property="og:description" content="Explora los sitios de Sevilla y ayuda a mantener actualizado el mapa." />
 <meta property="og:url" content="https://sevitime.com/mapa/" />
 <meta name="twitter:card" content="summary" />
 <script type="application/ld+json">
@@ -76,8 +76,8 @@
     padding: 9px 16px; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
   }
   #barra span { font-size: var(--t-cuerpo); color: var(--apagado); }
-  /* Buscador: solo entre los sitios de SeviTime (el mismo lugares.js de
-     /explorar/), así que no pregunta a ningún servicio externo. Los selectores
+  /* Buscador: solo entre los sitios de SeviTime (el mismo lugares.js de la
+     app), así que no pregunta a ningún servicio externo. Los selectores
      van con #barra para ganar a `#barra button` y `#barra span`. */
   #barra .buscar-caja { position: relative; flex: 0 1 230px; min-width: 150px; }
   #barra .buscar-caja input {
@@ -104,12 +104,6 @@
   #barra .buscar-resultados .b-tipo,
   #barra .buscar-resultados .b-estado { color: var(--tenue); font-size: var(--t-etiqueta); }
   #barra .buscar-resultados .b-estado { display: block; padding: 8px 10px; }
-  /* Este mapa es para aportar; el de Explorar, para mirar. Se cruzan. */
-  .link-explorar {
-    font-size: var(--t-cuerpo); font-weight: 600;
-    color: var(--verde-claro); text-decoration: none; white-space: nowrap;
-  }
-  .link-explorar:hover { text-decoration: underline; }
   /* Vuelta a la web sin montar un cabecero entero, que aquí taparía el mapa. */
   .marca-mapa { display: inline-flex; align-items: center; flex: 0 0 auto; border-radius: var(--r-sm); }
   .marca-mapa img { border-radius: var(--r-sm); display: block; }
@@ -308,9 +302,9 @@
 </head>
 <body>
 
-<h1 class="solo-lectores">Mapa colaborativo de Sevilla</h1>
+<h1 class="solo-lectores">Explorar y aportar en el mapa de Sevilla</h1>
 <noscript>
-  <p class="noscript-aviso">Este mapa necesita JavaScript para mostrarse. Puedes <a href="/">descargar la app de SeviTime</a> o <a href="/explorar/">ver los sitios</a>.</p>
+  <p class="noscript-aviso">Este mapa necesita JavaScript para mostrarse. Puedes <a href="/">descargar la app de SeviTime</a>.</p>
 </noscript>
 
 <div id="map" tabindex="-1"></div>
@@ -320,14 +314,13 @@
   <a href="/" class="marca-mapa" title="Volver a sevitime.com" aria-label="Volver a sevitime.com">
     <img src="/icono.png" alt="" width="24" height="24" />
   </a>
-  <span id="ayuda">👉 Busca un sitio para avisar de un cambio, o toca un hueco para añadir uno nuevo</span>
+  <span id="ayuda">👉 Explora los sitios de Sevilla o aporta un cambio al mapa</span>
   <div class="buscar-caja">
     <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
     <ul id="buscar-resultados" class="buscar-resultados"></ul>
   </div>
   <button id="btn-anadir" class="btn-anadir" type="button">＋ Añadir lugar</button>
   <button id="btn-sitios" class="btn-sitios" aria-pressed="false" disabled>Cargando sitios…</button>
-  <a href="/explorar/" class="link-explorar">Ver los sitios</a>
   <div id="auth-seccion">
     <button id="btn-mis-aportaciones" class="btn-aportaciones">Mis aportaciones</button>
     <button id="btn-login-google" class="btn-google">
@@ -435,8 +428,7 @@ window.addEventListener('DOMContentLoaded', function () {
   const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
 
-  // Lugares compartidos con /explorar/ (lugares.js): mismo snapshot, mismos
-  // tipos y mismos colores.
+  // Lugares compartidos con la app: mismo snapshot, mismos tipos y colores.
   const { cargar } = window.sevitimeLugares;
 
   // Mismos tipos que en la app (lib/data/tipos_de_sitio.dart), para no
@@ -753,7 +745,7 @@ window.addEventListener('DOMContentLoaded', function () {
   usarProtocoloTeselas();
 
   // El basemap también sigue al tema: si no, la web entera se oscurece y el
-  // mapa se queda blanco. El estilo lo comparte /explorar/ (mapa/estilo-mapa.js)
+  // mapa se queda blanco. El estilo vive en un fichero común de la web.
   // y se rehace si el sistema cambia de preferencia con la pestaña abierta.
   const prefiereOscuro = window.matchMedia('(prefers-color-scheme: dark)');
 
@@ -779,9 +771,9 @@ window.addEventListener('DOMContentLoaded', function () {
     map.setStyle(sevitimeEstiloMapa(e.matches));
   });
 
-  // ---- Pines de SeviTime (los mismos sitios que Explorar) ----
-  // El editor arranca limpio: el JSON de sitios (1,9 MB) solo se descarga si se
-  // piden. Con los pines a la vista, tocar uno avisa de un cambio sobre el
+  // ---- Pines de SeviTime (pantalla unificada de explorar y aportar) ----
+  // La pantalla unificada carga el JSON de sitios al entrar. Con los pines a
+  // la vista, tocar uno avisa de un cambio sobre el
   // sitio real de SeviTime, no sobre el POI suelto del basemap, así el nombre y
   // las coordenadas coinciden con los de la app y la nota enlaza el elemento
   // exacto de OSM.
@@ -909,7 +901,7 @@ window.addEventListener('DOMContentLoaded', function () {
   });
 
   // ---- Buscador de sitios de SeviTime ----
-  // Solo busca entre los sitios que ya conocemos (el lugares.js de /explorar/).
+  // Solo busca entre los sitios que ya conocemos (el lugares.js compartido).
   // No pregunta a ningún servicio externo: si no está en SeviTime, se añade
   // tocando el mapa. Se descarga el listado la primera vez que se busca.
   const inputBuscar = document.getElementById('buscar-sitio');
