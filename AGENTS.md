@@ -64,6 +64,10 @@ sitios solo aparecen si se pulsa «Mostrar sitios»; para avisar de un cambio se
 busca el sitio con el buscador (que abre su reporte) y para añadir uno se toca
 un hueco del mapa.
 
+El estilo es **una copia** del de la app
+(`lib/widgets/mapa/estilo_mapa_vectorial.dart` en `sevitime/`): paleta, capas y
+etiquetas tienen que coincidir. Si tocas uno, toca el otro.
+
 ## Consistencia de datos con la app
 
 Lo que se ve en la web tiene que coincidir con lo de la app. Cómo se consigue:
