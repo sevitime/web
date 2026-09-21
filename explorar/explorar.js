@@ -10,7 +10,7 @@
 
   // Tipos, categorías, colores y utilidades de lugares: módulo compartido con
   // /mapa/ (lugares.js), para que las dos páginas no se separen con el tiempo.
-  const { SEVILLA, FILTROS, normalizar, metros, formatDist, cargar } = window.sevitimeLugares;
+  const { SEVILLA, FILTROS, normalizar, metros, formatDist, cargar, cargarCurado } = window.sevitimeLugares;
 
   // --- Estado ---
   const estado = { todos: [], resultados: [], centro: { ...SEVILLA }, filtro: 'todo', texto: '' };
@@ -141,10 +141,7 @@
   map.on('click', 'sitios', (e) => {
     if (colocando) return;
     const f = e.features[0];
-    new maplibregl.Popup({ offset: 12, closeButton: true, maxWidth: '260px' })
-      .setLngLat(f.geometry.coordinates)
-      .setDOMContent(nodoPopup(f.properties))
-      .addTo(map);
+    abrirPopup(f.properties, f.geometry.coordinates);
   });
   map.on('mouseenter', 'sitios', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'sitios', () => { map.getCanvas().style.cursor = ''; });
@@ -399,13 +396,23 @@
 
   function abrir(p) {
     map.flyTo({ center: [p.lon, p.lat], zoom: 16 });
-    new maplibregl.Popup({ offset: 12, closeButton: true, maxWidth: '260px' })
-      .setLngLat([p.lon, p.lat])
-      .setDOMContent(nodoPopup({
-        nombre: p.nombre, label: p.label, dist: p.dist, web: p.web, osm: p.osm,
-        lat: p.lat, lon: p.lon,
-      }))
+    abrirPopup({
+      nombre: p.nombre, label: p.label, dist: p.dist, web: p.web, osm: p.osm,
+      lat: p.lat, lon: p.lon,
+    }, [p.lon, p.lat]);
+  }
+
+  function abrirPopup(props, coordenadas) {
+    const contenido = nodoPopup(props);
+    new maplibregl.Popup({ offset: 12, closeButton: true, maxWidth: '300px' })
+      .setLngLat(coordenadas)
+      .setDOMContent(contenido)
       .addTo(map);
+
+    cargarCurado(props.nombre, Number(props.lat), Number(props.lon))
+      .then((curado) => {
+        if (curado) anadirDatosCurados(contenido, curado, props.nombre);
+      });
   }
 
   function nodoPopup(props) {
@@ -450,5 +457,57 @@
     editor.appendChild(ea);
     el.appendChild(editor);
     return el;
+  }
+
+  function anadirDatosCurados(el, curado, nombreLugar) {
+    const tieneTexto = curado.description || curado.verified_hours ||
+      curado.curated_rating != null || (Array.isArray(curado.tags) && curado.tags.length);
+    if (!curado.image_url && !tieneTexto) return;
+
+    const bloque = document.createElement('section');
+    bloque.className = 'curado';
+
+    if (curado.image_url) {
+      const imagen = document.createElement('img');
+      imagen.src = curado.image_url;
+      imagen.alt = 'Foto de ' + nombreLugar;
+      imagen.loading = 'lazy';
+      imagen.referrerPolicy = 'no-referrer';
+      imagen.addEventListener('error', () => {
+        imagen.remove();
+        if (!bloque.childNodes.length) bloque.remove();
+      });
+      bloque.appendChild(imagen);
+    }
+    if (curado.description) {
+      const descripcion = document.createElement('p');
+      descripcion.className = 'descripcion';
+      descripcion.textContent = curado.description;
+      bloque.appendChild(descripcion);
+    }
+    if (curado.verified_hours) {
+      const horario = document.createElement('p');
+      horario.className = 'horario';
+      horario.textContent = 'Horario verificado: ' + curado.verified_hours;
+      bloque.appendChild(horario);
+    }
+    if (curado.curated_rating != null) {
+      const valoracion = document.createElement('p');
+      valoracion.className = 'valoracion';
+      valoracion.textContent = 'Recomendación SeviTime: ' +
+        Number(curado.curated_rating).toLocaleString('es-ES', { maximumFractionDigits: 1 }) + ' / 5';
+      bloque.appendChild(valoracion);
+    }
+    if (Array.isArray(curado.tags) && curado.tags.length) {
+      const etiquetas = document.createElement('div');
+      etiquetas.className = 'etiquetas';
+      curado.tags.forEach((tag) => {
+        const etiqueta = document.createElement('span');
+        etiqueta.textContent = tag;
+        etiquetas.appendChild(etiqueta);
+      });
+      bloque.appendChild(etiquetas);
+    }
+    if (bloque.childNodes.length) el.insertBefore(bloque, el.querySelector('.editor'));
   }
 })();

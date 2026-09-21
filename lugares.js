@@ -572,6 +572,53 @@ const CATEGORIAS_LUGARES = {
       .catch(() => []);
   }
 
+  // Los datos editoriales no hacen falta para dibujar miles de pines. Se
+  // piden solo al abrir la ficha de un sitio y se guardan por nombre durante
+  // la visita. Así la web enseña la misma información enriquecida que la app
+  // sin hacer más pesada la carga inicial del mapa.
+  const curadosEnCache = new Map();
+
+  function filasCuradas(nombre) {
+    if (curadosEnCache.has(nombre)) return curadosEnCache.get(nombre);
+    const cabeceras = {
+      apikey: SUPABASE_KEY,
+      Authorization: 'Bearer ' + SUPABASE_KEY,
+    };
+    const url = SUPABASE_URL +
+      '/rest/v1/curated_places?name=eq.' + encodeURIComponent(nombre) +
+      '&select=name,description,tags,image_url,verified_hours,lat,lon,curated_rating';
+    const carga = fetch(url, { headers: cabeceras })
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => []);
+    curadosEnCache.set(nombre, carga);
+    return carga;
+  }
+
+  // Igual que CuratedPlacesService.fetchForPlace en la app: si hay dos sitios
+  // con el mismo nombre, gana el que tenga coordenadas más cercanas. Una fila
+  // sin coordenadas solo sirve de respaldo.
+  function cargarCurado(nombre, lat, lon) {
+    return filasCuradas(nombre).then((filas) => {
+      if (!filas.length) return null;
+      let mejor = null;
+      let mejorDistancia = Infinity;
+      for (const fila of filas) {
+        if (fila.lat == null || fila.lon == null) {
+          mejor = mejor || fila;
+          continue;
+        }
+        const dLat = lat - fila.lat;
+        const dLon = lon - fila.lon;
+        const distancia = dLat * dLat + dLon * dLon;
+        if (distancia < mejorDistancia) {
+          mejorDistancia = distancia;
+          mejor = fila;
+        }
+      }
+      return mejor;
+    });
+  }
+
   // Un alta manual -> lugar con la misma forma que los de la foto.
   function aLugarManual(m) {
     const nombre = (m.nombre || '').trim();
@@ -608,5 +655,6 @@ const CATEGORIAS_LUGARES = {
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
+    cargarCurado,
   };
 })();

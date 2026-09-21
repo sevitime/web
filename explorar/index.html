@@ -123,6 +123,12 @@
   .popup .meta { font-size: var(--t-etiqueta); color: var(--apagado); margin-top: 2px; }
   .popup a { display: inline-block; margin-top: 8px; font-size: var(--t-etiqueta); color: var(--verde-claro); text-decoration: none; }
   .popup a:hover { text-decoration: underline; }
+  .popup .curado { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--borde); }
+  .popup .curado img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; border-radius: var(--r-sm); }
+  .popup .curado p { margin: 7px 0 0; font-size: var(--t-etiqueta); line-height: 1.45; color: var(--texto); }
+  .popup .curado .horario, .popup .curado .valoracion { color: var(--apagado); }
+  .popup .etiquetas { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+  .popup .etiquetas span { padding: 3px 7px; border-radius: var(--r-pill); background: var(--superficie-alta); color: var(--apagado); font-size: var(--t-etiqueta); }
   .popup .editor a { margin-top: 6px; color: var(--apagado); }
   .maplibregl-popup-content { background: var(--superficie) !important; border: 1px solid var(--borde); border-radius: var(--r-sm); }
   .maplibregl-popup-tip { border-top-color: var(--superficie) !important; border-bottom-color: var(--superficie) !important; }

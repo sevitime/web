@@ -60,9 +60,10 @@ El estilo (`mapa/estilo-mapa.js`) **no** dibuja los POI del basemap de OSM a
 propósito: eran cientos de puntos que además duplicaban los sitios de SeviTime
 (que ya salen de OSM). Los únicos puntos del mapa son los de SeviTime —la capa
 `sitios`, con color por categoría— más su capa de etiquetas. En el editor los
-sitios solo aparecen si se pulsa «Mostrar sitios»; para avisar de un cambio se
-busca el sitio con el buscador (que abre su reporte) y para añadir uno se toca
-un hueco del mapa.
+sitios se cargan y aparecen al abrir el mapa, igual que en la app; el botón
+«Ocultar sitios» permite quitarlos temporalmente. Para avisar de un cambio se
+busca el sitio con el buscador (que abre su reporte) o se toca un sitio visible,
+y para añadir uno se toca un hueco del mapa.
 
 El estilo es **una copia** del de la app
 (`lib/widgets/mapa/estilo_mapa_vectorial.dart` en `sevitime/`): paleta, capas y
@@ -88,10 +89,10 @@ Lo que se ve en la web tiene que coincidir con lo de la app. Cómo se consigue:
   `reportes_lugares`) que la app; se moderan en el panel de la app.
 - **Tiles del mapa:** el mismo `.pmtiles` propio.
 
-**Pendiente:** `curated_places` (descripción, foto, horario verificado, rating)
-la app lo usa para enriquecer fichas; la web **no** muestra esos campos, así que
-no se leen. Si algún día la web enseña descripción o foto curada, hay que
-leerlos también.
+**Datos curados:** tanto la app como la ficha emergente de `/explorar/` leen
+`curated_places` (descripción, foto, horario verificado, etiquetas y
+recomendación editorial). La web los pide solo al abrir un sitio y conserva la
+respuesta durante la visita, para no retrasar la carga del mapa.
 
 **Latencia:** las altas manuales aparecen al momento (lectura directa). Los
 cambios que van solo a OSM (notas) aparecen cuando OSM los aplica y se regenera

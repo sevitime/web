@@ -228,15 +228,17 @@
     background: var(--superficie-alta); color: var(--texto); font-weight: 600;
   }
   #barra button.btn-aportaciones:hover { background: var(--borde); }
-  /* Mostrar/ocultar los pines de SeviTime (los mismos que Explorar). Apagado
-     por defecto: el editor arranca limpio y el JSON de sitios solo se descarga
-     si se pide. */
+  /* Mostrar/ocultar los pines de SeviTime (los mismos que Explorar). Se cargan
+     al entrar para que, al colocar un sitio, los existentes de alrededor estén
+     visibles igual que en la app. */
   #barra button.btn-sitios {
     background: var(--superficie-alta); color: var(--texto); font-weight: 600;
   }
   #barra button.btn-sitios:hover { background: var(--borde); }
   #barra button.btn-sitios[aria-pressed="true"] { background: var(--verde-solido); color: #fff; }
   #barra button.btn-sitios:disabled { opacity: .6; cursor: default; }
+  #barra button.btn-anadir { background: var(--dorado); color: var(--texto); font-weight: 800; }
+  #barra button.btn-anadir:hover { background: #E8B42F; }
 
   .ap-xp-caja {
     margin: 10px 0 2px; padding: 10px 12px; border-radius: var(--r-sm);
@@ -323,7 +325,8 @@
     <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
     <ul id="buscar-resultados" class="buscar-resultados"></ul>
   </div>
-  <button id="btn-sitios" class="btn-sitios" aria-pressed="false">Mostrar sitios</button>
+  <button id="btn-anadir" class="btn-anadir" type="button">＋ Añadir lugar</button>
+  <button id="btn-sitios" class="btn-sitios" aria-pressed="false" disabled>Cargando sitios…</button>
   <a href="/explorar/" class="link-explorar">Ver los sitios</a>
   <div id="auth-seccion">
     <button id="btn-mis-aportaciones" class="btn-aportaciones">Mis aportaciones</button>
@@ -783,6 +786,7 @@ window.addEventListener('DOMContentLoaded', function () {
   // las coordenadas coinciden con los de la app y la nota enlaza el elemento
   // exacto de OSM.
   const btnSitios = document.getElementById('btn-sitios');
+  const btnAnadir = document.getElementById('btn-anadir');
   const COLECCION_VACIA = { type: 'FeatureCollection', features: [] };
   let lugaresCargados = null;
   let sitiosVisibles = false;
@@ -849,14 +853,8 @@ window.addEventListener('DOMContentLoaded', function () {
   map.on('load', montarCapaSitios);
   map.on('styledata', montarCapaSitios);
 
-  btnSitios.addEventListener('click', async () => {
-    if (sitiosVisibles) {
-      sitiosVisibles = false;
-      quitarCapaSitios();
-      btnSitios.textContent = 'Mostrar sitios';
-      btnSitios.setAttribute('aria-pressed', 'false');
-      return;
-    }
+  async function mostrarSitios() {
+    if (sitiosVisibles) return;
     sitiosVisibles = true;
     btnSitios.setAttribute('aria-pressed', 'true');
     if (lugaresCargados) {
@@ -878,6 +876,36 @@ window.addEventListener('DOMContentLoaded', function () {
     } finally {
       btnSitios.disabled = false;
     }
+  }
+
+  btnSitios.addEventListener('click', async () => {
+    if (sitiosVisibles) {
+      sitiosVisibles = false;
+      quitarCapaSitios();
+      btnSitios.textContent = 'Mostrar sitios';
+      btnSitios.setAttribute('aria-pressed', 'false');
+      return;
+    }
+    await mostrarSitios();
+  });
+
+  // Igual que en la app: al abrir el selector ya se ven los sitios cercanos;
+  // el botón permite ocultarlos si se quiere tocar un hueco sin pines. La
+  // capa se montará cuando el estilo esté listo, aunque el listado termine
+  // de cargar antes.
+  void mostrarSitios();
+
+  // Entrada directa para quien está delante del sitio: no hace falta conocer
+  // su nombre ni encontrarlo en el buscador. El clic siguiente en el mapa
+  // abre el formulario de sitio nuevo, sujeto a moderación.
+  btnAnadir.addEventListener('click', () => {
+    if (!usuarioActual) {
+      abrirPanelLogin();
+      return;
+    }
+    apagarModos();
+    ayuda.textContent = '👉 Toca el mapa donde está el lugar que quieres añadir';
+    map.getCanvas().focus();
   });
 
   // ---- Buscador de sitios de SeviTime ----
