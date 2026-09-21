@@ -72,7 +72,7 @@
     padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 90vw;
   }
   #barra button {
-    border: none; background: var(--verde-solido); color: #fff; font-size: var(--t-cuerpo);
+    border: none; background: var(--verde-solido); color: #fff; font-family: inherit; font-size: var(--t-cuerpo);
     padding: 9px 16px; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
   }
   #barra span { font-size: var(--t-cuerpo); color: var(--apagado); }
@@ -186,27 +186,38 @@
 
   /* Auth & XP */
   #barra #auth-seccion {
-    margin-left: auto; display: flex; align-items: center; gap: 8px;
+    margin-left: auto; display: flex; align-items: center; gap: 10px;
     border-left: 1px solid var(--borde); padding-left: 10px;
   }
   #barra button.btn-google {
     background: #fff; color: #3c4043; border: 1px solid #dadce0;
-    display: inline-flex; align-items: center; gap: 6px; font-weight: 500;
-    padding: 7px 12px; font-size: var(--t-cuerpo);
+    display: inline-flex; align-items: center; gap: 9px; height: 38px;
+    padding: 0 16px 0 14px; border-radius: var(--r-pill);
+    font-family: inherit; font-size: var(--t-cuerpo); font-weight: 500;
+    letter-spacing: 0.01em;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 4px 14px rgba(0, 0, 0, 0.18);
+    transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
   }
-  #barra button.btn-google:hover { background: #f8f9fa; border-color: #c0c2c5; }
+  #barra button.btn-google:hover {
+    background: #f6f8f8; border-color: #c0c2c5;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 22px rgba(0, 0, 0, 0.22);
+  }
+  #barra button.btn-google:active { transform: translateY(1px); }
+  #barra button.btn-google:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  #barra button.btn-google svg { flex: 0 0 auto; }
   #user-info {
-    display: inline-flex; align-items: center; gap: 8px; font-size: var(--t-cuerpo); color: var(--texto);
+    display: inline-flex; align-items: center; gap: 9px; height: 38px; font-size: var(--t-cuerpo); color: var(--texto);
   }
   #user-avatar {
-    width: 26px; height: 26px; border-radius: 50%; object-fit: cover; border: 1px solid var(--borde);
+    width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1px solid var(--glass-borde-avatar);
   }
   .badge-xp {
     background: rgba(252, 196, 64, 0.16); color: var(--dorado-texto); font-weight: 700; font-size: var(--t-etiqueta);
-    padding: 2px 7px; border-radius: var(--r-sm); border: 1px solid rgba(252, 196, 64, 0.4);
+    padding: 3px 9px; border-radius: var(--r-pill); border: 1px solid rgba(252, 196, 64, 0.4); white-space: nowrap;
   }
   #barra #btn-logout {
-    background: transparent; color: var(--tenue); border: none; padding: 4px 6px;
+    background: transparent; color: var(--tenue); border: none; padding: 2px 4px;
+    font-family: inherit;
     font-size: var(--t-etiqueta); cursor: pointer; text-decoration: underline;
   }
   #barra #btn-logout:hover { color: var(--error); }
