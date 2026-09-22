@@ -108,6 +108,13 @@
   .marca-mapa { display: inline-flex; align-items: center; flex: 0 0 auto; border-radius: var(--r-sm); }
   .marca-mapa img { border-radius: var(--r-sm); display: block; }
   .marca-mapa:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 2px; }
+  /* Vuelta explícita a la portada, junto al logo. */
+  .enlace-inicio {
+    flex: 0 0 auto; font-size: var(--t-cuerpo); color: var(--texto);
+    text-decoration: none; white-space: nowrap; padding: 2px 4px; border-radius: var(--r-sm);
+  }
+  .enlace-inicio:hover { color: var(--verde-claro); }
+  .enlace-inicio:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 2px; }
 
   /* Hoja inferior en móvil: antes era una caja flotante de 300px fijos que,
      a 390px de ancho, ocupaba el 75% de la pantalla y podía solaparse con la
@@ -325,6 +332,7 @@
   <a href="/" class="marca-mapa" title="Volver a sevitime.com" aria-label="Volver a sevitime.com">
     <img src="/icono.png" alt="" width="24" height="24" />
   </a>
+  <a href="/" class="enlace-inicio">Inicio</a>
   <span id="ayuda">👉 Explora los sitios de Sevilla o aporta un cambio al mapa</span>
   <div class="buscar-caja">
     <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
