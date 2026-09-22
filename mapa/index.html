@@ -75,7 +75,10 @@
     border: none; background: var(--verde-solido); color: #fff; font-family: inherit; font-size: var(--t-cuerpo);
     padding: 9px 16px; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
   }
-  #barra span { font-size: var(--t-cuerpo); color: var(--apagado); }
+  /* Solo el texto de ayuda (hijo directo). Con `#barra span` a secas, el
+     <span> de dentro del botón «Entrar con Google» heredaba este gris y se
+     veía más claro que en el resto de páginas. */
+  #barra > span { font-size: var(--t-cuerpo); color: var(--apagado); }
   /* Buscador: solo entre los sitios de SeviTime (el mismo lugares.js de la
      app), así que no pregunta a ningún servicio externo. Los selectores
      van con #barra para ganar a `#barra button` y `#barra span`. */
