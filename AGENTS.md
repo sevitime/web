@@ -54,6 +54,15 @@ La política de privacidad vive en el repo `sevitime/privacidad` y se publica en
 `https://sevitime.github.io/privacidad/`. Es un solo documento; desde el 21 de
 septiembre de 2026 cubre también la web (`sevitime.com`).
 
+En este repo hay una **copia** en `privacidad/index.html` (y
+`privacidad/borrar-cuenta.html`), servida en `https://sevitime.com/privacidad/`.
+No es la fuente: Google exige que el enlace de política de privacidad del
+consentimiento de OAuth esté alojado en el **mismo dominio** que la home para
+poder verificar la marca de la app, así que se publica aquí también. Si cambia
+el texto en `sevitime/privacidad`, hay que copiarlo aquí en el mismo commit (y
+al revés). El pie de `index.html`, `404.html` y `ranking/index.html` enlaza a
+`/privacidad/`.
+
 ## Qué dibuja el mapa
 
 El estilo (`mapa/estilo-mapa.js`) **no** dibuja los POI del basemap de OSM a

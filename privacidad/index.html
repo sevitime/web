@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<!-- COPIA de la política de privacidad oficial (repo sevitime/privacidad,
+     publicada en https://sevitime.github.io/privacidad/).
+
+     Esta copia vive aquí porque Google exige que el enlace de política de
+     privacidad del consentimiento de OAuth esté alojado en el MISMO dominio
+     que la home (https://sevitime.com) para verificar la marca de la app.
+
+     El original sigue siendo sevitime/privacidad: si cambias uno, cambia el
+     otro (index.html y borrar-cuenta.html). -->
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Política de Privacidad — SeviTime</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0f0f13;
+      color: #e0e0e0;
+      line-height: 1.7;
+    }
+    header {
+      background: #00897B;
+      padding: 40px 24px 32px;
+      text-align: center;
+    }
+    header h1 { font-size: 26px; font-weight: 700; color: #fff; }
+    header p  { font-size: 14px; color: rgba(255,255,255,0.75); margin-top: 6px; }
+    /* Dentro de la app, la pantalla ya lleva el título en su cabecera. */
+    .en-app header { padding: 16px 24px; }
+    .en-app header h1 { display: none; }
+    .en-app header p { margin-top: 0; }
+    main {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+    h2 {
+      font-size: 17px;
+      font-weight: 700;
+      color: #00BFA5;
+      margin: 36px 0 12px;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #1e1e2e;
+    }
+    p { margin-bottom: 12px; font-size: 15px; color: #ccc; }
+    ul { margin: 8px 0 12px 20px; }
+    li { font-size: 15px; color: #ccc; margin-bottom: 6px; }
+    .badge {
+      display: inline-block;
+      background: #1e1e2e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 3px 10px;
+      font-size: 13px;
+      color: #aaa;
+      margin-bottom: 4px;
+    }
+    .highlight {
+      background: #1a2a28;
+      border-left: 3px solid #00897B;
+      padding: 14px 18px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+      font-size: 14px;
+      color: #aaa;
+    }
+    a { color: #00BFA5; }
+    footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 13px;
+      color: #555;
+      border-top: 1px solid #1e1e2e;
+    }
+  </style>
+  <script>
+    if (new URLSearchParams(location.search).has('app')) {
+      document.documentElement.classList.add('en-app');
+    }
+  </script>
+</head>
+<body>
+
+<header>
+  <h1>Política de Privacidad</h1>
+  <p>SeviTime · Última actualización: 21 de septiembre de 2026 (la web sevitime.com)</p>
+</header>
+
+<main>
+
+  <h2>1. Responsable</h2>
+  <p>
+    Esta política de privacidad aplica a la aplicación <strong>SeviTime</strong>
+    (paquete <span class="badge">com.selu.sevitime</span>) y a su web pública
+    <strong>sevitime.com</strong>, desarrolladas por
+    <strong>José Luis Torres L.</strong> Puedes contactar en
+    <a href="mailto:sevitimeapp@gmail.com">sevitimeapp@gmail.com</a>.
+  </p>
+
+  <h2>2. Datos personales</h2>
+  <p>SeviTime funciona <strong>sin necesidad de crear una cuenta</strong>: puedes
+  usar la app y su web de forma anónima y no recogemos nombre, correo ni teléfono.</p>
+  <p>Opcionalmente, puedes <strong>iniciar sesión con Google</strong>. En ese caso
+  guardamos tu nombre, dirección de correo electrónico y foto de perfil para
+  sincronizar favoritos, pendientes, visitados y valoraciones entre dispositivos,
+  y para firmar tus aportaciones. Puedes cerrar sesión o borrar tus datos cuando
+  quieras desde Ajustes.</p>
+
+  <h2>3. Permisos del dispositivo</h2>
+  <ul>
+    <li>
+      <strong>Ubicación (opcional):</strong> se usa exclusivamente en sesión para
+      mostrar lugares cercanos y el tiempo de tu zona. No se almacena en ningún
+      servidor ni se comparte con terceros.
+    </li>
+    <li>
+      <strong>Internet:</strong> necesario para cargar datos de tiempo, lugares,
+      eventos y sincronizar favoritos.
+    </li>
+    <li>
+      <strong>Notificaciones (opcional):</strong> se usan para enviarte la efeméride
+      diaria, el lugar destacado y avisos de partidos. Puedes desactivarlas desde Ajustes.
+    </li>
+  </ul>
+  <p>
+    En la web, el navegador te pide permiso de ubicación solo si pulsas «Usar mi
+    ubicación» al añadir un sitio. Se usa para colocar el punto en el mapa y no se
+    guarda salvo que envíes la aportación.
+  </p>
+
+  <h2>4. Almacenamiento local</h2>
+  <p>La app guarda en tu dispositivo (SharedPreferences), sin enviarlo a ningún servidor:</p>
+  <ul>
+    <li>Caché de clima, lugares y eventos (para uso sin conexión)</li>
+    <li>Preferencias: tema visual, tamaño de fuente</li>
+    <li>Historial de búsquedas recientes</li>
+    <li>Valoraciones de lugares que has puntuado</li>
+    <li>Un identificador anónimo de dispositivo (UUID generado aleatoriamente)</li>
+    <li>En la web, tu navegador guarda la sesión de Google, para no pedirte que entres en cada visita</li>
+  </ul>
+  <div class="highlight">
+    Estos datos se eliminan al desinstalar la aplicación.
+  </div>
+
+  <h2>5. Datos enviados a nuestros servidores (Supabase)</h2>
+  <p>SeviTime usa <strong>Supabase</strong> para sincronizar tus datos y mejorar la app:</p>
+  <ul>
+    <li>
+      <strong>Favoritos, pendientes y visitados:</strong> se sincronizan usando tu
+      cuenta de Google (si has iniciado sesión) o, en su defecto, un identificador
+      anónimo de dispositivo (UUID). El UUID no puede vincularse a tu identidad real.
+    </li>
+    <li>
+      <strong>Valoraciones:</strong> la puntuación que asignas a un lugar se suma a la
+      media global. Solo puedes valorar si has iniciado sesión con Google, y la
+      valoración queda asociada a tu cuenta.
+    </li>
+    <li>
+      <strong>Avisos sobre un sitio:</strong> para evitar spam, avisar de que un
+      sitio ha cerrado, ha cambiado de nombre o tiene datos mal requiere haber
+      iniciado sesión con Google (en la app o en la web). El aviso (el sitio, el
+      motivo, lo que escribes
+      y la foto si la adjuntas) se guarda con tu cuenta, para poder contarte en
+      el buzón en qué quedó y darte los puntos si se aprueba.
+    </li>
+    <li>
+      <strong>Sugerencias de lugares:</strong> por el mismo motivo, sugerir un
+      sitio nuevo también requiere sesión iniciada con Google (en la app o en la
+      web), y se guarda con tu cuenta. Guardamos el nombre, el tipo, si pone
+      tapas, las notas, la foto si la adjuntas y dónde está. Para situarlo puedes
+      usar tu ubicación (y entonces guardamos las coordenadas del GPS, su
+      precisión y la hora en que se tomaron) o marcarlo en el mapa (y entonces
+      guardamos el punto que marcas y, en la app, lo que escribiste en el buscador
+      para llegar hasta él; en la web, el punto que ajustas arrastrándolo). Si se
+      aprueba, el sitio aparece en la app y enviamos un aviso a OpenStreetMap
+      con su nombre y su ubicación, nunca con tu nombre ni tu cuenta.
+    </li>
+    <li>
+      <strong>Reseñas y rutas:</strong> las reseñas que escribes y las rutas que
+      creas, con sus notas y sus fotos, se revisan a mano y, si se aprueban, se
+      publican con tu nombre público (el apodo que elijas en tu perfil). Puedes
+      editarlas o borrarlas cuando quieras; al borrar tu cuenta se borran con
+      ella.
+    </li>
+    <li>
+      <strong>Buzón:</strong> cuando revisamos algo que has mandado (una reseña,
+      una ruta, una sugerencia o un aviso sobre un sitio), la app te deja un
+      mensaje contando en qué quedó y, si no se ha podido publicar, el motivo.
+      Se guarda con el mismo identificador que lo que mandaste (tu cuenta o el
+      UUID del dispositivo), solo lo puedes leer tú y se borra solo a los 180
+      días, cuando lo borras tú o al eliminar tu cuenta.
+    </li>
+    <li>
+      <strong>Mensajes que nos escribes:</strong> desde «Contactar con SeviTime»
+      (en Ajustes o en el buzón) puedes mandarnos una duda, un fallo, una idea,
+      tu desacuerdo con una decisión o una denuncia. Guardamos el motivo, el
+      texto que escribes, la versión de la app y la plataforma (para poder
+      reproducir un fallo), el aviso del buzón al que te refieres si escribes
+      desde él, y tu cuenta o el UUID del dispositivo para poder contestarte.
+      Lo leemos solo los administradores de SeviTime, y la respuesta te llega
+      al buzón. Te pedimos que no incluyas datos personales tuyos ni de otras
+      personas. Se borran al eliminar tu cuenta, o antes si nos lo pides.
+    </li>
+    <li>
+      <strong>Datos de uso:</strong> registramos que la app se ha abierto —el
+      identificador anónimo del dispositivo (UUID), el día, la versión de la
+      app y la plataforma—, para saber cuánta gente la usa y cuánta vuelve.
+      Ese mismo día apuntamos también, solo con un sí o un no, si llegaste a
+      dar permiso de ubicación, abrir cada pestaña (Transporte, Eventos,
+      Noticias o Rutas), buscar, abrir la ficha de un sitio, guardar uno,
+      abrir una ruta o tener la sesión iniciada. Sirve para saber qué partes
+      de la app se usan y por qué hay gente que no vuelve. Nunca qué ficha, qué ruta,
+      qué buscaste ni dónde estabas. Se quedan en nuestro servidor de
+      Supabase: no usamos Google Analytics ni ninguna herramienta de terceros,
+      y no se comparten con nadie. <strong>Puedes desactivarlo</strong> en
+      Ajustes → Privacidad → «Compartir datos de uso»; al apagarlo la app deja
+      de enviar nada de esto.
+      Las versiones de la app anteriores a la 1.0.8 enviaban además qué
+      pantallas y lugares se abrían, qué se buscaba y cuándo se usaba el mapa,
+      siempre con el identificador anónimo. Desde la 1.0.8 ya no se envía nada
+      de eso, y lo recogido se borrará cuando nadie use esas versiones.
+    </li>
+  </ul>
+
+  <h2>6. Servicios de terceros</h2>
+  <ul>
+    <li><strong>Open-Meteo</strong> — tiempo y calidad del aire. Recibe tus coordenadas GPS para devolver la previsión local. <a href="https://open-meteo.com/en/terms" target="_blank">Términos</a></li>
+    <li><strong>OpenStreetMap / Overpass API</strong> — lugares cercanos y búsqueda de sitios cuando no hay datos en el móvil. Recibe tus coordenadas. <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">Política de privacidad</a></li>
+    <li><strong>OpenStreetMap / Nominatim</strong> — buscador de direcciones al marcar un sitio en el mapa. Recibe el texto que escribes en ese buscador, pero no tu ubicación. <a href="https://wiki.osmfoundation.org/wiki/Privacy_Policy" target="_blank">Política de privacidad</a></li>
+    <li><strong>MapTiler y OpenStreetMap (mapas)</strong> — las imágenes del mapa y, en la web, las tipografías de sus etiquetas (OpenMapTiles). Reciben la zona del mapa que estás mirando. <a href="https://www.maptiler.com/privacy-policy/" target="_blank">Política de privacidad de MapTiler</a></li>
+    <li><strong>Wikimedia Commons y Wikidata</strong> — fotos y datos de los sitios. Reciben el nombre y la posición del sitio que consultas, no la tuya. <a href="https://foundation.wikimedia.org/wiki/Policy:Privacy_policy" target="_blank">Política de privacidad</a></li>
+    <li><strong>Tussam y Metro de Sevilla (ArcGIS)</strong> — paradas y estaciones cercanas. Pueden recibir tu ubicación aproximada para buscar las que tienes cerca.</li>
+    <li><strong>Consorcio de Transporte Metropolitano de Sevilla (api.ctan.es)</strong> — autobuses interurbanos. No envía datos del usuario.</li>
+    <li><strong>CityBikes</strong> — estaciones de Sevici. No envía datos del usuario.</li>
+    <li><strong>YouTube</strong> — miniaturas de los vídeos de algunos sitios. No envía datos del usuario más allá de la propia petición de la imagen.</li>
+    <li><strong>Firebase Cloud Messaging (Google)</strong> — avisos push, si los aceptas. Recibe un identificador del dispositivo para poder entregarlos. <a href="https://policies.google.com/privacy" target="_blank">Política de privacidad</a></li>
+    <li><strong>Wikipedia API</strong> — efeméride del día. No envía datos del usuario.</li>
+    <li><strong>Datos Abiertos Junta de Andalucía</strong> — agenda cultural. No envía datos del usuario.</li>
+    <li><strong>Ayuntamiento de Sevilla / OnSevilla</strong> — eventos locales vía RSS. No envía datos del usuario.</li>
+    <li><strong>Ticketmaster</strong> — conciertos y espectáculos con entradas. La consulta la hace nuestro servidor y no tu móvil, así que Ticketmaster no recibe ningún dato tuyo. Si tocas «Entradas» se abre su web, y a partir de ahí se aplica su política. <a href="https://www.ticketmaster.es/h/privacy.html" target="_blank">Política de privacidad</a></li>
+    <li><strong>Google Fonts</strong> — tipografía. Puede realizar peticiones a servidores de Google. <a href="https://policies.google.com/privacy" target="_blank">Política de privacidad</a></li>
+    <li><strong>footballwebpages.co.uk</strong> — calendarios de fútbol. No envía datos del usuario.</li>
+    <li><strong>Google (inicio de sesión)</strong> — si inicias sesión con Google, usas la autenticación de Google. <a href="https://policies.google.com/privacy" target="_blank">Política de privacidad</a></li>
+    <li><strong>Sentry</strong> — monitorización de errores para detectar y corregir fallos. Puede registrar información técnica del dispositivo (modelo, versión del sistema). <a href="https://sentry.io/privacy/" target="_blank">Política de privacidad</a></li>
+  </ul>
+  <p>
+    La web carga sus librerías (mapas, componentes) desde su propio dominio, no
+    desde CDN de terceros, y los mapas se sirven desde su propia infraestructura.
+  </p>
+
+  <h2>7. Fotos que envías</h2>
+  <p>
+    Puedes adjuntar una foto al sugerir un sitio o aportar sus datos, al avisar
+    de que la que aparece no es de ese lugar, al reportar un problema, al
+    escribir una reseña o en cada parada de una ruta. Es siempre opcional: todo
+    lo demás funciona sin ella.
+  </p>
+  <p>
+    <strong>Qué hacemos con ella.</strong> Las revisamos a mano antes de
+    publicar nada. Si la foto es buena, puede pasar a ser la imagen con la que
+    ese sitio aparece en la app, y en ese caso la verá cualquiera que lo
+    consulte. Al enviarla nos das permiso para usarla con esa finalidad. Las
+    fotos de las reseñas y de las paradas de una ruta se publican junto a la
+    reseña o la ruta una vez aprobadas.
+  </p>
+  <p>
+    <strong>Sigue siendo tuya.</strong> No cedes la propiedad de la foto ni
+    renuncias a nada: nos autorizas a mostrarla dentro de SeviTime, y puedes
+    pedirnos que la retiremos cuando quieras escribiendo a
+    <a href="mailto:sevitimeapp@gmail.com">sevitimeapp@gmail.com</a>. Tampoco la
+    publicamos en otros servicios: cuando enviamos un aviso a OpenStreetMap
+    incluimos el enlace a la foto para que quien mantiene el mapa pueda
+    comprobar el dato, pero no la subimos allí ni a Wikimedia Commons, porque
+    eso exigiría una cesión bajo licencia libre que no te pedimos.
+  </p>
+  <div class="highlight">
+    No subas fotos en las que se reconozca a personas, matrículas o el interior
+    de una vivienda. Tu permiso no cubre a quien salga en ellas, y esas fotos
+    las descartamos.
+  </div>
+  <p>
+    Las fotos se guardan en Supabase (bucket <code>sugerencias-fotos</code>), en
+    una carpeta con el identificador de tu cuenta, y se borran al eliminarla,
+    salvo las que ya ilustran la ficha de un sitio (ver
+    <a href="borrar-cuenta.html">qué se borra al eliminar la cuenta</a>).
+    Las de reseñas y rutas se ven con tu nombre público, igual que la reseña o
+    la ruta. Las que pasan a ser la imagen de un sitio no llevan crédito de
+    autor, para no publicar datos de quien las envía.
+  </p>
+
+  <h2>8. Base legal (RGPD)</h2>
+  <p>
+    Los datos de uso anónimos se tratan al amparo del <strong>interés legítimo</strong>
+    del desarrollador para mejorar la aplicación (art. 6.1.f RGPD). Al no contener
+    dato personal alguno, los datos estadísticos anónimos quedan fuera del ámbito
+    de aplicación del RGPD conforme al Considerando 26.
+  </p>
+  <p>
+    La sincronización de favoritos mediante UUID anónimo se realiza con tu
+    <strong>consentimiento implícito</strong> al usar la funcionalidad de favoritos,
+    y puede eliminarse desinstalando la app.
+  </p>
+  <p>
+    Los datos asociados a tu cuenta de Google se tratan con tu
+    <strong>consentimiento</strong> al iniciar sesión (art. 6.1.a RGPD) y se eliminan
+    al cerrar sesión o borrar tu cuenta desde la app.
+  </p>
+  <p>
+    Las fotos que envías se tratan con tu <strong>consentimiento</strong>
+    (art. 6.1.a RGPD), que das al enviarlas después de que la app te explique,
+    en ese mismo momento, que pueden acabar publicadas como imagen del sitio.
+  </p>
+
+  <h2>9. Tus derechos</h2>
+  <p>Puedes ejercer tus derechos de acceso, rectificación, supresión y portabilidad
+  escribiendo a <a href="mailto:sevitimeapp@gmail.com">sevitimeapp@gmail.com</a>.
+  Si has iniciado sesión, puedes cerrar sesión desde la app o la web, y borrar tu
+  cuenta y sus datos desde Ajustes (en la app). Si usas la app de forma anónima,
+  basta con desinstalarla o contactarnos indicando tu UUID (visible bajo petición).</p>
+
+  <h2>10. Menores</h2>
+  <p>SeviTime no está dirigida a menores de 14 años. No recogemos conscientemente
+  datos de menores.</p>
+
+  <h2>11. Cambios en esta política</h2>
+  <p>Cualquier cambio relevante se notificará mediante la actualización de la fecha
+  al inicio de este documento. Te recomendamos revisarla periódicamente.</p>
+
+</main>
+
+<footer>
+  SeviTime &copy; 2026 · <a href="mailto:sevitimeapp@gmail.com">sevitimeapp@gmail.com</a>
+</footer>
+
+</body>
+</html>
