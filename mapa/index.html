@@ -104,17 +104,20 @@
   #barra .buscar-resultados .b-tipo,
   #barra .buscar-resultados .b-estado { color: var(--tenue); font-size: var(--t-etiqueta); }
   #barra .buscar-resultados .b-estado { display: block; padding: 8px 10px; }
-  /* Vuelta a la web sin montar un cabecero entero, que aquí taparía el mapa. */
-  .marca-mapa { display: inline-flex; align-items: center; flex: 0 0 auto; border-radius: var(--r-sm); }
-  .marca-mapa img { border-radius: var(--r-sm); display: block; }
-  .marca-mapa:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 2px; }
-  /* Vuelta explícita a la portada, junto al logo. */
-  .enlace-inicio {
-    flex: 0 0 auto; font-size: var(--t-cuerpo); color: var(--texto);
-    text-decoration: none; white-space: nowrap; padding: 2px 4px; border-radius: var(--r-sm);
+  /* Vuelta a la web sin montar un cabecero entero, que aquí taparía el mapa.
+     El texto hace visible la salida y comparte enlace con el logo para no
+     duplicar la misma acción en la barra. */
+  .marca-mapa {
+    display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
+    min-height: 40px; padding: 6px 10px 6px 6px;
+    border: 1px solid transparent; border-radius: var(--r-sm);
+    color: var(--texto); font-size: var(--t-cuerpo); font-weight: 600;
+    text-decoration: none; white-space: nowrap;
   }
-  .enlace-inicio:hover { color: var(--verde-claro); }
-  .enlace-inicio:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 2px; }
+  .marca-mapa img { border-radius: var(--r-sm); display: block; }
+  #barra .marca-mapa span { color: inherit; }
+  .marca-mapa:hover { color: var(--verde-claro); background: var(--superficie-alta); }
+  .marca-mapa:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 2px; }
 
   /* Hoja inferior en móvil: antes era una caja flotante de 300px fijos que,
      a 390px de ancho, ocupaba el 75% de la pantalla y podía solaparse con la
@@ -293,7 +296,9 @@
       border-left: none; border-right: none; border-top: none;
       border-bottom: 1px solid var(--borde);
       border-radius: 0; max-width: none;
-      padding: 12px 24px;
+      /* La barra ocupa todo el ancho, pero sus controles arrancan en la
+         misma columna que la marca del resto de la web (contenedor de 1120px). */
+      padding: 12px max(24px, calc((100vw - 1120px) / 2));
     }
     #barra #ayuda { flex: 1; }
     #scrim { display: none; }
@@ -329,10 +334,10 @@
 <div id="scrim"></div>
 
 <div id="barra">
-  <a href="/" class="marca-mapa" title="Volver a sevitime.com" aria-label="Volver a sevitime.com">
+  <a href="/" class="marca-mapa" title="Volver a sevitime.com">
     <img src="/icono.png" alt="" width="24" height="24" />
+    <span>Inicio</span>
   </a>
-  <a href="/" class="enlace-inicio">Inicio</a>
   <span id="ayuda">👉 Explora los sitios de Sevilla o aporta un cambio al mapa</span>
   <div class="buscar-caja">
     <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
