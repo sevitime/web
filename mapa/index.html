@@ -78,7 +78,7 @@
   /* Solo el texto de ayuda (hijo directo). Con `#barra span` a secas, el
      <span> de dentro del botón «Entrar con Google» heredaba este gris y se
      veía más claro que en el resto de páginas. */
-  #barra > span { font-size: var(--t-cuerpo); color: var(--apagado); }
+  #barra > span { font-size: var(--t-cuerpo); color: var(--apagado); white-space: nowrap; }
   /* Buscador: solo entre los sitios de SeviTime (el mismo lugares.js de la
      app), así que no pregunta a ningún servicio externo. Los selectores
      van con #barra para ganar a `#barra button` y `#barra span`. */
@@ -297,7 +297,10 @@
       border-radius: 0; max-width: none;
       padding: 12px 24px;
     }
-    #barra #ayuda { flex: 1; }
+    /* En escritorio el texto de ayuda sobra (los botones ya lo dicen) y
+       ocupaba lo justo para que la barra pasara a dos filas. Quitándolo, la
+       barra queda en una sola fila, como el resto de pantallas. */
+    #barra #ayuda { display: none; }
     #scrim { display: none; }
     .panel {
       position: absolute; top: 78px; right: 16px; left: auto; bottom: auto;
@@ -335,7 +338,7 @@
     <img src="/icono.png" alt="" width="24" height="24" />
     <span>Inicio</span>
   </a>
-  <span id="ayuda">👉 Explora los sitios de Sevilla o aporta un cambio al mapa</span>
+  <span id="ayuda">👉 Explora o aporta al mapa</span>
   <div class="buscar-caja">
     <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
     <ul id="buscar-resultados" class="buscar-resultados"></ul>
