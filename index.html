@@ -30,7 +30,8 @@
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css">
 <script defer src="/nav.js"></script>
-<script defer src="/libs/supabase.min.js"></script>
+<!-- Supabase (216 KB) no se carga aquí a propósito: auth.js lo pide solo si
+     hay sesión, se vuelve del login o se pulsa «Entrar con Google». -->
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",

@@ -12,12 +12,22 @@
 //
 // `onAuth` es la lista de callbacks a los que se avisa cuando cambia la
 // sesión (para que el ranking repinte y marque tu fila, por ejemplo).
+//
+// La librería de Supabase (216 KB) NO se carga si no hace falta. En la
+// portada, donde mucha gente no entra nunca, se descarga solo al pulsar
+// «Entrar con Google», si hay una sesión guardada o si venimos del login.
+// Las páginas que hacen uso directo de Supabase (mapa, rutas, ranking,
+// eventos) siguen incluyendo el <script> ellas mismas, y aquí se detecta y
+// se usa sin cargarlo dos veces.
 (function () {
   var SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
   var SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
+  var SUPABASE_SRC = '/libs/supabase.min.js';
 
-  var sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-  window.SEVI = { sb: sb, onAuth: [] };
+  var sb = null;
+  var cola = null;
+
+  window.SEVI = { sb: null, onAuth: [] };
 
   function nombreDe(user) {
     return user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)
@@ -116,9 +126,11 @@
       texto.textContent = 'Entrar con Google';
       boton.appendChild(texto);
       boton.addEventListener('click', function () {
-        sb.auth.signInWithOAuth({
-          provider: 'google',
-          options: { redirectTo: window.location.origin + window.location.pathname },
+        conSupabase(function () {
+          sb.auth.signInWithOAuth({
+            provider: 'google',
+            options: { redirectTo: window.location.origin + window.location.pathname },
+          });
         });
       });
       seccion.appendChild(boton);
@@ -130,15 +142,75 @@
     window.SEVI.onAuth.forEach(function (fn) { fn(user); });
   }
 
-  sb.auth.onAuthStateChange(function (_event, session) {
-    avisar(session ? session.user : null);
-  });
-
-  sb.auth.getSession().then(function (res) {
-    var session = res.data && res.data.session;
-    avisar(session ? session.user : null);
-    if (window.location.hash.indexOf('access_token=') !== -1 || window.location.search.indexOf('code=') !== -1) {
-      window.history.replaceState(null, '', window.location.pathname);
+  // ¿Hay una sesión de Supabase guardada en este navegador? La clave que usa
+  // supabase-js es `sb-<ref>-auth-token` (a veces troceada en `.0`, `.1`…).
+  function haySesionGuardada() {
+    try {
+      for (var i = 0; i < localStorage.length; i++) {
+        var clave = localStorage.key(i);
+        if (clave && clave.indexOf('sb-') === 0 && clave.indexOf('-auth-token') !== -1) {
+          return true;
+        }
+      }
+    } catch (e) {
+      // localStorage bloqueado (modo privado estricto): trátalo como sin sesión.
     }
-  });
+    return false;
+  }
+
+  // Volvemos del login: Supabase tiene que procesar la URL (código o tokens).
+  function vieneDelLogin() {
+    return window.location.hash.indexOf('access_token=') !== -1 ||
+      window.location.search.indexOf('code=') !== -1;
+  }
+
+  function iniciar() {
+    if (sb) return;
+    sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    window.SEVI.sb = sb;
+
+    sb.auth.onAuthStateChange(function (_event, session) {
+      avisar(session ? session.user : null);
+    });
+
+    sb.auth.getSession().then(function (res) {
+      var session = res.data && res.data.session;
+      avisar(session ? session.user : null);
+      if (vieneDelLogin()) {
+        window.history.replaceState(null, '', window.location.pathname);
+      }
+    });
+  }
+
+  // Garantiza que Supabase está listo y ejecuta `fn`. Si no está cargado, lo
+  // descarga una sola vez y encola las llamadas que lleguen mientras tanto.
+  function conSupabase(fn) {
+    if (sb) { fn(); return; }
+    if (window.supabase) { iniciar(); fn(); return; }
+    if (cola) { cola.push(fn); return; }
+    cola = [fn];
+    var script = document.createElement('script');
+    script.src = SUPABASE_SRC;
+    script.onload = function () {
+      iniciar();
+      var pendientes = cola;
+      cola = null;
+      pendientes.forEach(function (f) { f(); });
+    };
+    script.onerror = function () {
+      cola = null;
+    };
+    document.head.appendChild(script);
+  }
+
+  if (window.supabase) {
+    // La página ya trae la librería: no hay nada que diferir.
+    iniciar();
+  } else if (haySesionGuardada() || vieneDelLogin()) {
+    // Hay sesión o venimos del login: necesitamos Supabase ya.
+    conSupabase(function () {});
+  } else {
+    // Visitante anónimo: pinta el botón y no descargues nada todavía.
+    pintar(null);
+  }
 })();
