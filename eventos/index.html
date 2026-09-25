@@ -80,6 +80,86 @@
   }
   .vacio { color: var(--tenue); font-size: var(--t-cuerpo); padding: 20px 0; }
   .nota { margin-top: 30px; font-size: var(--t-etiqueta); color: var(--tenue); }
+
+  /* La tarjeta es un botón (abre la ficha): se le quita el aspecto de botón. */
+  button.evento-enlace {
+    background: none; border: 0; padding: 0; margin: 0; width: 100%;
+    font: inherit; text-align: left; cursor: pointer;
+  }
+  button.evento-enlace:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: -2px; border-radius: var(--r-lg); }
+
+  .eventos-intro-fila { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; }
+
+  .boton-primario, .boton-secundario {
+    display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+    min-height: 44px; padding: 0 18px; border-radius: var(--r-sm);
+    font: inherit; font-size: var(--t-cuerpo); font-weight: 700;
+    text-decoration: none; cursor: pointer;
+  }
+  .boton-primario { background: var(--verde-solido); color: #fff; border: 1px solid var(--verde-solido); }
+  .boton-secundario { background: transparent; color: var(--verde-claro); border: 1px solid var(--verde-claro); }
+  .boton-primario:disabled, .boton-secundario:disabled { opacity: .6; cursor: default; }
+
+  dialog.ventana {
+    width: min(640px, calc(100% - 32px)); max-height: calc(100dvh - 32px); margin: auto;
+    padding: 0; border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); color: var(--texto); overflow: auto;
+  }
+  dialog.ventana::backdrop { background: rgba(0, 0, 0, .55); }
+  .ventana-cerrar {
+    position: sticky; top: 0; float: right; margin: 8px; z-index: 1;
+    width: 44px; height: 44px; border-radius: var(--r-pill); border: 1px solid var(--borde);
+    background: var(--superficie-alta); color: var(--texto); font-size: 20px; cursor: pointer;
+  }
+  .ficha-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  .ficha-cab, .ficha-seccion, .proponer-cuerpo { padding: 16px 20px; }
+  .ficha-cab { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+  .ficha-titulo { margin: 0; font-size: var(--t-seccion); line-height: 1.25; }
+  .ficha-desc { margin: 4px 0 8px; font-size: var(--t-cuerpo); color: var(--apagado); line-height: 1.5; }
+  .ficha-seccion { border-top: 1px solid var(--borde); }
+  .ficha-seccion h3 { margin: 0 0 8px; font-size: var(--t-item); }
+  .ficha-apagado { margin: 0 0 10px; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .ficha-nota { margin: 6px 0 0; font-size: var(--t-etiqueta); color: var(--tenue); }
+
+  .personas { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 12px; }
+  .persona {
+    display: inline-flex; align-items: center; gap: 6px; padding: 3px 10px 3px 3px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill); font-size: var(--t-etiqueta);
+  }
+  .persona-mas { padding-left: 10px; color: var(--apagado); }
+  .persona-avatar {
+    width: 24px; height: 24px; border-radius: 50%; overflow: hidden; display: inline-flex;
+    align-items: center; justify-content: center; background: var(--superficie-alta);
+    color: var(--verde-claro); font-weight: 700; font-size: 11px;
+  }
+  .persona-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+  .interruptor { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; cursor: pointer; }
+  .interruptor input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--verde-solido); flex: none; }
+  .interruptor span { display: flex; flex-direction: column; gap: 2px; font-size: var(--t-cuerpo); }
+  .interruptor small { color: var(--tenue); font-size: var(--t-etiqueta); }
+
+  .comentario { padding: 10px 12px; margin-bottom: 8px; border: 1px solid var(--borde); border-radius: var(--r-sm); background: var(--fondo); }
+  .comentario p { margin: 4px 0 0; font-size: var(--t-cuerpo); line-height: 1.45; white-space: pre-wrap; overflow-wrap: anywhere; }
+  .comentario-meta { font-size: var(--t-etiqueta); color: var(--tenue); font-weight: 600; }
+  .enlace-discreto { margin-top: 4px; padding: 4px 0; background: none; border: 0; color: var(--tenue); font: inherit; font-size: var(--t-etiqueta); text-decoration: underline; cursor: pointer; }
+
+  .ventana textarea, .ventana input, .ventana select {
+    width: 100%; box-sizing: border-box; padding: 10px 12px; margin: 4px 0 10px;
+    border: 1px solid var(--borde); border-radius: var(--r-sm);
+    background: var(--fondo); color: var(--texto); font: inherit; font-size: 16px;
+  }
+  .ventana textarea { resize: vertical; }
+  .ventana label.campo { display: block; font-size: var(--t-etiqueta); color: var(--apagado); font-weight: 600; }
+  .campos-fila { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0 10px; }
+  .proponer-msg { min-height: 1.2em; font-size: var(--t-cuerpo); color: var(--error); margin: 4px 0 8px; }
+
+  .tostada {
+    position: fixed; left: 50%; bottom: 24px; transform: translateX(-50%); z-index: 10;
+    max-width: calc(100% - 32px); padding: 10px 16px; border-radius: var(--r-sm);
+    background: var(--superficie-alta); color: var(--texto); border: 1px solid var(--borde);
+    font-size: var(--t-cuerpo); box-shadow: 0 6px 24px rgba(0,0,0,.3);
+  }
 </style>
 </head>
 <body>
@@ -115,9 +195,12 @@
 </nav>
 
 <main class="eventos" id="contenido" tabindex="-1">
-  <div class="eventos-intro">
-    <h1>Qué pasa en Sevilla</h1>
-    <p>Conciertos, festivales, fiestas y deporte, con su fecha y su lugar. Se actualiza cada día.</p>
+  <div class="eventos-intro eventos-intro-fila">
+    <div>
+      <h1>Qué pasa en Sevilla</h1>
+      <p>Conciertos, festivales, fiestas y deporte, con su fecha y su lugar. Se actualiza cada día.</p>
+    </div>
+    <button id="boton-proponer" class="boton-secundario" type="button">+ Proponer un evento</button>
   </div>
 
   <div id="chips-cuando" class="filtros" role="group" aria-label="Filtrar por cuándo"></div>
@@ -125,9 +208,44 @@
 
   <p id="cuenta" class="cuenta">Cargando los eventos…</p>
   <div id="lista"></div>
-  <p class="nota">Los datos vienen de las fuentes públicas que usa la app de SeviTime (Ayuntamiento, prensa y entradas). Los cambios de fecha o cancelaciones los manda cada fuente.</p>
+  <p class="nota">Los datos vienen de las fuentes públicas que usa la app de SeviTime (Ayuntamiento, prensa y entradas). Los cambios de fecha o cancelaciones los manda cada fuente. Los comentarios y los eventos propuestos se revisan antes de publicarse.</p>
 </main>
 
+<dialog id="ficha" class="ventana" aria-labelledby="ficha-titulo">
+  <button id="ficha-cerrar" class="ventana-cerrar" type="button" aria-label="Cerrar">×</button>
+  <div id="ficha-cuerpo"></div>
+</dialog>
+
+<dialog id="proponer" class="ventana" aria-labelledby="proponer-titulo">
+  <button id="proponer-cerrar" class="ventana-cerrar" type="button" aria-label="Cerrar">×</button>
+  <form id="proponer-form" class="proponer-cuerpo">
+    <h2 id="proponer-titulo" class="ficha-titulo">Proponer un evento</h2>
+    <p class="ficha-apagado">No se publica hasta que lo revisemos. Te avisamos en el buzón de la app tanto si sale como si no.</p>
+    <label class="campo">Nombre del evento<input name="nombre" required minlength="3" maxlength="200"></label>
+    <label class="campo">Dónde<input name="lugar" required minlength="3" maxlength="200" placeholder="Sala, recinto o dirección"></label>
+    <div class="campos-fila">
+      <label class="campo">Día<input name="dia" type="date" required></label>
+      <label class="campo">Empieza<input name="hora" type="time" required></label>
+      <label class="campo">Acaba (opcional)<input name="hora_fin" type="time"></label>
+    </div>
+    <label class="campo">Tipo
+      <select name="categoria">
+        <option>Concierto</option><option>Festival</option><option>Espectáculo</option>
+        <option>Flamenco</option><option>Música</option><option>Cultura</option>
+        <option>Fiesta</option><option>Deportes</option><option>Tradición</option><option>Otros</option>
+      </select>
+    </label>
+    <label class="campo">Descripción (opcional)<textarea name="descripcion" maxlength="1000" rows="3"></textarea></label>
+    <label class="campo">Enlace oficial o de entradas (opcional)<input name="url" type="url" pattern="https?://.+" placeholder="https://…"></label>
+    <label class="campo">Para quien lo revisa (opcional)<textarea name="notas" maxlength="500" rows="2" placeholder="¿De dónde lo has sacado? ¿Eres el organizador?"></textarea></label>
+    <p id="proponer-msg" class="proponer-msg" role="status"></p>
+    <button class="boton-primario" type="submit">Enviar para revisar</button>
+    <p class="ficha-nota">La hora es la de Sevilla.</p>
+  </form>
+</dialog>
+
+<script defer src="/eventos/clave.js"></script>
+<script defer src="/eventos/comunidad.js"></script>
 <script defer src="/eventos/eventos.js"></script>
 </body>
 </html>

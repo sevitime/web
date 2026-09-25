@@ -111,16 +111,13 @@
     const art = document.createElement('article');
     art.className = 'evento';
 
-    const enlace = document.createElement('a');
+    // Abre la ficha (quién va, comentarios y el enlace de entradas), no la
+    // web de la fuente: el enlace externo está dentro. Ver comunidad.js.
+    const enlace = document.createElement('button');
+    enlace.type = 'button';
     enlace.className = 'evento-enlace';
-    if (e.url) {
-      enlace.href = e.url;
-      enlace.target = '_blank';
-      enlace.rel = 'noopener';
-    } else {
-      enlace.href = '#';
-      enlace.addEventListener('click', (ev) => ev.preventDefault());
-    }
+    enlace.setAttribute('aria-haspopup', 'dialog');
+    enlace.addEventListener('click', () => window.SeviComunidad.abrir(e));
 
     const img = e.imagenCard || e.imagen;
     if (img) {
@@ -220,6 +217,7 @@
         .sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
       montarFiltros();
       pintar();
+      window.SeviComunidad.conEventos(estado.eventos);
     })
     .catch(() => {
       cuenta.textContent = 'No se pudieron cargar los eventos. Recarga en un momento.';
