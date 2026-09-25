@@ -1,6 +1,6 @@
 // Ficha de un evento (quién va y comentarios) y formulario para proponer
-// uno. Lo mismo que hace la app en EventoComunidadSection y
-// ProponerEventoScreen, contra las mismas funciones de Supabase
+// uno. Lo mismo que hace la app en EventoAccionesPrincipales,
+// EventoComentariosSection y ProponerEventoScreen, contra las mismas funciones de Supabase
 // (docs/sql/eventos_comunidad.sql en el repo de la app).
 //
 // - Ir es privado por defecto: el apodo solo sale si se activa en ESE evento.
@@ -69,6 +69,24 @@
   }
 
   // --- Ficha del evento -----------------------------------------------------
+  //
+  // Orden (revisado el 25-sep-2026, igual que la app): qué es, cuándo y
+  // dónde; justo debajo la decisión —quién va, «Voy» y entradas—; luego la
+  // descripción, y al final los comentarios, que es lo único que crece sin
+  // límite. Solo «Entradas» va relleno: una acción principal por pantalla.
+
+  // Gemela de urlEsDeEntradas (lib/utils/evento_url.dart en la app): el
+  // botón dice «Entradas» solo si el enlace es de una taquilla. Si cambia la
+  // lista allí, cámbiala aquí.
+  const DOMINIOS_ENTRADAS = ['ticketmaster', 'ticket', 'entrada', 'taquilla', 'eventbrite',
+    'wegow', 'giglon', 'feverup', 'dice.fm', 'atrapalo', 'elcorteingles'];
+  function urlEsDeEntradas(url) {
+    let host = '';
+    try { host = new URL(url).hostname.toLowerCase(); } catch (_) { return false; }
+    return DOMINIOS_ENTRADAS.some((d) => host.includes(d));
+  }
+
+  const EN_LA_FICHA = 3;
 
   const dlg = document.getElementById('ficha');
   const cuerpo = document.getElementById('ficha-cuerpo');
@@ -102,94 +120,127 @@
     h.id = 'ficha-titulo';
     cab.appendChild(h);
     cab.appendChild(el('p', 'evento-lugar', e.lugar || 'Sevilla'));
-    if (e.descripcion) cab.appendChild(el('p', 'ficha-desc', e.descripcion));
-    if (e.url) {
-      const a = el('a', 'boton-primario', ['Concierto', 'Festival', 'Espectáculo', 'Música'].includes(e.categoria) ? 'Entradas' : 'Más información');
-      a.href = e.url;
-      a.target = '_blank';
-      a.rel = 'noopener';
-      cab.appendChild(a);
-    }
-    cuerpo.appendChild(cab);
 
-    const asis = el('section', 'ficha-seccion');
-    asis.appendChild(el('h3', null, '¿Quién va?'));
-    const asisCuerpo = el('div', null, 'Cargando…');
-    asis.appendChild(asisCuerpo);
-    cuerpo.appendChild(asis);
+    const accion = el('div', 'accion');
+    cab.appendChild(accion);
+    cuerpo.appendChild(cab);
+    pintarAccion(e, accion, null);
+    cargarAsistencia(e, accion);
+
+    if (e.descripcion) {
+      const sobre = el('section', 'ficha-seccion');
+      sobre.appendChild(el('h3', null, 'Sobre el evento'));
+      sobre.appendChild(el('p', 'ficha-desc', e.descripcion));
+      cuerpo.appendChild(sobre);
+    }
 
     const com = el('section', 'ficha-seccion');
-    com.appendChild(el('h3', null, 'Comentarios'));
-    const comLista = el('div', null, 'Cargando…');
-    com.appendChild(comLista);
-    const comForm = el('div');
-    com.appendChild(comForm);
+    const tit = el('h3', null, 'Comentarios');
+    com.appendChild(tit);
+    const lista = el('div');
+    com.appendChild(lista);
+    const form = el('div');
+    com.appendChild(form);
     cuerpo.appendChild(com);
-
-    cargarAsistencia(e, asisCuerpo);
-    cargarComentarios(e, comLista);
-    pintarFormComentario(e, comForm, comLista);
+    cargarComentarios(e, tit, lista);
+    pintarFormComentario(e, form);
   }
 
-  async function cargarAsistencia(e, caja) {
-    const clave = claveEvento(e);
-    let a = { total: 0, voy: false, publico_mio: false, visibles: [] };
-    try {
-      const { data, error } = await sb().rpc('fn_evento_asistencia', { p_clave: clave });
-      if (!error && data) a = data;
-    } catch (_) { /* se queda en cero */ }
-    if (abierto !== e) return;
-    caja.textContent = '';
-
-    const pasado = yaPaso(e);
+  function resumenAsistencia(e, a) {
     const n = a.total || 0;
-    const resumen = n === 0
-      ? (pasado ? 'Nadie dijo que iba.' : 'Aún no se ha apuntado nadie.')
-      : pasado
-        ? (n === 1 ? 'Fue 1 persona.' : 'Fueron ' + n + ' personas.')
-        : (n === 1 ? 'Va 1 persona.' : 'Van ' + n + ' personas.');
-    caja.appendChild(el('p', 'ficha-apagado', resumen));
+    if (yaPaso(e)) return n === 0 ? 'Nadie dijo que iba' : n === 1 ? 'Fue 1 persona' : 'Fueron ' + n + ' personas';
+    if (n === 0) return 'Sé la primera persona en apuntarte';
+    if (a.voy) return n === 1 ? 'Vas tú' : n === 2 ? 'Vas tú y 1 persona más' : 'Vas tú y ' + (n - 1) + ' personas más';
+    return n === 1 ? 'Va 1 persona' : 'Van ' + n + ' personas';
+  }
 
-    const visibles = a.visibles || [];
+  function avatar(v) {
+    const av = el('span', 'persona-avatar');
+    if (v.avatar) {
+      const im = el('img');
+      im.src = v.avatar;
+      im.alt = '';
+      av.appendChild(im);
+    } else {
+      av.textContent = (v.nombre_publico || '?').charAt(0).toUpperCase();
+    }
+    return av;
+  }
+
+  // La tarjeta de acción. `a` es null mientras carga.
+  function pintarAccion(e, caja, a) {
+    caja.textContent = '';
+    const clave = claveEvento(e);
+    const puedeIr = !yaPaso(e);
+    const hayUrl = !!e.url;
+    const est = a || { total: 0, voy: false, publico_mio: false, visibles: [] };
+    const visibles = est.visibles || [];
+
+    // Quién va
+    const fila = el(visibles.length ? 'button' : 'div', 'accion-quien');
     if (visibles.length) {
-      const fila = el('div', 'personas');
+      fila.type = 'button';
+      fila.setAttribute('aria-expanded', 'false');
+      const pila = el('span', 'avatares');
+      visibles.slice(0, 4).forEach((v) => pila.appendChild(avatar(v)));
+      fila.appendChild(pila);
+    } else {
+      fila.appendChild(el('span', 'accion-icono', '👥'));
+    }
+    fila.appendChild(el('span', 'accion-resumen', a ? resumenAsistencia(e, est) : ' '));
+    caja.appendChild(fila);
+
+    if (visibles.length) {
+      const nombres = el('div', 'personas');
+      nombres.hidden = true;
       visibles.forEach((v) => {
         const p = el('span', 'persona');
-        const av = el('span', 'persona-avatar');
-        if (v.avatar) {
-          const im = el('img');
-          im.src = v.avatar;
-          im.alt = '';
-          av.appendChild(im);
-        } else {
-          av.textContent = (v.nombre_publico || '?').charAt(0).toUpperCase();
-        }
-        p.appendChild(av);
+        p.appendChild(avatar(v));
         p.appendChild(el('span', null, v.nombre_publico));
-        fila.appendChild(p);
+        nombres.appendChild(p);
       });
-      const resto = n - visibles.length;
-      if (resto > 0) fila.appendChild(el('span', 'persona persona-mas', '+' + resto + ' más'));
-      caja.appendChild(fila);
+      nombres.appendChild(el('small', 'ficha-nota', 'Solo salen quienes han elegido que se vea su apodo en este evento.'));
+      fila.addEventListener('click', () => {
+        nombres.hidden = !nombres.hidden;
+        fila.setAttribute('aria-expanded', String(!nombres.hidden));
+      });
+      caja.appendChild(nombres);
     }
 
-    if (pasado) return;
+    // Botones: «Voy» tonal y el enlace relleno. Sin enlace, «Voy» es la
+    // única acción y va relleno.
+    const botones = el('div', 'accion-botones');
+    if (puedeIr) {
+      const voy = el('button', hayUrl || est.voy ? 'boton-tonal' : 'boton-primario', (est.voy ? '✓ ' : '') + 'Voy');
+      voy.type = 'button';
+      voy.setAttribute('aria-pressed', String(!!est.voy));
+      if (est.voy) voy.classList.add('marcado');
+      voy.disabled = !a;
+      voy.addEventListener('click', async () => {
+        if (!usuario) { entrar(clave); return; }
+        voy.disabled = true;
+        await asistir(e, !est.voy, false);
+        cargarAsistencia(e, caja);
+      });
+      botones.appendChild(voy);
+    }
+    if (hayUrl) {
+      const entradas = urlEsDeEntradas(e.url);
+      const link = el('a', 'boton-primario',
+        entradas ? 'Entradas' : (puedeIr ? 'Más info' : 'Más información'));
+      link.href = e.url;
+      link.target = '_blank';
+      link.rel = 'noopener';
+      botones.appendChild(link);
+    }
+    if (botones.childNodes.length === 1) botones.classList.add('uno');
+    if (botones.childNodes.length) caja.appendChild(botones);
 
-    const boton = el('button', a.voy ? 'boton-secundario' : 'boton-primario', a.voy ? '✓ Voy · Desapuntarme' : 'Voy');
-    boton.type = 'button';
-    boton.addEventListener('click', async () => {
-      if (!usuario) { entrar(clave); return; }
-      boton.disabled = true;
-      await asistir(e, !a.voy, false);
-      cargarAsistencia(e, caja);
-    });
-    caja.appendChild(boton);
-
-    if (a.voy) {
+    if (puedeIr && est.voy) {
       const et = el('label', 'interruptor');
       const cb = el('input');
       cb.type = 'checkbox';
-      cb.checked = !!a.publico_mio;
+      cb.checked = !!est.publico_mio;
       cb.addEventListener('change', async () => {
         cb.disabled = true;
         await asistir(e, true, cb.checked);
@@ -199,11 +250,21 @@
       const txt = el('span');
       txt.appendChild(el('strong', null, 'Que se vea mi apodo en este evento'));
       txt.appendChild(el('small', null, miApodo
-        ? 'Saldrá como «' + miApodo + '». Si no, solo cuentas en el total y nadie sabe que eres tú.'
+        ? 'Saldrá como «' + miApodo + '». Si no, solo cuentas en el total.'
         : 'Aún no tienes apodo: elígelo en la app de SeviTime para poder aparecer.'));
       et.appendChild(txt);
       caja.appendChild(et);
     }
+  }
+
+  async function cargarAsistencia(e, caja) {
+    let a = { total: 0, voy: false, publico_mio: false, visibles: [] };
+    try {
+      const { data, error } = await sb().rpc('fn_evento_asistencia', { p_clave: claveEvento(e) });
+      if (!error && data) a = data;
+    } catch (_) { /* se queda en cero */ }
+    if (abierto !== e) return;
+    pintarAccion(e, caja, a);
   }
 
   async function asistir(e, voy, publico) {
@@ -218,7 +279,25 @@
     }
   }
 
-  async function cargarComentarios(e, caja) {
+  function tarjetaComentario(c) {
+    const art = el('article', 'comentario');
+    art.appendChild(el('div', 'comentario-meta', (c.nombre_publico || 'Usuario de SeviTime') + ' · ' + fechaCorta(c.created_at)));
+    art.appendChild(el('p', null, c.texto));
+    if (c.es_mio) {
+      const borrar = el('button', 'enlace-discreto', 'Borrar');
+      borrar.type = 'button';
+      borrar.addEventListener('click', async () => {
+        if (!window.confirm('¿Borrar tu comentario? No se puede recuperar.')) return;
+        const { error } = await sb().from('evento_comentarios').delete().eq('id', c.id);
+        if (error) alertaSuave('No se ha podido borrar.');
+        else art.remove();
+      });
+      art.appendChild(borrar);
+    }
+    return art;
+  }
+
+  async function cargarComentarios(e, titulo, caja) {
     let filas = [];
     try {
       const { data, error } = await sb().rpc('fn_evento_comentarios', { p_clave: claveEvento(e) });
@@ -226,57 +305,66 @@
     } catch (_) { /* sin comentarios */ }
     if (abierto !== e) return;
     caja.textContent = '';
+    if (filas.length) titulo.appendChild(el('span', 'ficha-cuenta', ' ' + filas.length));
     if (!filas.length) {
-      caja.appendChild(el('p', 'ficha-apagado', 'Todavía no hay comentarios.'));
+      caja.appendChild(el('p', 'ficha-apagado', '¿Vas a ir o ya has estado? Cuenta qué tal.'));
       return;
     }
-    filas.forEach((c) => {
-      const art = el('article', 'comentario');
-      const meta = el('div', 'comentario-meta', (c.nombre_publico || 'Usuario de SeviTime') + ' · ' + fechaCorta(c.created_at));
-      art.appendChild(meta);
-      art.appendChild(el('p', null, c.texto));
-      if (c.es_mio) {
-        const borrar = el('button', 'enlace-discreto', 'Borrar');
-        borrar.type = 'button';
-        borrar.addEventListener('click', async () => {
-          if (!window.confirm('¿Borrar tu comentario? No se puede recuperar.')) return;
-          const { error } = await sb().from('evento_comentarios').delete().eq('id', c.id);
-          if (error) alertaSuave('No se ha podido borrar.');
-          else art.remove();
-        });
-        art.appendChild(borrar);
+    // En la ficha, los más recientes primero; «Ver todos» los pone en orden.
+    const pintar = (todos) => {
+      caja.textContent = '';
+      const lista = todos ? filas : filas.slice(-EN_LA_FICHA).reverse();
+      lista.forEach((c) => caja.appendChild(tarjetaComentario(c)));
+      if (!todos && filas.length > EN_LA_FICHA) {
+        const mas = el('button', 'enlace-discreto', 'Ver los ' + filas.length + ' comentarios');
+        mas.type = 'button';
+        mas.addEventListener('click', () => pintar(true));
+        caja.appendChild(mas);
       }
-      caja.appendChild(art);
-    });
+    };
+    pintar(false);
   }
 
-  async function pintarFormComentario(e, caja, lista) {
+  async function pintarFormComentario(e, caja) {
     caja.textContent = '';
     if (!usuario) {
-      const b = el('button', 'boton-secundario', 'Inicia sesión para comentar o decir que vas');
+      const b = el('button', 'boton-secundario ancho', 'Inicia sesión para comentar');
       b.type = 'button';
       b.addEventListener('click', () => entrar(claveEvento(e)));
       caja.appendChild(b);
       return;
     }
 
-    const aviso = el('p', 'ficha-apagado');
     try {
       const { data } = await sb().from('evento_comentarios')
         .select('id, evento_ref!inner(clave)')
         .eq('user_id', usuario.id).eq('estado', 'pendiente')
         .eq('evento_ref.clave', claveEvento(e));
       const n = (data || []).length;
-      if (n) aviso.textContent = n === 1 ? '⏳ Tienes 1 comentario esperando revisión.' : '⏳ Tienes ' + n + ' comentarios esperando revisión.';
+      if (n) caja.appendChild(el('p', 'ficha-apagado', n === 1 ? '⏳ Tienes 1 comentario esperando revisión.' : '⏳ Tienes ' + n + ' comentarios esperando revisión.'));
     } catch (_) { /* nada que avisar */ }
 
+    // El campo no se abre hasta que se pide: con él siempre abierto, la
+    // ficha parecía un formulario.
+    const abrirForm = el('button', 'boton-secundario ancho', 'Escribir un comentario');
+    abrirForm.type = 'button';
+    const form = el('div', 'comentar');
+    form.hidden = true;
     const area = el('textarea');
     area.maxLength = 1000;
     area.rows = 3;
-    area.placeholder = '¿Vas? ¿Qué tal la última vez? Cuéntalo';
+    area.placeholder = 'Escribe tu comentario';
     area.setAttribute('aria-label', 'Escribe un comentario');
     const enviar = el('button', 'boton-primario', 'Enviar');
     enviar.type = 'button';
+    form.appendChild(area);
+    form.appendChild(enviar);
+    form.appendChild(el('p', 'ficha-nota', 'Los comentarios se revisan antes de publicarse.'));
+    abrirForm.addEventListener('click', () => {
+      abrirForm.hidden = true;
+      form.hidden = false;
+      area.focus();
+    });
     enviar.addEventListener('click', async () => {
       const texto = area.value.trim();
       if (!texto) return;
@@ -289,19 +377,15 @@
         });
         if (error) throw error;
         if (data && data.error === 'tope diario') msg = 'Has llegado al máximo de comentarios de hoy. Vuelve mañana.';
-        else area.value = '';
       } catch (_) {
         msg = 'No se ha podido enviar. Inténtalo de nuevo.';
       }
       enviar.disabled = false;
       alertaSuave(msg);
-      pintarFormComentario(e, caja, lista);
+      pintarFormComentario(e, caja);
     });
-
-    if (aviso.textContent) caja.appendChild(aviso);
-    caja.appendChild(area);
-    caja.appendChild(enviar);
-    caja.appendChild(el('p', 'ficha-nota', 'Los comentarios se revisan antes de publicarse.'));
+    caja.appendChild(abrirForm);
+    caja.appendChild(form);
   }
 
   // Aviso breve dentro del diálogo abierto (o de la página), sin alert().
