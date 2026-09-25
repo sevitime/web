@@ -172,6 +172,7 @@
   .ancho { width: 100%; }
   .ficha-cuenta { color: var(--tenue); font-weight: 600; }
   .comentar { margin-top: 4px; }
+  .foto-aviso { margin: -4px 0 12px; }
 
   .interruptor { display: flex; gap: 10px; align-items: flex-start; margin-top: 12px; cursor: pointer; }
   .interruptor input { width: 20px; height: 20px; margin-top: 2px; accent-color: var(--verde-solido); flex: none; }
@@ -248,7 +249,7 @@
 
   <p id="cuenta" class="cuenta">Cargando los eventos…</p>
   <div id="lista"></div>
-  <p class="nota">Los datos vienen de las fuentes públicas que usa la app de SeviTime (Ayuntamiento, prensa y entradas). Los cambios de fecha o cancelaciones los manda cada fuente. Los comentarios y los eventos propuestos se revisan antes de publicarse.</p>
+  <p class="nota">Los datos vienen de las fuentes públicas que usa la app de SeviTime (salas, prensa y entradas). Los cambios de fecha o cancelaciones los manda cada fuente. Los comentarios y los eventos propuestos se revisan antes de publicarse.</p>
 </main>
 
 <dialog id="ficha" class="ventana" aria-labelledby="ficha-titulo">
@@ -275,6 +276,8 @@
         <option>Fiesta</option><option>Deportes</option><option>Tradición</option><option>Otros</option>
       </select>
     </label>
+    <label class="campo">Cartel o foto (opcional)<input name="foto" type="file" accept="image/jpeg,image/png,image/webp"></label>
+    <p class="ficha-nota foto-aviso">Si se aprueba, será la imagen del evento en la app y en la web, y al enviarla nos das permiso para publicarla. Sube el cartel que difunde el organizador o una foto tuya, y evita fotos en las que se reconozca a alguien.</p>
     <label class="campo">Descripción (opcional)<textarea name="descripcion" maxlength="1000" rows="3"></textarea></label>
     <label class="campo">Enlace oficial o de entradas (opcional)<input name="url" type="url" pattern="https?://.+" placeholder="https://…"></label>
     <label class="campo">Para quien lo revisa (opcional)<textarea name="notas" maxlength="500" rows="2" placeholder="¿De dónde lo has sacado? ¿Eres el organizador?"></textarea></label>

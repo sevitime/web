@@ -434,6 +434,28 @@
     const boton = formProp.querySelector('button[type=submit]');
     boton.disabled = true;
     msgProp.textContent = 'Enviando…';
+
+    // La foto, si la hay, primero: si no sube, la propuesta va igual (el
+    // evento vale sin cartel) pero se dice. Mismo criterio que la app
+    // (envio_con_foto.dart).
+    const archivo = f.get('foto');
+    let rutaFoto = null;
+    let fotoUrl = null;
+    let fotoFallo = false;
+    if (archivo && archivo.size) {
+      try {
+        const jpeg = await reducirFoto(archivo);
+        rutaFoto = usuario.id + '/' + Date.now() + '.jpg';
+        const { error: errSubida } = await sb().storage.from('sugerencias-fotos')
+          .upload(rutaFoto, jpeg, { contentType: 'image/jpeg' });
+        if (errSubida) throw errSubida;
+        fotoUrl = sb().storage.from('sugerencias-fotos').getPublicUrl(rutaFoto).data.publicUrl;
+      } catch (_) {
+        rutaFoto = null;
+        fotoFallo = true;
+      }
+    }
+
     const { error } = await sb().from('eventos_solicitados').insert({
       user_id: usuario.id,
       nombre: String(f.get('nombre')).trim(),
@@ -444,9 +466,12 @@
       descripcion: opcional('descripcion'),
       url: opcional('url'),
       notas: opcional('notas'),
+      foto_url: fotoUrl,
     });
     boton.disabled = false;
     if (error) {
+      // La foto subió pero la propuesta no entró: que no quede suelta.
+      if (rutaFoto) sb().storage.from('sugerencias-fotos').remove([rutaFoto]);
       const m2 = error.message || '';
       msgProp.textContent = m2.includes('demasiadas solicitudes')
         ? 'Ya tienes 5 propuestas esperando revisión. Espera a que las veamos.'
@@ -456,8 +481,24 @@
     }
     formProp.reset();
     dlgProp.close();
-    alertaSuave('Recibido. Lo revisamos y te avisamos en el buzón de la app.');
+    alertaSuave(fotoFallo
+      ? 'Recibido, pero la foto no se ha podido subir. Lo revisamos y te avisamos en el buzón de la app.'
+      : 'Recibido. Lo revisamos y te avisamos en el buzón de la app.');
   });
+
+  // Como la app (elegirFotoDeAportacion): 1600 px de lado y JPEG al 80 %.
+  // El bucket admite 5 MB por archivo y no da para fotos de móvil enteras.
+  async function reducirFoto(archivo) {
+    const bitmap = await createImageBitmap(archivo);
+    const escala = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const lienzo = document.createElement('canvas');
+    lienzo.width = Math.round(bitmap.width * escala);
+    lienzo.height = Math.round(bitmap.height * escala);
+    lienzo.getContext('2d').drawImage(bitmap, 0, 0, lienzo.width, lienzo.height);
+    bitmap.close();
+    return await new Promise((ok, mal) =>
+      lienzo.toBlob((b) => (b ? ok(b) : mal(new Error('sin imagen'))), 'image/jpeg', 0.8));
+  }
 
   // --- Sesión ---------------------------------------------------------------
 
