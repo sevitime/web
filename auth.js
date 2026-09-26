@@ -106,6 +106,21 @@
       seccion.appendChild(info);
       seccion.appendChild(salir);
 
+      // «Panel», solo para los administradores, como en la app. Lo decide
+      // el servidor (`fn_es_admin`); el panel también lo comprueba al
+      // entrar, así que esto es solo el acceso, no la seguridad.
+      sb.rpc('fn_es_admin')
+        .then(function (res) {
+          if (res.data !== true || !salir.isConnected) return;
+          var panel = document.createElement('a');
+          panel.className = 'auth-panel';
+          panel.href = '/admin/';
+          panel.textContent = 'Panel';
+          panel.title = 'Panel de administrador';
+          seccion.insertBefore(panel, salir);
+        })
+        .catch(function () {});
+
       // El XP real, con sesión. Sin sesión esto no devolvería nada.
       sb.rpc('fn_mis_puntos')
         .then(function (res) {

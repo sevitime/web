@@ -458,6 +458,15 @@ footer span { margin: 0 8px; }
   transition: color 0.15s ease;
 }
 .auth-salir:hover { color: #ff6b6b; }
+/* Solo lo ven los administradores: al lado de «Salir», con el verde de
+   marca para que no se confunda con él. */
+.auth-panel {
+  font-size: var(--t-etiqueta); font-weight: 600;
+  color: var(--verde-claro); text-decoration: none;
+  padding: 2px 4px;
+}
+.auth-panel:hover { text-decoration: underline; }
+.auth-panel:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
 
 .nav-link {
   font-size: var(--t-cuerpo);
