@@ -532,6 +532,108 @@ const CATEGORIAS_LUGARES = {
     };
   }
 
+  // --- Mismo sitio en OSM y en las altas manuales --------------------------
+  //
+  // Réplica de `DuplicateCheckService.sonMismoLugar` de la app, con los mismos
+  // casos de prueba (`tool/mismo_lugar.test.mjs`). Antes la web solo juntaba
+  // un alta con OSM si caían en el mismo punto al milímetro, y el mapeador casi
+  // nunca pone el punto donde el nuestro: el 26-sep-2026 salían duplicados
+  // Burger Up!, Shayka, Caprixo, Lamprea, C.D. Demo y Ronda Alamillo.
+
+  function normalizarNombre(s) {
+    return normalizar(s).replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  // Palabras que dicen qué es el sitio, no cuál.
+  const GENERICAS = new Set([
+    'bar', 'bares', 'cafeteria', 'cafe', 'cerveceria', 'restaurante',
+    'taberna', 'bodega', 'pub', 'meson', 'freiduria', 'heladeria',
+    'pasteleria', 'confiteria', 'casa', 'el', 'la', 'los', 'las', 'de',
+    'del', 'y',
+  ]);
+
+  // El nombre sin lo genérico ni espacios, con las letras que suenan igual
+  // igualadas: «Cafetería Kimera» y «Quimera» dan lo mismo.
+  function nucleo(n) {
+    return n.split(' ').filter((w) => w && !GENERICAS.has(w)).join('')
+      .replace(/qu/g, 'k')
+      .replace(/c([ei])/g, 's$1')
+      .replace(/c/g, 'k')
+      .replace(/z/g, 's')
+      .replace(/v/g, 'b')
+      .replace(/ll/g, 'y')
+      .replace(/h/g, '');
+  }
+
+  function distanciaEdicion(a, b) {
+    let previa = Array.from({ length: b.length + 1 }, (_, j) => j);
+    for (let i = 1; i <= a.length; i++) {
+      const actual = [i];
+      for (let j = 1; j <= b.length; j++) {
+        const coste = a[i - 1] === b[j - 1] ? 0 : 1;
+        actual[j] = Math.min(previa[j] + 1, actual[j - 1] + 1, previa[j - 1] + coste);
+      }
+      previa = actual;
+    }
+    return previa[b.length];
+  }
+
+  // Una letra de diferencia a partir de 6, dos a partir de 10; por debajo,
+  // iguales: «Bar Pepe» y «Bar Pepa» pueden ser vecinos.
+  function casiIguales(a, b) {
+    if (!a || !b) return false;
+    if (a === b) return true;
+    const corto = Math.min(a.length, b.length);
+    const margen = corto >= 10 ? 2 : (corto >= 6 ? 1 : 0);
+    if (margen === 0 || Math.abs(a.length - b.length) > margen) return false;
+    return distanciaEdicion(a, b) <= margen;
+  }
+
+  function pareceElMismo(a, b) {
+    if (!a || !b) return false;
+    if (a.includes(b) || b.includes(a)) return true;
+    const primera = (n) => n.split(' ').find((w) => w.length >= 4) || '';
+    const pa = primera(a), pb = primera(b);
+    if (pa && pa === pb) return true;
+    return casiIguales(nucleo(a), nucleo(b));
+  }
+
+  function sonMismoLugar(a, b, radioM = 80) {
+    if (metros(a, b) > radioM) return false;
+    return pareceElMismo(normalizarNombre(a.nombre), normalizarNombre(b.nombre));
+  }
+
+  // --- Sitios ocultos (`lugares_ocultos`) -----------------------------------
+  //
+  // Los cerrados que se aprueban en la app, y los que se tapan para dejar
+  // sitio a un alta (el «Bar» de OSM bajo La Paraíta Los Militares). La web no
+  // los leía y seguía enseñándolos. Misma regla que `LugaresOcultos` en la
+  // app: se oculta cuando coinciden el nombre y el sitio (por la clave de
+  // coordenadas o por el elemento de OSM); sin coordenadas, solo el nombre.
+  function ocultos() {
+    const cabeceras = {
+      apikey: SUPABASE_KEY,
+      Authorization: 'Bearer ' + SUPABASE_KEY,
+    };
+    const url = SUPABASE_URL +
+      '/rest/v1/lugares_ocultos?activo=eq.true' +
+      '&select=nombre_lugar,lat,lon,osm_type,osm_id';
+    return fetch(url, { headers: cabeceras })
+      .then((r) => (r.ok ? r.json() : []))
+      .catch(() => []);
+  }
+
+  function estaOculto(p, filas) {
+    const nombre = p.nombre.toLowerCase();
+    return filas.some((o) => {
+      if ((o.nombre_lugar || '').toLowerCase() !== nombre) return false;
+      if (o.lat == null || o.lon == null) return true;
+      if (claveDe(o.lat, o.lon) === claveDe(p.lat, p.lon)) return true;
+      return o.osm_id != null && o.osm_id === p.osmId &&
+        (o.osm_type == null || o.osm_type === p.osmType);
+    });
+  }
+
   // Tipos en español de las altas manuales -> tipo canónico de la web. Los
   // mismos que la app (`lib/services/manual_places_service.dart`).
   const TIPO_ES = {
@@ -632,29 +734,55 @@ const CATEGORIAS_LUGARES = {
     };
   }
 
+  // Junta las altas con la foto como `_mergeManualPlaces` en la app: si OSM
+  // ya tiene el sitio, se enseña el de OSM (más probable que esté al día y es
+  // donde cuelgan las reseñas) completado con lo que OSM no tenga; si no, el
+  // alta entra como un sitio más.
+  function juntar(snap, man) {
+    const vistos = new Set(snap.map((p) => claveDe(p.lat, p.lon)));
+    for (const m of man) {
+      // Un cuadrado de ~100 m antes de medir: son miles de sitios por alta.
+      const cerca = snap.filter((p) =>
+        Math.abs(p.lat - m.lat) < 0.001 && Math.abs(p.lon - m.lon) < 0.0013);
+      const osm = cerca.find((p) => sonMismoLugar(p, m));
+      if (osm) {
+        osm.telefono = osm.telefono || m.telefono;
+        osm.web = osm.web || m.web;
+        osm.horario = osm.horario || m.horario;
+        continue;
+      }
+      const k = claveDe(m.lat, m.lon);
+      if (vistos.has(k)) continue;
+      vistos.add(k);
+      snap.push(m);
+    }
+    return snap;
+  }
+
   // Devuelve una promesa con el array de lugares ya convertidos y sin nulos:
-  // la foto diaria de OSM (la misma que lee la app) **más las altas manuales**.
+  // la foto diaria de OSM (la misma que lee la app) **más las altas manuales**
+  // y **menos los ocultos**, en el mismo orden que la app.
   function cargar() {
     return Promise.all([
       fetch(SNAPSHOT_URL)
         .then((r) => r.json())
         .then((d) => (d.elements || []).map(aLugar).filter(Boolean)),
       manuales().then((filas) => filas.map(aLugarManual).filter(Boolean)),
-    ]).then(([snap, man]) => {
-      const vistos = new Set(snap.map((p) => claveDe(p.lat, p.lon)));
-      for (const m of man) {
-        const k = claveDe(m.lat, m.lon);
-        if (vistos.has(k)) continue; // ya está en la foto (p. ej. ya en OSM)
-        vistos.add(k);
-        snap.push(m);
-      }
-      return snap;
+      ocultos(),
+    ]).then(([snap, man, filasOcultas]) => {
+      const visible = (p) => !estaOculto(p, filasOcultas);
+      // Los ocultos se quitan ANTES de juntar: si no, un alta en el mismo
+      // punto que un sitio oculto (La Paraíta sobre el «Bar» de OSM) se
+      // descartaba por repetida y luego se ocultaba el otro, y no quedaba
+      // ninguno. Y otra vez al final, por si la oculta es un alta.
+      return juntar(snap.filter(visible), man).filter(visible);
     });
   }
 
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
+    sonMismoLugar, juntar, estaOculto,
     cargarCurado,
   };
 })();
