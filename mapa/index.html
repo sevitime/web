@@ -793,15 +793,19 @@ window.addEventListener('DOMContentLoaded', function () {
   map.addControl(new maplibregl.NavigationControl(), 'bottom-right');
   vigilarTeselas(map);
 
-  // En Chrome y Firefox el pellizco del trackpad llega como una rueda con
-  // Ctrl y MapLibre lo atiende solo. Safari de escritorio, en cambio, emite
-  // GestureEvent y se queda con el gesto para ampliar la página; MapLibre no
-  // escucha esos eventos. Los traducimos a zoom del mapa para que el pellizco
-  // funcione igual en los tres navegadores, sin afectar al scroll normal de
-  // dos dedos.
+  // El pellizco del trackpad llega como una rueda con Ctrl en Chrome y Firefox
+  // (y como GestureEvent en Safari). Lo atendemos antes que el navegador para
+  // que Chrome no amplíe la página y se lo entregamos al manejador nativo de
+  // MapLibre; el scroll normal de dos dedos no lleva Ctrl y no se toca.
   let zoomInicialPellizco = null;
   let centroPellizco = null;
   const lienzoMapa = map.getCanvasContainer();
+  lienzoMapa.addEventListener('wheel', (evento) => {
+    if (!evento.ctrlKey) return;
+    evento.preventDefault();
+    evento.stopImmediatePropagation();
+    map.scrollZoom.wheel(evento);
+  }, { capture: true, passive: false });
   lienzoMapa.addEventListener('gesturestart', (evento) => {
     evento.preventDefault();
     zoomInicialPellizco = map.getZoom();
