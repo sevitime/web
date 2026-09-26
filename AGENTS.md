@@ -110,3 +110,17 @@ respuesta durante la visita, para no retrasar la carga del mapa.
 **Latencia:** las altas manuales aparecen al momento (lectura directa). Los
 cambios que van solo a OSM (notas) aparecen cuando OSM los aplica y se regenera
 la foto diaria (hasta ~1 día).
+
+## Panel de administrador (`admin/`)
+
+`admin/` es el panel de administrador de la app compilado para navegador
+(`https://sevitime.com/admin/`). **No se edita a mano**: lo genera
+`./publicar_panel_web.sh` desde el repo de la app (arranque
+`lib/main_panel.dart`) y cada publicación lo sustituye entero. Para cambiar
+el panel, se cambia en la app y se vuelve a publicar.
+
+Sigue la regla de terceros de arriba: el motor de dibujo y las fuentes de
+reserva van autohospedados. Lo único que sale fuera es el cliente de Google
+Sign-In, que es el propio login. Lleva `noindex` y está fuera de
+`robots.txt`. Quién entra lo decide el servidor (`fn_es_admin` y RLS), no la
+página.
