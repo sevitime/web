@@ -41,6 +41,7 @@
 <script defer src="/libs/supabase.min.js"></script>
 <script defer src="/mapa/estilo-mapa.js"></script>
 <script defer src="/lugares.js"></script>
+<script defer src="/nav.js"></script>
 <style>
   /* La paleta y la tipografía vienen de /estilo.css, el mismo que usan la
      portada y el cuadro de honor. Así el mapa también cambia a tema oscuro y
@@ -65,30 +66,40 @@
   }
   #scrim.visible { opacity: 1; pointer-events: auto; }
 
-  #barra {
-    position: absolute; top: 12px; left: 12px; z-index: 5;
-    background: var(--superficie); color: var(--texto); border: 1px solid var(--borde);
-    border-radius: var(--r-sm); box-shadow: var(--sombra-1);
-    padding: 10px 14px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; max-width: 90vw;
+  /* El mapa reutiliza el mismo header que el resto de la web (`estilo.css`):
+     marca, enlaces y acceso idénticos. Debajo, una fila propia con las
+     herramientas del mapa, que en móvil se pliega sin tapar el mapa. */
+  #barra.top-nav {
+    position: absolute; top: 0; left: 0; right: 0; z-index: 30;
+    padding: 12px 20px;
   }
-  #barra button {
-    border: none; background: var(--verde-solido); color: #fff; font-family: inherit; font-size: var(--t-cuerpo);
-    padding: 9px 16px; border-radius: var(--r-sm); cursor: pointer; white-space: nowrap;
-  }
-  /* Solo el texto de ayuda (hijo directo). Con `#barra span` a secas, el
-     <span> de dentro del botón «Entrar con Google» heredaba este gris y se
-     veía más claro que en el resto de páginas. */
-  #barra > span { font-size: var(--t-cuerpo); color: var(--apagado); white-space: nowrap; }
-  /* Buscador: solo entre los sitios de SeviTime (el mismo lugares.js de la
-     app), así que no pregunta a ningún servicio externo. Los selectores
-     van con #barra para ganar a `#barra button` y `#barra span`. */
-  #barra .buscar-caja { position: relative; flex: 0 1 230px; min-width: 150px; }
-  #barra .buscar-caja input {
-    width: 100%; padding: 8px 12px; border-radius: var(--r-sm);
+  #barra .top-nav-inner { max-width: none; justify-content: flex-start; gap: 12px; }
+  #barra .nav-marca { flex: 0 0 auto; white-space: nowrap; }
+  #barra .nav-acciones { margin-left: auto; }
+  #barra .nav-link { white-space: nowrap; }
+  #barra .auth-entrar, #barra .auth-info { flex: 0 0 auto; white-space: nowrap; }
+
+  .mapa-herramientas { display: flex; align-items: center; gap: 8px; flex: 0 1 auto; min-width: 0; }
+  .mapa-herramientas .buscar-caja { position: relative; flex: 0 1 240px; min-width: 120px; max-width: 280px; }
+  .mapa-herramientas .buscar-caja input {
+    width: 100%; height: 38px; padding: 0 14px;
+    border-radius: var(--r-pill);
     border: 1px solid var(--borde); background: var(--superficie-alta); color: var(--texto);
     font-family: inherit; font-size: var(--t-cuerpo);
   }
-  #barra .buscar-caja input::placeholder { color: var(--tenue); }
+  .mapa-herramientas .buscar-caja input::placeholder { color: var(--tenue); }
+  .mapa-herramientas .buscar-caja input:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  #ayuda { font-size: var(--t-etiqueta); color: var(--apagado); white-space: nowrap; }
+  .btn-anadir {
+    flex: 0 0 auto; height: 38px; padding: 0 16px;
+    border: none; border-radius: var(--r-pill); cursor: pointer; white-space: nowrap;
+    background: var(--verde-solido); color: #fff;
+    font-family: inherit; font-size: var(--t-cuerpo); font-weight: 600;
+    transition: filter .15s ease, transform .1s ease;
+  }
+  .btn-anadir:hover { filter: brightness(1.08); }
+  .btn-anadir:active { transform: scale(.96); }
+  .btn-anadir:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
   #barra .buscar-resultados {
     position: absolute; z-index: 20; top: calc(100% + 6px); left: 0; right: 0;
     list-style: none; margin: 0; padding: 6px; max-height: 46vh; overflow-y: auto;
@@ -107,20 +118,22 @@
   #barra .buscar-resultados .b-tipo,
   #barra .buscar-resultados .b-estado { color: var(--tenue); font-size: var(--t-etiqueta); }
   #barra .buscar-resultados .b-estado { display: block; padding: 8px 10px; }
-  /* Vuelta a la web sin montar un cabecero entero, que aquí taparía el mapa.
-     El texto hace visible la salida y comparte enlace con el logo para no
-     duplicar la misma acción en la barra. */
-  .marca-mapa {
-    display: inline-flex; align-items: center; gap: 8px; flex: 0 0 auto;
-    min-height: 40px; padding: 6px 10px 6px 6px;
-    border: 1px solid transparent; border-radius: var(--r-sm);
-    color: var(--texto); font-size: var(--t-cuerpo); font-weight: 600;
-    text-decoration: none; white-space: nowrap;
+  /* Herramientas secundarias del mapa: la misma píldora que los enlaces del
+     nav, para que la barra hable igual en todas las pantallas. */
+  .nav-herramienta {
+    display: inline-flex; align-items: center; justify-content: center;
+    flex: 0 0 auto;
+    height: 38px; padding: 0 15px; border-radius: var(--r-pill);
+    background: var(--superficie); color: var(--texto); border: 1px solid var(--borde);
+    font-family: inherit; font-size: var(--t-cuerpo); font-weight: 600;
+    cursor: pointer; white-space: nowrap;
+    transition: background-color .15s ease, border-color .15s ease, color .15s ease, transform .1s ease;
   }
-  .marca-mapa img { border-radius: var(--r-sm); display: block; }
-  #barra .marca-mapa span { color: inherit; }
-  .marca-mapa:hover { color: var(--verde-claro); background: var(--superficie-alta); }
-  .marca-mapa:focus-visible { outline: 2px solid var(--verde-claro); outline-offset: 2px; }
+  .nav-herramienta:hover { background: var(--superficie-alta); }
+  .nav-herramienta:active { transform: scale(.96); }
+  .nav-herramienta[aria-pressed="true"] { background: rgba(38, 166, 154, .14); border-color: rgba(38, 166, 154, .45); color: var(--verde-claro); }
+  .nav-herramienta:disabled { opacity: .6; cursor: default; }
+  .nav-herramienta:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
 
   /* Hoja inferior en móvil: antes era una caja flotante de 300px fijos que,
      a 390px de ancho, ocupaba el 75% de la pantalla y podía solaparse con la
@@ -201,62 +214,15 @@
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 
-  /* Auth & XP */
-  #barra #auth-seccion {
-    margin-left: auto; display: flex; align-items: center; gap: 10px;
-    padding-left: 0;
-  }
-  #barra button.btn-google {
-    background: #fff; color: #3c4043; border: 1px solid #dadce0;
-    display: inline-flex; align-items: center; gap: 9px; height: 38px;
-    padding: 0 16px 0 14px; border-radius: var(--r-pill);
-    font-family: inherit; font-size: var(--t-cuerpo); font-weight: 500;
-    letter-spacing: 0.01em;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28), 0 4px 14px rgba(0, 0, 0, 0.18);
-    transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.12s ease;
-  }
-  #barra button.btn-google:hover {
-    background: #f6f8f8; border-color: #c0c2c5;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3), 0 8px 22px rgba(0, 0, 0, 0.22);
-  }
-  #barra button.btn-google:active { transform: translateY(1px); }
-  #barra button.btn-google:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
-  #barra button.btn-google svg { width: 18px; height: 18px; flex: 0 0 auto; }
-  #barra button.auth-salir {
-    background: transparent; color: var(--tenue); border: none; padding: 2px 4px;
-    font-family: inherit; font-size: var(--t-etiqueta); cursor: pointer;
-  }
-  #barra button.auth-salir:hover { color: var(--error); }
-  #user-avatar {
-    width: 30px; height: 30px; border-radius: 50%; object-fit: cover; border: 1px solid var(--glass-borde-avatar);
-  }
-  .badge-xp {
-    background: rgba(252, 196, 64, 0.16); color: var(--dorado-texto); font-weight: 700; font-size: var(--t-etiqueta);
-    padding: 3px 9px; border-radius: var(--r-pill); border: 1px solid rgba(252, 196, 64, 0.4); white-space: nowrap;
-  }
+  /* El acceso (Google, avatar, nombre, XP y «Salir») usa las clases
+     compartidas de `estilo.css`, las mismas que el resto de páginas: aquí no
+     se redefinen. Solo el aviso de XP de los paneles es propio del mapa. */
   .aviso-xp {
     margin-top: 10px; font-size: var(--t-etiqueta); color: var(--apagado); line-height: 1.4;
     padding: 6px 8px; background: var(--superficie-alta); border-radius: var(--r-sm); border-left: 3px solid var(--verde);
   }
   .aviso-xp.anon { border-left-color: var(--tenue); }
   .aviso-xp a { color: var(--ok-fg); text-decoration: underline; cursor: pointer; }
-
-  /* Mis aportaciones */
-  #barra button.btn-aportaciones {
-    background: var(--superficie-alta); color: var(--texto); font-weight: 600;
-  }
-  #barra button.btn-aportaciones:hover { background: var(--borde); }
-  /* Mostrar/ocultar los pines de SeviTime (los mismos que Explorar). Se cargan
-     al entrar para que, al colocar un sitio, los existentes de alrededor estén
-     visibles igual que en la app. */
-  #barra button.btn-sitios {
-    background: var(--superficie-alta); color: var(--texto); font-weight: 600;
-  }
-  #barra button.btn-sitios:hover { background: var(--borde); }
-  #barra button.btn-sitios[aria-pressed="true"] { background: var(--verde-solido); color: #fff; }
-  #barra button.btn-sitios:disabled { opacity: .6; cursor: default; }
-  #barra button.btn-anadir { background: var(--dorado); color: var(--texto); font-weight: 800; }
-  #barra button.btn-anadir:hover { background: #E8B42F; }
 
   .ap-xp-caja {
     margin: 10px 0 2px; padding: 10px 12px; border-radius: var(--r-sm);
@@ -281,30 +247,56 @@
   .ap-fecha { font-size: var(--t-etiqueta); color: var(--tenue); }
   .ap-vacio { font-size: var(--t-cuerpo); color: var(--tenue); padding: 10px 0; }
 
-  @media (max-width: 650px) {
-    #barra #auth-seccion {
-      width: 100%; border-left: none; border-top: 1px solid var(--borde);
-      padding-left: 0; padding-top: 8px; justify-content: flex-end;
+  /* Móvil: como en el resto de la web, marca, acceso y menú arriba, y las
+     herramientas del mapa en una fila propia debajo. Las secundarias viven
+     dentro del menú (#nav-enlaces). */
+  @media (max-width: 719px) {
+    #barra.top-nav { padding: 10px 12px; }
+    #barra .top-nav-inner { flex-wrap: wrap; row-gap: 8px; }
+    #barra .nav-marca { order: 1; }
+    #barra .nav-acciones { order: 2; margin-left: auto; }
+    #barra .mapa-herramientas { order: 3; flex: 1 1 100%; flex-wrap: wrap; }
+    .mapa-herramientas .buscar-caja { max-width: none; }
+    #ayuda { display: none; }
+    /* El aviso de «toca el mapa…» solo aparece cuando estás en modo añadir. */
+    #ayuda.activo { display: block; flex: 1 1 100%; }
+    .nav-enlaces .nav-herramienta {
+      min-height: 44px; width: 100%; justify-content: flex-start;
+      height: auto; border-radius: var(--r-sm);
     }
   }
 
-  /* Escritorio: la barra se pega arriba a todo el ancho, el scrim no hace
-     falta (nada se solapa) y los formularios vuelven al panel lateral
-     flotante de siempre, en vez de la hoja inferior de móvil: hay que
-     deshacer aquí cada propiedad que puso la hoja (posición, bordes, sombra,
-     relleno, animación), no solo las que cambian. */
-  @media (min-width: 900px) {
-    #barra {
-      top: 0; left: 0; right: 0;
-      border-left: none; border-right: none; border-top: none;
-      border-bottom: 1px solid var(--borde);
-      border-radius: 0; max-width: none;
-      padding: 12px 24px;
+  /* Pantallas que no dan para la barra entera: los enlaces y las herramientas
+     secundarias se recogen en el mismo menú de móvil (patrón de `estilo.css`). */
+  @media (min-width: 720px) and (max-width: 1400px) {
+    #barra .nav-menu-toggle { display: flex; }
+    #barra .nav-enlaces {
+      position: absolute; z-index: 31; top: calc(100% + 6px); right: 20px;
+      min-width: 240px; padding: 8px; display: grid; gap: 2px;
+      visibility: hidden; opacity: 0; transform: translateY(-6px);
+      background: var(--superficie); border: 1px solid var(--borde);
+      border-radius: var(--r-lg); box-shadow: var(--sombra-2);
+      transition: opacity .15s ease, transform .15s ease, visibility 0s .15s;
     }
-    /* En escritorio el texto de ayuda sobra (los botones ya lo dicen) y
-       ocupaba lo justo para que la barra pasara a dos filas. Quitándolo, la
-       barra queda en una sola fila, como el resto de pantallas. */
+    #barra .nav-acciones.menu-abierto .nav-enlaces {
+      visibility: visible; opacity: 1; transform: none;
+      transition: opacity .15s ease, transform .15s ease, visibility 0s;
+    }
+    #barra .nav-link, #barra .nav-herramienta {
+      min-height: 44px; width: 100%; justify-content: flex-start;
+      height: auto; border-radius: var(--r-sm);
+    }
+  }
+
+  /* Escritorio: el texto de ayuda sobra (los botones ya lo dicen); el scrim
+     no hace falta y los formularios vuelven al panel lateral flotante de
+     siempre, en vez de la hoja inferior de móvil: hay que deshacer aquí cada
+     propiedad que puso la hoja (posición, bordes, sombra, relleno, animación),
+     no solo las que cambian. */
+  @media (min-width: 720px) {
     #barra #ayuda { display: none; }
+  }
+  @media (min-width: 900px) {
     #scrim { display: none; }
     .panel {
       position: absolute; top: 78px; right: 16px; left: auto; bottom: auto;
@@ -337,21 +329,34 @@
 <div id="map" tabindex="-1"></div>
 <div id="scrim"></div>
 
-<div id="barra">
-  <a href="/" class="marca-mapa" title="Volver a sevitime.com">
-    <img src="/icono.png" alt="" width="24" height="24" />
-    <span>Inicio</span>
-  </a>
-  <span id="ayuda">👉 Explora o aporta al mapa</span>
-  <div class="buscar-caja">
-    <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
-    <ul id="buscar-resultados" class="buscar-resultados"></ul>
-  </div>
-  <button id="btn-anadir" class="btn-anadir" type="button">＋ Añadir lugar</button>
-  <button id="btn-sitios" class="btn-sitios" aria-pressed="false" disabled>Cargando sitios…</button>
-  <div id="auth-seccion">
-    <button id="btn-mis-aportaciones" class="btn-aportaciones">Mis aportaciones</button>
-    <button id="btn-login-google" class="btn-google auth-entrar">
+<nav class="top-nav" id="barra">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca" title="Volver a sevitime.com">
+      <img src="/icono.png" alt="" width="28" height="28" />
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+
+    <div class="mapa-herramientas">
+      <div class="buscar-caja">
+        <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
+        <ul id="buscar-resultados" class="buscar-resultados"></ul>
+      </div>
+      <button id="btn-anadir" class="btn-anadir" type="button">＋ Añadir lugar</button>
+      <span id="ayuda">👉 Explora o aporta al mapa</span>
+    </div>
+
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+        <button id="btn-sitios" class="nav-herramienta" aria-pressed="false" disabled>Cargando sitios…</button>
+        <button id="btn-mis-aportaciones" class="nav-herramienta">Mis aportaciones</button>
+        <a href="/rutas/" class="nav-link">Rutas</a>
+        <a href="/eventos/" class="nav-link">Eventos</a>
+        <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      </div>
+
+      <div id="auth-seccion">
+    <button id="btn-login-google" class="auth-entrar">
       <svg width="15" height="15" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/></svg>
       <span>Entrar con Google</span>
     </button>
@@ -360,9 +365,11 @@
       <span id="user-name" class="auth-nombre"></span>
       <span class="badge-xp auth-xp" title="Tus aportaciones sumarán XP a tu cuenta de SeviTime">+XP</span>
       <button id="btn-logout" class="auth-salir" title="Cerrar sesión">Salir</button>
+        </div>
+      </div>
     </div>
   </div>
-</div>
+</nav>
 
 <!-- Sugerir sitio nuevo -->
 <div id="panel-sugerir" class="panel" role="dialog" aria-labelledby="s-titulo">
@@ -871,9 +878,37 @@ window.addEventListener('DOMContentLoaded', function () {
     // Si el estilo aún no está listo (un clic nada más abrir), no se monta
     // todavía: el `load`/`styledata` siguiente lo hace.
     if (!map.isStyleLoaded()) return;
-    map.addSource('sitios', { type: 'geojson', data: COLECCION_VACIA });
+    const colorGrupo = prefiereOscuro.matches ? '#26A69A' : '#00796B';
+    // Los sitios se agrupan por cercanía: a escala de ciudad eran cientos de
+    // puntos solapados e ilegibles. El grupo se abre al acercarte (hasta z14)
+    // y a partir de ahí vuelven a verse uno a uno, como en la app.
+    map.addSource('sitios', {
+      type: 'geojson', data: COLECCION_VACIA,
+      cluster: true, clusterRadius: 50, clusterMaxZoom: 14,
+    });
+    map.addLayer({
+      id: 'sitios-clusters', type: 'circle', source: 'sitios',
+      filter: ['has', 'point_count'],
+      paint: {
+        'circle-radius': ['step', ['get', 'point_count'], 15, 25, 18, 100, 22, 750, 28],
+        'circle-color': colorGrupo,
+        'circle-stroke-width': 2,
+        'circle-stroke-color': 'rgba(255,255,255,0.9)',
+      },
+    });
+    map.addLayer({
+      id: 'sitios-cluster-count', type: 'symbol', source: 'sitios',
+      filter: ['has', 'point_count'],
+      layout: {
+        'text-field': ['get', 'point_count_abbreviated'],
+        'text-font': ['OpenSansRegular'],
+        'text-size': 12,
+      },
+      paint: { 'text-color': '#ffffff' },
+    });
     map.addLayer({
       id: 'sitios', type: 'circle', source: 'sitios',
+      filter: ['!', ['has', 'point_count']],
       paint: {
         'circle-radius': 6,
         'circle-color': ['get', 'color'],
@@ -883,7 +918,7 @@ window.addEventListener('DOMContentLoaded', function () {
     });
     map.addLayer({
       id: 'sitios-label', type: 'symbol', source: 'sitios', minzoom: 15,
-      filter: ['==', ['geometry-type'], 'Point'],
+      filter: ['all', ['==', ['geometry-type'], 'Point'], ['!', ['has', 'point_count']]],
       layout: {
         'text-field': ['get', 'nombre'],
         'text-font': ['OpenSansRegular'],
@@ -904,6 +939,8 @@ window.addEventListener('DOMContentLoaded', function () {
 
   function quitarCapaSitios() {
     if (map.getLayer('sitios-label')) map.removeLayer('sitios-label');
+    if (map.getLayer('sitios-cluster-count')) map.removeLayer('sitios-cluster-count');
+    if (map.getLayer('sitios-clusters')) map.removeLayer('sitios-clusters');
     if (map.getLayer('sitios')) map.removeLayer('sitios');
     if (map.getSource('sitios')) map.removeSource('sitios');
   }
@@ -965,6 +1002,7 @@ window.addEventListener('DOMContentLoaded', function () {
     }
     apagarModos();
     ayuda.textContent = '👉 Toca el mapa donde está el lugar que quieres añadir';
+    ayuda.classList.add('activo');
     map.getCanvas().focus();
   });
 
@@ -1188,6 +1226,7 @@ window.addEventListener('DOMContentLoaded', function () {
 
   function apagarModos() {
     ayuda.textContent = ayudaTexto;
+    ayuda.classList.remove('activo');
     ocultarPaneles();
     if (marker) { marker.remove(); marker = null; }
   }
@@ -1202,6 +1241,17 @@ window.addEventListener('DOMContentLoaded', function () {
   }
 
   map.on('click', (e) => {
+    // Un grupo se abre al tocarlo, haya sesión o no: acercarse es solo ver.
+    if (sitiosVisibles && map.getLayer('sitios-clusters')) {
+      const grupos = map.queryRenderedFeatures(e.point, { layers: ['sitios-clusters'] });
+      if (grupos.length) {
+        const id = grupos[0].properties.cluster_id;
+        map.getSource('sitios').getClusterExpansionZoom(id).then((zoom) => {
+          map.easeTo({ center: grupos[0].geometry.coordinates, zoom });
+        }).catch(() => {});
+        return;
+      }
+    }
     if (!usuarioActual) { abrirPanelLogin(); return; }
     const radio = 8; // píxeles de tolerancia alrededor del clic
     const caja = [
@@ -1239,6 +1289,8 @@ window.addEventListener('DOMContentLoaded', function () {
 
   map.on('mouseenter', 'sitios', () => { map.getCanvas().style.cursor = 'pointer'; });
   map.on('mouseleave', 'sitios', () => { map.getCanvas().style.cursor = ''; });
+  map.on('mouseenter', 'sitios-clusters', () => { map.getCanvas().style.cursor = 'pointer'; });
+  map.on('mouseleave', 'sitios-clusters', () => { map.getCanvas().style.cursor = ''; });
 
   // «Usar mi ubicación»: lo mismo que «Estoy allí» en la app. Sirve para poner
   // el pin donde estás sin tener que buscarte en el mapa. La ubicación la da
