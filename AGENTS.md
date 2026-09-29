@@ -78,6 +78,22 @@ el texto en `sevitime/privacidad`, hay que copiarlo aquí en el mismo commit (y
 al revés). El pie de `index.html`, `404.html` y `ranking/index.html` enlaza a
 `/privacidad/`.
 
+## Sitios ocultos: la web no puede fallar enseñándolos
+
+`lugares_ocultos` es lo que tapa los cerrados, los mal puestos y los que dejan
+sitio a un alta. Si la petición falla, **no vale quedarse sin lista**: eso
+pinta justo lo que se quería esconder. `lugares.js` guarda la última lista
+buena en `localStorage` (`sevitime_ocultos`) y tira de ella cuando Supabase no
+responde, igual que la app hace en `place_reports_service.dart`.
+
+Sin caducidad a propósito: una lista de ayer oculta de más como mucho un sitio
+recién desocultado, y eso es preferible a enseñar de más. El límite que queda,
+y no tiene arreglo: en la **primera** visita de un navegador no hay nada
+guardado, así que si Supabase está caído en ese momento se verán los ocultos.
+
+Cubierto por `tool/ocultos_respaldo.test.mjs`, que corre el `lugares.js`
+publicado con un `fetch` y un `localStorage` simulados.
+
 ## Qué dibuja el mapa
 
 El estilo (`mapa/estilo-mapa.js`) **no** dibuja los POI del basemap de OSM a

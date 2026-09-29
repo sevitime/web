@@ -610,6 +610,38 @@ const CATEGORIAS_LUGARES = {
   // los leía y seguía enseñándolos. Misma regla que `LugaresOcultos` en la
   // app: se oculta cuando coinciden el nombre y el sitio (por la clave de
   // coordenadas o por el elemento de OSM); sin coordenadas, solo el nombre.
+  // La última lista de ocultos que llegó bien, guardada en el navegador.
+  //
+  // Antes, un fallo de Supabase daba `[]` y la web **pintaba los sitios
+  // ocultos**: los cerrados, los mal puestos y los que se tapan para dejar
+  // sitio a un alta (el «Bar» de OSM bajo La Paraíta Los Militares). Es el
+  // fallo que no se quiere, porque falla hacia el lado inseguro justo en lo
+  // que existe para esconder cosas. La app no lo tiene: guarda la última
+  // lista buena (`place_reports_service.dart`) y sigue ocultando.
+  //
+  // Sin caducidad a propósito: una lista de ayer oculta de más como mucho un
+  // sitio que se acaba de desocultar, y eso es preferible a enseñar de más.
+  const CLAVE_OCULTOS = 'sevitime_ocultos';
+
+  function ocultosGuardados() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_OCULTOS);
+      const filas = crudo ? JSON.parse(crudo) : null;
+      return Array.isArray(filas) ? filas : [];
+    } catch (e) {
+      // Modo incógnito, almacenamiento bloqueado o JSON roto.
+      return [];
+    }
+  }
+
+  function guardarOcultos(filas) {
+    try {
+      localStorage.setItem(CLAVE_OCULTOS, JSON.stringify(filas));
+    } catch (e) {
+      // Que no quepa no es motivo para romper el mapa.
+    }
+  }
+
   function ocultos() {
     const cabeceras = {
       apikey: SUPABASE_KEY,
@@ -619,8 +651,18 @@ const CATEGORIAS_LUGARES = {
       '/rest/v1/lugares_ocultos?activo=eq.true' +
       '&select=nombre_lugar,lat,lon,osm_type,osm_id';
     return fetch(url, { headers: cabeceras })
-      .then((r) => (r.ok ? r.json() : []))
-      .catch(() => []);
+      .then((r) => {
+        if (!r.ok) throw new Error('lugares_ocultos: ' + r.status);
+        return r.json();
+      })
+      .then((filas) => {
+        if (!Array.isArray(filas)) throw new Error('lugares_ocultos: no es lista');
+        // Una lista vacía de verdad también se guarda: puede que ya no haya
+        // ninguno oculto, y entonces la vieja estorba.
+        guardarOcultos(filas);
+        return filas;
+      })
+      .catch(() => ocultosGuardados());
   }
 
   function estaOculto(p, filas) {
@@ -782,7 +824,7 @@ const CATEGORIAS_LUGARES = {
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
-    sonMismoLugar, juntar, estaOculto,
+    sonMismoLugar, juntar, estaOculto, ocultos,
     cargarCurado,
   };
 })();
