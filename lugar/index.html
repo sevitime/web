@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un sitio de Sevilla — SeviTime</title>
+<meta name="description" content="Un sitio de Sevilla en SeviTime: dónde está, cómo llegar y qué se sabe de él.">
+<link rel="canonical" href="https://sevitime.com/lugar/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sevitime.com/lugar/">
+<meta property="og:site_name" content="SeviTime">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="Un sitio de Sevilla — SeviTime">
+<meta property="og:description" content="Míralo en el mapa y ábrelo en SeviTime.">
+<meta property="og:image" content="https://sevitime.com/social.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<!-- Sin `noindex`, pero tampoco en el sitemap: es UNA página con parámetro,
+     así que para Google es una sola URL. Las páginas por sitio, de verdad
+     indexables, son el paso siguiente (ver AGENTS.md). -->
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css">
+<link rel="stylesheet" href="/libs/maplibre-gl.css">
+<script defer src="/nav.js"></script>
+<script defer src="/libs/maplibre-gl.js"></script>
+<script defer src="/libs/pmtiles.js"></script>
+<script defer src="/mapa/estilo-mapa.js"></script>
+<script defer src="/lugares.js"></script>
+<style>
+  .sitio { max-width: 680px; margin: 0 auto; padding: 32px 24px 60px; }
+
+  .sitio-cabecera { display: flex; gap: 14px; align-items: flex-start; }
+  .sitio-emoji {
+    flex: 0 0 auto; width: 52px; height: 52px; border-radius: 14px;
+    display: grid; place-items: center; font-size: 26px;
+    background: var(--gris-bg);
+  }
+  .sitio h1 {
+    font-size: var(--t-display); font-weight: 800; color: var(--texto);
+    letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 4px;
+  }
+  .sitio-tipo { color: var(--apagado); font-weight: 600; margin: 0; }
+
+  /* Mientras carga la foto diaria no se enseña un nombre inventado: se
+     enseña que está cargando. El nombre sale de los datos, no de la URL. */
+  .cargando { color: var(--tenue); }
+
+  .mapa-caja { position: relative; margin: 24px 0; }
+  #mapa-sitio {
+    height: 260px; border-radius: 16px;
+    border: 1px solid var(--borde); overflow: hidden;
+  }
+  #atribucion-mapa {
+    position: absolute; left: 0; bottom: 0; margin: 0;
+    padding: 3px 8px; border-bottom-left-radius: 16px;
+    font-size: var(--t-etiqueta); color: var(--texto);
+    background: var(--atrib-bg);
+  }
+
+  .sitio-datos { list-style: none; padding: 0; margin: 0 0 28px; }
+  .sitio-datos li {
+    display: flex; gap: 10px; padding: 12px 0;
+    border-bottom: 1px solid var(--borde); color: var(--texto);
+  }
+  .sitio-datos li:last-child { border-bottom: 0; }
+  .sitio-datos .etiqueta { color: var(--apagado); min-width: 96px; }
+  .sitio-datos a { color: var(--verde-claro); }
+
+  .sitio-cta {
+    display: block; text-align: center; padding: 16px 20px;
+    border-radius: 999px; background: var(--verde); color: #fff;
+    font-weight: 700; text-decoration: none;
+  }
+  .sitio-cta-pie {
+    text-align: center; color: var(--tenue); margin: 12px 0 0;
+    font-size: var(--t-pequeno, 0.9rem);
+  }
+
+  .sitio-aviso {
+    background: var(--gris-bg); border: 1px solid var(--borde);
+    border-radius: 14px; padding: 20px; color: var(--apagado);
+  }
+  .sitio-aviso a { color: var(--verde-claro); }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="/mapa/" class="nav-link">Explorar</a>
+      <a href="/rutas/" class="nav-link">Rutas</a>
+      <a href="/eventos/" class="nav-link">Eventos</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Mapa y editor</span>
+      </a>
+      </div>
+    </div>
+  </div>
+</nav>
+<main class="sitio">
+  <div id="ficha">
+    <div class="sitio-cabecera">
+      <div class="sitio-emoji" id="emoji" aria-hidden="true">📍</div>
+      <div>
+        <h1 id="nombre" class="cargando">Buscando el sitio…</h1>
+        <p class="sitio-tipo" id="tipo"></p>
+      </div>
+    </div>
+
+    <div class="mapa-caja">
+      <div id="mapa-sitio" role="img" aria-label="Mapa con la posición del sitio"></div>
+      <!-- Obligatoria, no decorativa: los datos son de OpenStreetMap (ODbL) y
+           el esquema de teselas es de OpenMapTiles. Mismo texto que /mapa/. -->
+      <p id="atribucion-mapa">© OpenMapTiles © OpenStreetMap contributors</p>
+    </div>
+
+    <ul class="sitio-datos" id="datos"></ul>
+
+    <a class="sitio-cta" id="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
+      Ábrelo en SeviTime
+    </a>
+    <p class="sitio-cta-pie" id="cta-pie">
+      Con la app ves si está abierto ahora, lo que dice la gente y cómo llegar.
+    </p>
+  </div>
+
+  <div class="sitio-aviso" id="no-encontrado" hidden>
+    <p><strong>No encontramos ese sitio.</strong></p>
+    <p>Puede que el enlace esté incompleto, o que el sitio ya no esté en el mapa.
+       Puedes <a href="/mapa/">explorar el mapa de Sevilla</a> para buscarlo.</p>
+  </div>
+</main>
+
+<script>
+// La página de un sitio, para que compartir un bar lleve a SeviTime y no a
+// Google Maps.
+//
+// La clave del sitio va en `?k=`, y es la MISMA que usa la app
+// (`Place.placeKey`: latitud y longitud con cinco decimales, separadas por
+// un guion bajo). Así el enlace que comparte la app y lo que busca esta
+// página hablan el mismo idioma, sin una tabla de equivalencias que
+// mantener.
+//
+// LO QUE ESTA PÁGINA NO HACE, y conviene tenerlo escrito:
+//
+//   * No tiene vista previa propia al compartirla. Los rastreadores de
+//     WhatsApp o Twitter no ejecutan JavaScript, así que leen las etiquetas
+//     `og:` de este fichero, que son genéricas. Para que la previa diga el
+//     nombre del bar hace falta una página POR sitio, generada, que es el
+//     paso siguiente.
+//   * No la indexa Google sitio a sitio, por lo mismo: para Google esto es
+//     una sola URL.
+//
+// Se acepta así a propósito: lo que arregla hoy es que el enlace compartido
+// enseñe el sitio y ofrezca la app, que es lo que no pasaba.
+(function () {
+  const PLAY = 'https://play.google.com/store/apps/details?id=com.selu.sevitime';
+  const clave = new URLSearchParams(location.search).get('k');
+  const ficha = document.getElementById('ficha');
+  const aviso = document.getElementById('no-encontrado');
+
+  function noEncontrado() {
+    ficha.hidden = true;
+    aviso.hidden = false;
+  }
+
+  // Una clave con forma, antes de tocar nada: `37.38910_-5.98450`.
+  if (!clave || !/^-?\d+\.\d+_-?\d+\.\d+$/.test(clave)) {
+    noEncontrado();
+    return;
+  }
+  const [lat, lon] = clave.split('_').map(Number);
+  if (!isFinite(lat) || !isFinite(lon)) {
+    noEncontrado();
+    return;
+  }
+
+  // El mapa se pinta ya, con la posición, sin esperar a saber el nombre: es
+  // lo que más tarda en llegar y lo que antes contesta «¿dónde está esto?».
+  function pintarMapa() {
+    if (!window.maplibregl || !window.sevitimeEstiloMapa) return;
+    const oscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    usarProtocoloTeselas();
+    const map = new maplibregl.Map({
+      container: 'mapa-sitio',
+      style: sevitimeEstiloMapa(oscuro),
+      center: [lon, lat],
+      zoom: 16,
+      attributionControl: false,
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
+    new maplibregl.Marker({ color: oscuro ? '#26A69A' : '#00897B' })
+      .setLngLat([lon, lat]).addTo(map);
+  }
+
+  function fila(etiqueta, valor, href) {
+    const li = document.createElement('li');
+    const e = document.createElement('span');
+    e.className = 'etiqueta';
+    e.textContent = etiqueta;
+    li.appendChild(e);
+    if (href) {
+      const a = document.createElement('a');
+      a.href = href;
+      a.textContent = valor;
+      if (/^https?:/.test(href)) { a.target = '_blank'; a.rel = 'noopener'; }
+      li.appendChild(a);
+    } else {
+      const s = document.createElement('span');
+      s.textContent = valor;
+      li.appendChild(s);
+    }
+    return li;
+  }
+
+  function pintar(p) {
+    const nombre = document.getElementById('nombre');
+    nombre.textContent = p.nombre;
+    nombre.classList.remove('cargando');
+    document.title = p.nombre + ' — SeviTime';
+    document.getElementById('emoji').textContent = p.emoji || '📍';
+    document.getElementById('tipo').textContent = p.label || '';
+
+    const datos = document.getElementById('datos');
+    if (p.telefono) datos.appendChild(fila('Teléfono', p.telefono, 'tel:' + p.telefono));
+    if (p.web) datos.appendChild(fila('Web', p.web, p.web));
+    // El horario se enseña como lo que es: lo que dice OpenStreetMap, no lo
+    // que pasa en la puerta. Es la misma cautela que la app.
+    if (p.horario) datos.appendChild(fila('Horario', p.horario + ' (según OpenStreetMap)'));
+    if (p.osm) datos.appendChild(fila('En OpenStreetMap', 'Ver el elemento', p.osm));
+
+    // El botón intenta abrir la app y, si no pasa nada, se va a Play.
+    //
+    // El formato es el que la app YA entiende: `sevitime://lugar/<nombre>`
+    // (`EnlaceEntrante._desdeEsquema`). Por eso esto funciona con la 1.0.20
+    // que la gente tiene instalada, sin esperar a una versión nueva.
+    //
+    // Busca por nombre, que es su punto débil: en el centro hay 45
+    // «Caixabank» y la app abrirá el primero que encuentre. Para un enlace
+    // compartido de un bar con nombre propio acierta; lo que lo arreglaría
+    // del todo es que la app acepte también la clave de coordenadas, y eso
+    // sí pide versión nueva.
+    const app = 'sevitime://lugar/' + encodeURIComponent(p.nombre);
+    const cta = document.getElementById('cta');
+    cta.href = app;
+    cta.addEventListener('click', function (e) {
+      e.preventDefault();
+      // Si la app abre, el navegador pasa a segundo plano y el temporizador
+      // no llega a disparar: `document.hidden` es la señal.
+      const empezo = Date.now();
+      const aPlay = setTimeout(function () {
+        if (document.hidden || Date.now() - empezo > 2500) return;
+        location.href = PLAY;
+      }, 1200);
+      window.addEventListener('pagehide', function () { clearTimeout(aPlay); },
+        { once: true });
+      location.href = app;
+    });
+    document.getElementById('cta-pie').textContent =
+      '¿No la tienes? Se descarga gratis en Google Play.';
+  }
+
+  window.addEventListener('load', function () {
+    pintarMapa();
+    if (!window.sevitimeLugares) { noEncontrado(); return; }
+    window.sevitimeLugares.cargar().then(function (lugares) {
+      const p = lugares.find(function (x) {
+        return window.sevitimeLugares.claveDe(x.lat, x.lon) === clave;
+      });
+      if (!p) { noEncontrado(); return; }
+      pintar(p);
+    }).catch(noEncontrado);
+  });
+})();
+</script>
+</body>
+</html>

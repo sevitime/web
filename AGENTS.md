@@ -78,6 +78,37 @@ el texto en `sevitime/privacidad`, hay que copiarlo aquí en el mismo commit (y
 al revés). El pie de `index.html`, `404.html` y `ranking/index.html` enlaza a
 `/privacidad/`.
 
+## `/lugar/`: la página de un sitio
+
+Existe para que **compartir un bar desde la app lleve a SeviTime y no a Google
+Maps**. Hasta el 29-sep-2026 el botón de compartir mandaba
+`maps.google.com/?q=<lat>,<lon>`: cada cosa que compartía un usuario era
+tráfico regalado a Google, y quien lo recibía no se enteraba de que SeviTime
+existía.
+
+La clave del sitio va en `?k=`, y es la **misma** que usa la app
+(`Place.placeKey`: lat y lon con cinco decimales y un guión bajo), así que no
+hay tabla de equivalencias que mantener. Los datos salen de `lugares.js`, o
+sea de la foto diaria más las altas menos los ocultos: lo mismo que el mapa.
+
+El botón abre `sevitime://lugar/<nombre>`, que es el formato que la app **ya**
+entiende (`EnlaceEntrante._desdeEsquema`), y cae a Google Play si no pasa nada
+en 1,2 s. Por eso funciona con la 1.0.20 ya instalada, sin versión nueva. Su
+punto débil es que la app busca por nombre: en el centro hay 45 «Caixabank».
+Arreglarlo pide que la app acepte también la clave de coordenadas.
+
+**Lo que esta página NO hace, y es a propósito por ahora:**
+- **No tiene vista previa propia al compartirla.** Los rastreadores de WhatsApp
+  y Twitter no ejecutan JavaScript, así que leen las `og:` del fichero, que son
+  genéricas. Para que la previa diga el nombre del bar hace falta una página
+  **por sitio**, generada.
+- **No está en el sitemap**, por lo mismo: para Google es una sola URL, y
+  entrar sin `?k=` enseña «no encontramos ese sitio».
+
+Generar 9.700 páginas estáticas es el paso siguiente si esto demuestra servir;
+serían ~40 MB en el repo y habría que regenerarlas con la foto diaria, así que
+no se hace «por si acaso».
+
 ## Sitios ocultos: la web no puede fallar enseñándolos
 
 `lugares_ocultos` es lo que tapa los cerrados, los mal puestos y los que dejan
