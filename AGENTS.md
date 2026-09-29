@@ -45,7 +45,22 @@ actualizar una, descarga la versión fijada, guárdala en `libs/` y actualiza es
 nota. Motivo: un tercero que recibe la IP del visitante obliga a declararlo en
 la política de privacidad.
 
-Con esto la web no habla con ningún tercero para pintar el mapa. Ojo: el nombre
+Con esto la web no habla con ningún tercero para pintar el mapa, **con una
+excepción: `/admin/`**. El panel es la app Flutter compilada a web y su mapa es
+`flutter_map`, que pide imágenes y no sabe leer PMTiles, así que usa los tiles
+de `tile.openstreetmap.org` con el filtro oscuro. Antes usaba MapTiler, y se
+quitó el 29 de septiembre de 2026 porque la clave viajaba dentro de
+`admin/main.dart.js`, a la vista de cualquiera, y era **la misma** que lleva el
+AAB: quien la copiara podía agotar la cuota y dejar el mapa gris en la app de
+todo el mundo.
+
+La excepción se acepta porque el panel está detrás del login con lista blanca
+(dos cuentas), así que las únicas IP que llegan a OSM son las suyas, no las de
+los visitantes. Si algún día el panel deja de estar cerrado, esto hay que
+revisarlo. La salida buena sería que el panel abriera `/mapa/` en vez de pintar
+el suyo.
+
+Ojo: el nombre
 de `text-font` en el estilo es el de la **carpeta**, no el de la fuente real
 (véase `libs/fonts/OpenSansRegular/`). Si se cambia, hay que cambiar el nombre a
 la vez en `mapa/estilo-mapa.js` y `mapa/index.html`.
