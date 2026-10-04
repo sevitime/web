@@ -173,6 +173,22 @@
     font-size: var(--t-cuerpo); color: var(--texto); line-height: 1.35;
   }
   .panel .login-ventajas span { flex: 0 0 auto; }
+  .colaborar-opciones { display: grid; gap: 10px; margin-top: 14px; }
+  .colaborar-opcion {
+    display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: center;
+    width: 100%; padding: 12px; text-align: left; cursor: pointer;
+    font-family: inherit; color: var(--texto); background: var(--superficie-alta);
+    border: 1px solid var(--borde); border-radius: var(--r-sm);
+  }
+  .colaborar-opcion:hover { border-color: var(--verde-claro); }
+  .colaborar-opcion:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .colaborar-opcion-icono {
+    display: flex; align-items: center; justify-content: center;
+    width: 36px; height: 36px; border-radius: var(--r-sm);
+    background: rgba(38, 166, 154, .14); color: var(--verde-claro); font-size: 18px;
+  }
+  .colaborar-opcion b { display: block; font-size: var(--t-cuerpo); }
+  .colaborar-opcion small { display: block; margin-top: 2px; color: var(--apagado); font-size: var(--t-etiqueta); line-height: 1.35; }
   .panel label, .panel .campo-label { display: block; font-size: var(--t-etiqueta); color: var(--apagado); margin: 10px 0 4px; }
   .panel input, .panel select, .panel textarea {
     width: 100%; padding: 8px; border: 1px solid var(--borde); border-radius: var(--r-sm); font-size: var(--t-cuerpo);
@@ -341,7 +357,7 @@
         <input id="buscar-sitio" type="search" placeholder="Busca un sitio de SeviTime…" autocomplete="off" aria-label="Buscar un sitio de SeviTime">
         <ul id="buscar-resultados" class="buscar-resultados"></ul>
       </div>
-      <button id="btn-anadir" class="btn-anadir" type="button">＋ Añadir lugar</button>
+      <button id="btn-anadir" class="btn-anadir" type="button">Añadir o corregir</button>
       <span id="ayuda">👉 Explora o aporta al mapa</span>
     </div>
 
@@ -441,6 +457,24 @@
 
 <!-- Entrar para aportar: la web pide cuenta, como la app. Se anuncia lo que
      gana quien entra, no lo que ganamos nosotros. -->
+<div id="panel-colaborar" class="panel" role="dialog" aria-labelledby="c-titulo">
+  <h3 id="c-titulo">Añade o corrige un sitio</h3>
+  <div class="subtitulo">Elige qué quieres hacer. Todas las aportaciones se revisan antes de publicarse.</div>
+  <div class="colaborar-opciones">
+    <button id="c-anadir" class="colaborar-opcion" type="button">
+      <span class="colaborar-opcion-icono" aria-hidden="true">＋</span>
+      <span><b>Añadir un lugar</b><small>Marca en el mapa un sitio que todavía no aparece.</small></span>
+    </button>
+    <button id="c-corregir" class="colaborar-opcion" type="button">
+      <span class="colaborar-opcion-icono" aria-hidden="true">✎</span>
+      <span><b>Corregir un sitio</b><small>Búscalo para avisar de un cierre, un cambio de nombre u otro problema.</small></span>
+    </button>
+  </div>
+  <div class="acciones">
+    <button class="btn-cancelar" id="c-cancelar" type="button">Seguir explorando</button>
+  </div>
+</div>
+
 <div id="panel-login" class="panel" role="dialog" aria-labelledby="l-titulo">
   <h3 id="l-titulo">Entra y sácale todo el partido</h3>
   <div class="subtitulo">Con tu cuenta de Google, aportar tiene recompensa.</div>
@@ -545,10 +579,13 @@ window.addEventListener('DOMContentLoaded', function () {
   }
 
   async function iniciarSesionGoogle() {
+    const destino = new URL(window.location.href);
+    destino.hash = '';
+    destino.searchParams.delete('code');
     const { error } = await sb.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: window.location.origin + window.location.pathname,
+        redirectTo: destino.origin + destino.pathname + destino.search,
       },
     });
     if (error) {
@@ -568,14 +605,22 @@ window.addEventListener('DOMContentLoaded', function () {
   // entra en la web llega aquí ya conectado y no hay nada que traspasar. Por
   // eso no queda rastro del viejo `?login=1`, que existía solo mientras esto
   // se servía en editor.sevitime.com y era otro origen para el navegador.
+  let authLista = false;
   sb.auth.onAuthStateChange((_event, session) => {
     actualizarUIAuth(session ? session.user : null);
+    authLista = true;
+    procesarCorreccionDirecta();
   });
 
   sb.auth.getSession().then(({ data: { session } }) => {
     actualizarUIAuth(session ? session.user : null);
+    authLista = true;
+    procesarCorreccionDirecta();
     if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
-      window.history.replaceState(null, '', window.location.pathname);
+      const limpia = new URL(window.location.href);
+      limpia.hash = '';
+      limpia.searchParams.delete('code');
+      window.history.replaceState(null, '', limpia.pathname + limpia.search);
     }
   });
 
@@ -965,6 +1010,7 @@ window.addEventListener('DOMContentLoaded', function () {
       lugaresCargados = await cargar();
       btnSitios.textContent = 'Ocultar sitios';
       montarCapaSitios();
+      procesarCorreccionDirecta();
     } catch (err) {
       sitiosVisibles = false;
       btnSitios.setAttribute('aria-pressed', 'false');
@@ -995,7 +1041,7 @@ window.addEventListener('DOMContentLoaded', function () {
   // Entrada directa para quien está delante del sitio: no hace falta conocer
   // su nombre ni encontrarlo en el buscador. El clic siguiente en el mapa
   // abre el formulario de sitio nuevo, sujeto a moderación.
-  btnAnadir.addEventListener('click', () => {
+  function activarModoAnadir() {
     if (!usuarioActual) {
       abrirPanelLogin();
       return;
@@ -1004,7 +1050,9 @@ window.addEventListener('DOMContentLoaded', function () {
     ayuda.textContent = '👉 Toca el mapa donde está el lugar que quieres añadir';
     ayuda.classList.add('activo');
     map.getCanvas().focus();
-  });
+  }
+
+  btnAnadir.addEventListener('click', abrirPanelColaborar);
 
   // ---- Buscador de sitios de SeviTime ----
   // Solo busca entre los sitios que ya conocemos (el lugares.js compartido).
@@ -1013,6 +1061,7 @@ window.addEventListener('DOMContentLoaded', function () {
   const inputBuscar = document.getElementById('buscar-sitio');
   const listaBuscar = document.getElementById('buscar-resultados');
   let temporizadorBuscar = null;
+  let correccionDirectaProcesada = false;
 
   function normalizar(t) {
     return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1039,6 +1088,20 @@ window.addEventListener('DOMContentLoaded', function () {
     abrirPanelReportar(p.nombre, p.lat, p.lon, {
       tipoLugar: p.label, osmType: p.osmType, osmId: p.osmId,
     });
+  }
+
+  function procesarCorreccionDirecta() {
+    if (correccionDirectaProcesada || !authLista || !lugaresCargados) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('modo') !== 'corregir') return;
+    const clave = params.get('k');
+    const sitio = clave && lugaresCargados.find((p) => window.sevitimeLugares.claveDe(p.lat, p.lon) === clave);
+    correccionDirectaProcesada = true;
+    if (!sitio) {
+      abrirPanelColaborar();
+      return;
+    }
+    elegirSitio(sitio);
   }
 
   function pintarResultados(q) {
@@ -1171,6 +1234,7 @@ window.addEventListener('DOMContentLoaded', function () {
   const ayudaTexto = ayuda.textContent;
   const panelSugerir = document.getElementById('panel-sugerir');
   const panelReportar = document.getElementById('panel-reportar');
+  const panelColaborar = document.getElementById('panel-colaborar');
   const panelLogin = document.getElementById('panel-login');
   let marker = null;
 
@@ -1209,7 +1273,7 @@ window.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Cierra los cuatro paneles sin tocar el marcador del mapa: antes de abrir
+  // Cierra todos los paneles sin tocar el marcador del mapa: antes de abrir
   // uno hay que pasar siempre por aquí, o dos pueden quedar visibles a la
   // vez (p. ej. abrir "Nuevo sitio" con "Mis aportaciones" ya abierta). Con
   // el panel flotante de antes no se notaba porque los dos ocupaban la misma
@@ -1219,6 +1283,7 @@ window.addEventListener('DOMContentLoaded', function () {
     panelSugerir.classList.remove('visible');
     panelReportar.classList.remove('visible');
     panelAportaciones.classList.remove('visible');
+    panelColaborar.classList.remove('visible');
     panelLogin.classList.remove('visible');
     actualizarScrim();
     devolverFoco();
@@ -1238,6 +1303,26 @@ window.addEventListener('DOMContentLoaded', function () {
     panelLogin.classList.add('visible');
     actualizarScrim();
     recordarYEnfocar(panelLogin);
+  }
+
+  function abrirPanelColaborar() {
+    apagarModos();
+    panelColaborar.classList.add('visible');
+    actualizarScrim();
+    recordarYEnfocar(panelColaborar);
+  }
+
+  document.getElementById('c-anadir').addEventListener('click', activarModoAnadir);
+  document.getElementById('c-corregir').addEventListener('click', () => {
+    ocultarPaneles();
+    ayuda.textContent = 'Busca el sitio que quieres corregir';
+    ayuda.classList.add('activo');
+    inputBuscar.focus();
+  });
+  document.getElementById('c-cancelar').addEventListener('click', apagarModos);
+
+  if (new URLSearchParams(window.location.search).get('modo') === 'colaborar') {
+    abrirPanelColaborar();
   }
 
   map.on('click', (e) => {

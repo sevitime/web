@@ -29,7 +29,7 @@
 <script defer src="/libs/supabase.min.js"></script>
 <style>
   .ranking {
-    max-width: 680px;
+    max-width: 760px;
     margin: 0 auto;
     padding: 0 24px 60px;
   }
@@ -60,6 +60,46 @@
     text-transform: uppercase;
     margin-bottom: 10px;
   }
+
+  .podio {
+    display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px;
+    margin: 28px 0 30px;
+  }
+  .podio[hidden] { display: none; }
+  .podio-tarjeta {
+    display: flex; flex-direction: column; align-items: center; min-width: 0;
+    padding: 18px 12px; text-align: center;
+    background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--r-lg);
+  }
+  .podio-tarjeta.primero { grid-column: 1 / -1; order: 1; border-color: rgba(252, 196, 64, .65); }
+  .podio-tarjeta.segundo { order: 2; }
+  .podio-tarjeta.tercero { order: 3; }
+  .podio-puesto { margin-bottom: 9px; color: var(--dorado-texto); font-size: var(--t-etiqueta); font-weight: 800; }
+  .podio-tarjeta .avatar { width: 58px; height: 58px; font-size: var(--t-seccion); }
+  .podio-tarjeta.primero .avatar { width: 68px; height: 68px; }
+  .podio-nombre { margin-top: 10px; font-size: var(--t-item); font-weight: 700; overflow-wrap: anywhere; }
+  .podio-nombre a { color: var(--texto); text-decoration: none; }
+  .podio-nombre a:hover { color: var(--verde-claro); text-decoration: underline; }
+  .podio-titulo { color: var(--apagado); font-size: var(--t-etiqueta); }
+  .podio-xp { margin-top: 7px; color: var(--verde-claro); font-size: var(--t-cuerpo); font-weight: 800; font-variant-numeric: tabular-nums; }
+
+  .lista-titulo, .mi-titulo {
+    margin: 0 0 6px; color: var(--texto); font-size: var(--t-item); font-weight: 700;
+  }
+  .mi-posicion { margin: 0 0 24px; padding: 14px; border: 1px solid var(--verde); border-radius: var(--r-lg); background: rgba(38, 166, 154, .08); }
+  .mi-posicion[hidden] { display: none; }
+  .mi-posicion .fila { border-bottom: none; }
+  .lista-ranking { margin-bottom: 16px; }
+  .ver-todos {
+    display: flex; align-items: center; justify-content: center;
+    min-height: 44px; width: 100%; padding: 0 18px;
+    color: var(--verde-claro); background: var(--superficie);
+    border: 1px solid var(--borde); border-radius: var(--r-sm);
+    font: inherit; font-size: var(--t-cuerpo); font-weight: 700; cursor: pointer;
+  }
+  .ver-todos:hover { border-color: var(--verde-claro); }
+  .ver-todos:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .ver-todos[hidden] { display: none; }
 
   .fila {
     display: flex;
@@ -138,6 +178,10 @@
     /* El nav ya va pegado arriba y ocupa su sitio en el flujo, así que la
        intro solo necesita aire, no esquivarlo. */
     .ranking-intro { padding-top: 48px; }
+    .podio { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: end; }
+    .podio-tarjeta.primero { grid-column: auto; order: 2; padding-top: 24px; padding-bottom: 24px; }
+    .podio-tarjeta.segundo { order: 1; }
+    .podio-tarjeta.tercero { order: 3; }
   }
 </style>
 </head>
@@ -163,9 +207,9 @@
       <a href="/rutas/" class="nav-link">Rutas</a>
       <a href="/eventos/" class="nav-link">Eventos</a>
       <a href="/ranking/" class="nav-link" aria-current="page">Cuadro de honor</a>
-      <a href="/mapa/" class="nav-btn-mapa">
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-        <span>Mapa y editor</span>
+        <span>Añadir o corregir sitios</span>
       </a>
       </div>
       <div id="auth-seccion"></div>
@@ -180,13 +224,20 @@
 </header>
 
 <main class="ranking" id="contenido" tabindex="-1">
+  <section id="podio" class="podio" aria-label="Podio" hidden></section>
+  <section id="mi-posicion" class="mi-posicion" hidden>
+    <h2 class="mi-titulo">Tu posición</h2>
+    <div id="mi-fila"></div>
+  </section>
+  <h2 id="lista-titulo" class="lista-titulo" hidden>Clasificación</h2>
   <div id="lista" class="cargando">Cargando…</div>
+  <button id="ver-todos" class="ver-todos" type="button" aria-expanded="false" hidden>Ver clasificación completa</button>
 </main>
 
 <footer>
   <a href="/">Inicio</a>
   <span aria-hidden="true">·</span>
-  <a href="/mapa/">Mapa web y editor</a>
+  <a href="/mapa/?modo=colaborar">Añadir o corregir sitios</a>
   <span aria-hidden="true">·</span>
   <a href="/privacidad/">Privacidad</a>
   <span aria-hidden="true">·</span>
@@ -212,7 +263,14 @@ document.addEventListener('DOMContentLoaded', function () {
   };
 
   var lista = document.getElementById('lista');
+  var podio = document.getElementById('podio');
+  var miPosicion = document.getElementById('mi-posicion');
+  var miFila = document.getElementById('mi-fila');
+  var listaTitulo = document.getElementById('lista-titulo');
+  var botonVerTodos = document.getElementById('ver-todos');
   var sb = window.SEVI.sb;
+  var filasRanking = [];
+  var clasificacionCompleta = false;
 
   function iniciales(nombre) {
     var partes = (nombre || '').trim().split(/\s+/).filter(Boolean);
@@ -224,7 +282,7 @@ document.addEventListener('DOMContentLoaded', function () {
   function avatar(fila) {
     var a = document.createElement('a');
     a.className = 'avatar';
-    a.href = 'https://sevitime.github.io/perfil/?n=' + encodeURIComponent(fila.nombre_publico);
+    a.href = '/perfil/?n=' + encodeURIComponent(fila.nombre_publico);
     a.title = 'Ver el perfil de ' + fila.nombre_publico;
     var guardado = fila.avatar;
     if (guardado && guardado.indexOf('preset:') === 0) {
@@ -245,61 +303,132 @@ document.addEventListener('DOMContentLoaded', function () {
 
   function numero(n) { return (n || 0).toLocaleString('es-ES'); }
 
-  function pintar(filas) {
+  function crearFila(fila) {
+    var filaEl = document.createElement('div');
+    filaEl.className = 'fila' + (fila.es_mio ? ' mia' : '');
+
+    var puesto = document.createElement('div');
+    puesto.className = 'puesto';
+    puesto.textContent = fila.posicion;
+    filaEl.appendChild(puesto);
+
+    filaEl.appendChild(avatar(fila));
+
+    var quien = document.createElement('div');
+    quien.className = 'quien';
+    var nombre = document.createElement('div');
+    nombre.className = 'nombre';
+    var enlace = document.createElement('a');
+    enlace.href = '/perfil/?n=' + encodeURIComponent(fila.nombre_publico);
+    enlace.textContent = fila.nombre_publico;
+    nombre.appendChild(enlace);
+    if (fila.es_mio) {
+      var etiqueta = document.createElement('span');
+      etiqueta.className = 'tu-etiqueta';
+      etiqueta.textContent = 'Tú';
+      nombre.appendChild(etiqueta);
+    }
+    quien.appendChild(nombre);
+    var titulo = document.createElement('div');
+    titulo.className = 'titulo';
+    titulo.textContent = fila.titulo || '';
+    quien.appendChild(titulo);
+    filaEl.appendChild(quien);
+
+    var xp = document.createElement('div');
+    xp.className = 'xp';
+    var num = document.createElement('div');
+    num.className = 'numero';
+    num.textContent = numero(fila.xp) + ' XP';
+    xp.appendChild(num);
+    var nivel = document.createElement('div');
+    nivel.className = 'nivel';
+    nivel.textContent = 'nivel ' + fila.nivel;
+    xp.appendChild(nivel);
+    filaEl.appendChild(xp);
+
+    return filaEl;
+  }
+
+  function crearTarjetaPodio(fila) {
+    var tarjeta = document.createElement('article');
+    var clases = ['primero', 'segundo', 'tercero'];
+    var medallas = ['🥇', '🥈', '🥉'];
+    tarjeta.className = 'podio-tarjeta ' + clases[fila.posicion - 1];
+
+    var puesto = document.createElement('div');
+    puesto.className = 'podio-puesto';
+    puesto.textContent = medallas[fila.posicion - 1] + ' Puesto ' + fila.posicion;
+    tarjeta.appendChild(puesto);
+    tarjeta.appendChild(avatar(fila));
+
+    var nombre = document.createElement('div');
+    nombre.className = 'podio-nombre';
+    var enlace = document.createElement('a');
+    enlace.href = '/perfil/?n=' + encodeURIComponent(fila.nombre_publico);
+    enlace.textContent = fila.nombre_publico;
+    nombre.appendChild(enlace);
+    tarjeta.appendChild(nombre);
+
+    var titulo = document.createElement('div');
+    titulo.className = 'podio-titulo';
+    titulo.textContent = fila.titulo || '';
+    tarjeta.appendChild(titulo);
+
+    var xp = document.createElement('div');
+    xp.className = 'podio-xp';
+    xp.textContent = numero(fila.xp) + ' XP';
+    tarjeta.appendChild(xp);
+    return tarjeta;
+  }
+
+  function pintarClasificacion() {
     lista.textContent = '';
-    lista.className = 'ranking';
+    lista.className = 'lista-ranking';
+    var limite = clasificacionCompleta ? filasRanking.length : Math.min(10, filasRanking.length);
+    filasRanking.slice(3, limite).forEach(function (fila) {
+      lista.appendChild(crearFila(fila));
+    });
+
+    var mia = filasRanking.find(function (fila) { return fila.es_mio; });
+    var mostrarMia = mia && mia.posicion > 10 && !clasificacionCompleta;
+    miPosicion.hidden = !mostrarMia;
+    miFila.textContent = '';
+    if (mostrarMia) miFila.appendChild(crearFila(mia));
+
+    botonVerTodos.hidden = filasRanking.length <= 10;
+    botonVerTodos.setAttribute('aria-expanded', String(clasificacionCompleta));
+    botonVerTodos.textContent = clasificacionCompleta
+      ? 'Mostrar solo los 10 primeros'
+      : 'Ver clasificación completa (' + filasRanking.length + ')';
+  }
+
+  function pintar(filas) {
+    filasRanking = filas;
+    clasificacionCompleta = false;
+    lista.textContent = '';
+    podio.textContent = '';
+    miPosicion.hidden = true;
+    botonVerTodos.hidden = true;
+    listaTitulo.hidden = !filas.length;
     if (!filas.length) {
+      podio.hidden = true;
       lista.textContent = 'Todavía no hay nadie en el cuadro de honor.';
       lista.className = 'error-ranking';
       return;
     }
-    filas.forEach(function (fila) {
-      var filaEl = document.createElement('div');
-      filaEl.className = 'fila' + (fila.posicion <= 3 ? ' top3' : '') + (fila.es_mio ? ' mia' : '');
-
-      var puesto = document.createElement('div');
-      puesto.className = 'puesto';
-      puesto.textContent = fila.posicion;
-      filaEl.appendChild(puesto);
-
-      filaEl.appendChild(avatar(fila));
-
-      var quien = document.createElement('div');
-      quien.className = 'quien';
-      var nombre = document.createElement('div');
-      nombre.className = 'nombre';
-      var enlace = document.createElement('a');
-      enlace.href = 'https://sevitime.github.io/perfil/?n=' + encodeURIComponent(fila.nombre_publico);
-      enlace.textContent = fila.nombre_publico;
-      nombre.appendChild(enlace);
-      if (fila.es_mio) {
-        var etiqueta = document.createElement('span');
-        etiqueta.className = 'tu-etiqueta';
-        etiqueta.textContent = 'Tú';
-        nombre.appendChild(etiqueta);
-      }
-      quien.appendChild(nombre);
-      var titulo = document.createElement('div');
-      titulo.className = 'titulo';
-      titulo.textContent = fila.titulo || '';
-      quien.appendChild(titulo);
-      filaEl.appendChild(quien);
-
-      var xp = document.createElement('div');
-      xp.className = 'xp';
-      var num = document.createElement('div');
-      num.className = 'numero';
-      num.textContent = numero(fila.xp) + ' XP';
-      xp.appendChild(num);
-      var nivel = document.createElement('div');
-      nivel.className = 'nivel';
-      nivel.textContent = 'nivel ' + fila.nivel;
-      xp.appendChild(nivel);
-      filaEl.appendChild(xp);
-
-      lista.appendChild(filaEl);
+    podio.hidden = false;
+    filas.slice(0, 3).forEach(function (fila) {
+      podio.appendChild(crearTarjetaPodio(fila));
     });
+    pintarClasificacion();
   }
+
+  botonVerTodos.addEventListener('click', function () {
+    clasificacionCompleta = !clasificacionCompleta;
+    pintarClasificacion();
+    if (!clasificacionCompleta) listaTitulo.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
 
   function cargar() {
     sb.rpc('fn_ranking_contribuidores', { p_limit: 100 })
@@ -308,6 +437,9 @@ document.addEventListener('DOMContentLoaded', function () {
         pintar(res.data || []);
       })
       .catch(function () {
+        podio.hidden = true;
+        listaTitulo.hidden = true;
+        botonVerTodos.hidden = true;
         lista.textContent = 'No se pudo cargar el cuadro de honor. Recarga dentro de un momento.';
         lista.className = 'error-ranking';
       });

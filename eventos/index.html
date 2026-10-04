@@ -63,9 +63,24 @@
     background: var(--superficie-alta);
   }
   .evento-img-vacia {
-    aspect-ratio: 16 / 9; display: flex; align-items: center; justify-content: center;
-    font-size: 40px; background: linear-gradient(135deg, var(--superficie-alta), var(--superficie));
+    position: relative; isolation: isolate; overflow: hidden;
+    aspect-ratio: 16 / 9; display: flex; flex-direction: column; gap: 4px;
+    align-items: center; justify-content: center;
+    background: linear-gradient(135deg, #173c38, #0f2825); color: #b8eee8;
   }
+  .evento-img-vacia::before, .evento-img-vacia::after {
+    content: ''; position: absolute; z-index: -1; border-radius: 50%;
+    border: 1px solid currentColor; opacity: .18;
+  }
+  .evento-img-vacia::before { width: 150px; height: 150px; top: -86px; right: -34px; }
+  .evento-img-vacia::after { width: 100px; height: 100px; bottom: -62px; left: -18px; }
+  .evento-img-vacia-icono { font-size: 42px; line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,.18)); }
+  .evento-img-vacia-tipo { font-size: var(--t-etiqueta); font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+  .evento-img-vacia.musica { background: linear-gradient(135deg, #432557, #241a3c); color: #e4b9ff; }
+  .evento-img-vacia.fiesta { background: linear-gradient(135deg, #61304c, #351d35); color: #ffc1de; }
+  .evento-img-vacia.deporte { background: linear-gradient(135deg, #174b3b, #153128); color: #a9ebcf; }
+  .evento-img-vacia.cultura { background: linear-gradient(135deg, #263d63, #192b43); color: #bad7ff; }
+  .evento-img-vacia.tradicion { background: linear-gradient(135deg, #65401e, #382918); color: #ffd5a1; }
   .evento-cuerpo { padding: 12px 14px 14px; display: flex; flex-direction: column; gap: 4px; flex: 1; }
   .evento-fecha { font-size: var(--t-etiqueta); font-weight: 700; color: var(--verde-claro); text-transform: uppercase; letter-spacing: .02em; }
   .evento-nombre { margin: 0; font-size: var(--t-item); font-weight: 700; color: var(--texto); line-height: 1.25; }
@@ -77,6 +92,14 @@
   .evento-cat {
     margin-top: auto; padding-top: 8px; font-size: var(--t-etiqueta); color: var(--tenue);
     display: inline-flex; align-items: center; gap: 5px;
+  }
+  @media (prefers-color-scheme: light) {
+    .evento-img-vacia { background: linear-gradient(135deg, #d8efeb, #b9ddd7); color: #00695f; }
+    .evento-img-vacia.musica { background: linear-gradient(135deg, #eadcf3, #d7c6e6); color: #63337d; }
+    .evento-img-vacia.fiesta { background: linear-gradient(135deg, #f4dce8, #e7c4d8); color: #8a315e; }
+    .evento-img-vacia.deporte { background: linear-gradient(135deg, #d9eddf, #badbc7); color: #226b45; }
+    .evento-img-vacia.cultura { background: linear-gradient(135deg, #dbe7f5, #c4d5eb); color: #315b8a; }
+    .evento-img-vacia.tradicion { background: linear-gradient(135deg, #f3e3cf, #e6ceb0); color: #7c4d1d; }
   }
   .vacio { color: var(--tenue); font-size: var(--t-cuerpo); padding: 20px 0; }
   .nota { margin-top: 30px; font-size: var(--t-etiqueta); color: var(--tenue); }
@@ -225,9 +248,9 @@
       <a href="/rutas/" class="nav-link">Rutas</a>
       <a href="/eventos/" class="nav-link" aria-current="page">Eventos</a>
       <a href="/ranking/" class="nav-link">Cuadro de honor</a>
-      <a href="/mapa/" class="nav-btn-mapa">
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-        <span>Mapa y editor</span>
+        <span>Añadir o corregir sitios</span>
       </a>
       </div>
       <div id="auth-seccion"></div>

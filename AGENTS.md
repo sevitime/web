@@ -109,6 +109,23 @@ Generar 9.700 páginas estáticas es el paso siguiente si esto demuestra servir;
 serían ~40 MB en el repo y habría que regenerarlas con la foto diaria, así que
 no se hace «por si acaso».
 
+La ficha enlaza a `/mapa/?modo=corregir&k=<place_key>` para abrir la corrección
+con ese sitio ya seleccionado. El mapa conserva esos parámetros durante el
+acceso con Google; no debe obligar a buscar de nuevo el lugar compartido.
+
+## `/perfil/`: perfiles dentro del dominio principal
+
+El cuadro de honor enlaza a `/perfil/?n=<nombre>`, que lee únicamente los datos
+públicos de `fn_perfil_publico` y `fn_rutas_de_usuario`. La página usa la copia
+autohospedada de Supabase y mantiene `noindex`, porque todos los nombres pasan
+por un único HTML con parámetro.
+
+Los enlaces antiguos `sevitime.github.io/perfil/` siguen existiendo y no se
+redirigen: son App Links compartidos por versiones publicadas de la app y su
+dominio conserva `/.well-known/assetlinks.json`. Las rutas de usuario que salen
+en el perfil siguen apuntando a `sevitime.github.io/ruta/` hasta que exista una
+ficha de ruta equivalente en este repositorio.
+
 ## Sitios ocultos: la web no puede fallar enseñándolos
 
 `lugares_ocultos` es lo que tapa los cerrados, los mal puestos y los que dejan

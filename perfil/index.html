@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un perfil de SeviTime</title>
+<meta name="description" content="Aportaciones y rutas públicas de un miembro de la comunidad de SeviTime.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://sevitime.com/perfil/">
+<meta property="og:type" content="profile">
+<meta property="og:site_name" content="SeviTime">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="Un perfil de SeviTime">
+<meta property="og:description" content="Aportaciones y rutas para descubrir Sevilla.">
+<meta property="og:image" content="https://sevitime.com/social.jpg">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css">
+<link rel="stylesheet" href="/perfil/perfil.css">
+<script defer src="/nav.js"></script>
+<script defer src="/libs/supabase.min.js"></script>
+<script defer src="/perfil/perfil.js"></script>
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+        <a href="/" class="nav-link">Inicio</a>
+        <a href="/mapa/" class="nav-link">Explorar</a>
+        <a href="/rutas/" class="nav-link">Rutas</a>
+        <a href="/eventos/" class="nav-link">Eventos</a>
+        <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="perfil" id="contenido" tabindex="-1">
+  <p class="perfil-etiqueta">Comunidad</p>
+  <div id="estado" class="perfil-estado" role="status">Cargando el perfil…</div>
+  <article id="datos" hidden>
+    <header class="perfil-cabecera">
+      <div id="avatar" class="perfil-avatar"></div>
+      <div class="perfil-identidad">
+        <h1 id="nombre"></h1>
+        <p id="titulo" class="perfil-titulo"></p>
+      </div>
+    </header>
+
+    <div id="stats" class="perfil-stats"></div>
+    <p id="bio" class="perfil-bio" hidden></p>
+    <div id="aportaciones" class="perfil-aportaciones"></div>
+
+    <section id="rutas-seccion" hidden>
+      <h2>Sus rutas</h2>
+      <div id="rutas" class="perfil-rutas"></div>
+    </section>
+
+    <div class="perfil-acciones">
+      <a id="abrir-app" class="perfil-boton principal" href="https://play.google.com/store/apps/details?id=com.selu.sevitime" hidden>Abrir en la app</a>
+      <a class="perfil-boton secundario" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">Descargar SeviTime</a>
+    </div>
+  </article>
+</main>
+
+<footer>
+  <a href="/ranking/">Cuadro de honor</a>
+  <span aria-hidden="true">·</span>
+  <a href="/privacidad/">Privacidad</a>
+  <span aria-hidden="true">·</span>
+  <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
+</footer>
+</body>
+</html>

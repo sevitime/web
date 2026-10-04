@@ -127,17 +127,11 @@
       im.src = img;
       im.alt = '';
       im.addEventListener('error', () => {
-        const caja = document.createElement('div');
-        caja.className = 'evento-img-vacia';
-        caja.textContent = e.icono || '🎭';
-        im.replaceWith(caja);
+        im.replaceWith(imagenVacia(e));
       });
       enlace.appendChild(im);
     } else {
-      const caja = document.createElement('div');
-      caja.className = 'evento-img-vacia';
-      caja.textContent = e.icono || '🎭';
-      enlace.appendChild(caja);
+      enlace.appendChild(imagenVacia(e));
     }
 
     const cuerpo = document.createElement('div');
@@ -169,6 +163,30 @@
     enlace.appendChild(cuerpo);
     art.appendChild(enlace);
     return art;
+  }
+
+  function imagenVacia(e) {
+    const categoria = (e.categoria || 'Otros').toLocaleLowerCase('es-ES')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '');
+    let tema = 'otros';
+    let icono = '📍';
+    if (/concierto|musica|flamenco/.test(categoria)) { tema = 'musica'; icono = '♫'; }
+    else if (/festival|fiesta/.test(categoria)) { tema = 'fiesta'; icono = '✦'; }
+    else if (/deporte/.test(categoria)) { tema = 'deporte'; icono = '●'; }
+    else if (/cultura|espectaculo|teatro|cine/.test(categoria)) { tema = 'cultura'; icono = '◆'; }
+    else if (/tradicion/.test(categoria)) { tema = 'tradicion'; icono = '✺'; }
+
+    const caja = document.createElement('div');
+    caja.className = 'evento-img-vacia ' + tema;
+    caja.setAttribute('aria-hidden', 'true');
+    const simbolo = document.createElement('span');
+    simbolo.className = 'evento-img-vacia-icono';
+    simbolo.textContent = icono;
+    const tipo = document.createElement('span');
+    tipo.className = 'evento-img-vacia-tipo';
+    tipo.textContent = e.categoria || 'Evento';
+    caja.append(simbolo, tipo);
+    return caja;
   }
 
   function pintarChips(contenedor, opciones, valorActual, alElegir) {

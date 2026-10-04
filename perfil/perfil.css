@@ -1,0 +1,80 @@
+/* Evita que los `display` propios de los botones pisen el atributo HTML. */
+[hidden] { display: none !important; }
+body { min-height: 100vh; display: flex; flex-direction: column; }
+
+.perfil {
+  flex: 1; width: 100%; max-width: 720px; margin: 0 auto; padding: 44px 24px 64px;
+}
+.perfil-etiqueta {
+  margin-bottom: 18px; color: var(--verde-claro); font-size: var(--t-etiqueta);
+  font-weight: 800; letter-spacing: .08em; text-align: center; text-transform: uppercase;
+}
+.perfil-estado {
+  padding: 48px 20px; color: var(--apagado); font-size: var(--t-item); text-align: center;
+}
+.perfil-cabecera {
+  display: flex; align-items: center; gap: 18px; padding: 0;
+  background: none; text-align: left;
+}
+.perfil-avatar {
+  display: flex; flex: 0 0 auto; align-items: center; justify-content: center;
+  width: 88px; height: 88px; overflow: hidden; border: 1px solid var(--borde);
+  border-radius: 50%; background: var(--superficie-alta); color: var(--verde-claro);
+  box-shadow: var(--sombra-2); font-size: 30px; font-weight: 800;
+}
+.perfil-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.perfil-identidad { min-width: 0; }
+.perfil-identidad h1 {
+  margin: 0 0 3px; color: var(--texto); font-size: var(--t-titulo);
+  letter-spacing: -.02em; overflow-wrap: anywhere;
+}
+.perfil-titulo { margin: 0; color: var(--apagado); font-size: var(--t-cuerpo); }
+
+.perfil-stats {
+  display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px;
+  margin-top: 24px;
+}
+.perfil-stat {
+  padding: 13px 10px; border: 1px solid var(--borde); border-radius: var(--r-sm);
+  background: var(--superficie); text-align: center;
+}
+.perfil-stat-valor { color: var(--texto); font-size: var(--t-item); font-weight: 800; font-variant-numeric: tabular-nums; }
+.perfil-stat:first-child .perfil-stat-valor { color: var(--dorado-texto); }
+.perfil-stat-etiqueta { margin-top: 2px; color: var(--tenue); font-size: var(--t-etiqueta); }
+.perfil-bio { margin: 20px 0 0; color: var(--apagado); font-size: var(--t-item); line-height: 1.55; }
+.perfil-aportaciones { display: flex; flex-wrap: wrap; gap: 7px; margin-top: 20px; }
+.perfil-chip {
+  padding: 5px 11px; border: 1px solid var(--borde); border-radius: var(--r-pill);
+  background: var(--superficie); color: var(--verde-claro); font-size: var(--t-etiqueta);
+}
+#rutas-seccion h2 { margin: 30px 0 12px; color: var(--texto); font-size: var(--t-item); }
+.perfil-rutas { display: grid; gap: 10px; }
+.perfil-ruta {
+  display: flex; align-items: center; gap: 13px; padding: 14px;
+  border: 1px solid var(--borde); border-radius: var(--r-lg);
+  background: var(--superficie); color: inherit; text-decoration: none;
+}
+.perfil-ruta:hover { border-color: var(--verde-claro); }
+.perfil-ruta:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+.perfil-ruta-icono {
+  display: grid; flex: 0 0 auto; place-items: center; width: 42px; height: 42px;
+  border-radius: var(--r-sm); background: var(--superficie-alta); font-size: 21px;
+}
+.perfil-ruta-cuerpo { min-width: 0; }
+.perfil-ruta-nombre { color: var(--texto); font-size: var(--t-cuerpo); font-weight: 700; }
+.perfil-ruta-meta { margin-top: 2px; color: var(--tenue); font-size: var(--t-etiqueta); }
+.perfil-acciones { display: grid; gap: 10px; margin-top: 30px; }
+.perfil-boton {
+  display: block; min-height: 48px; padding: 12px 18px; border-radius: var(--r-sm);
+  font-size: var(--t-cuerpo); font-weight: 700; text-align: center; text-decoration: none;
+}
+.perfil-boton.principal { background: var(--verde-solido); color: #fff; }
+.perfil-boton.secundario { border: 1px solid var(--borde); color: var(--verde-claro); background: var(--superficie); }
+.perfil-boton.principal[hidden] + .perfil-boton.secundario { grid-column: 1 / -1; }
+.perfil-boton.principal[hidden] + .perfil-boton.secundario { grid-column: 1 / -1; }
+.perfil-boton:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
+@media (min-width: 560px) {
+  .perfil-stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .perfil-acciones { grid-template-columns: 1fr 1fr; }
+}

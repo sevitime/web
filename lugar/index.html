@@ -71,11 +71,15 @@
   .sitio-datos .etiqueta { color: var(--apagado); min-width: 96px; }
   .sitio-datos a { color: var(--verde-claro); }
 
-  .sitio-cta {
+  .sitio-acciones { display: grid; gap: 10px; }
+  .sitio-cta, .sitio-corregir {
     display: block; text-align: center; padding: 16px 20px;
-    border-radius: 999px; background: var(--verde); color: #fff;
-    font-weight: 700; text-decoration: none;
+    border-radius: 999px; font-weight: 700; text-decoration: none;
   }
+  .sitio-cta { background: var(--verde-solido); color: #fff; }
+  .sitio-corregir { border: 1px solid var(--borde); color: var(--verde-claro); background: var(--superficie); }
+  .sitio-cta:focus-visible, .sitio-corregir:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .sitio-corregir:hover { border-color: var(--verde-claro); }
   .sitio-cta-pie {
     text-align: center; color: var(--tenue); margin: 12px 0 0;
     font-size: var(--t-pequeno, 0.9rem);
@@ -104,9 +108,9 @@
       <a href="/rutas/" class="nav-link">Rutas</a>
       <a href="/eventos/" class="nav-link">Eventos</a>
       <a href="/ranking/" class="nav-link">Cuadro de honor</a>
-      <a href="/mapa/" class="nav-btn-mapa">
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
-        <span>Mapa y editor</span>
+        <span>Añadir o corregir sitios</span>
       </a>
       </div>
     </div>
@@ -131,9 +135,14 @@
 
     <ul class="sitio-datos" id="datos"></ul>
 
-    <a class="sitio-cta" id="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
-      Ábrelo en SeviTime
-    </a>
+    <div class="sitio-acciones">
+      <a class="sitio-cta" id="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
+        Ábrelo en SeviTime
+      </a>
+      <a class="sitio-corregir" id="corregir" href="/mapa/?modo=corregir" hidden>
+        ¿Hay algún dato incorrecto? Corrígelo
+      </a>
+    </div>
     <p class="sitio-cta-pie" id="cta-pie">
       Con la app ves si está abierto ahora, lo que dice la gente y cómo llegar.
     </p>
@@ -273,6 +282,10 @@
     });
     document.getElementById('cta-pie').textContent =
       '¿No la tienes? Se descarga gratis en Google Play.';
+
+    const corregir = document.getElementById('corregir');
+    corregir.href = '/mapa/?modo=corregir&k=' + encodeURIComponent(clave);
+    corregir.hidden = false;
   }
 
   window.addEventListener('load', function () {
