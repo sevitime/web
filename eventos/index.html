@@ -58,10 +58,26 @@
   @media (hover: hover) and (pointer: fine) {
     .evento:hover { border-color: var(--verde-claro); }
   }
-  .evento-img {
-    aspect-ratio: 16 / 9; width: 100%; object-fit: cover; display: block;
-    background: var(--superficie-alta);
+  /* El cartel entero, sobre un fondo sacado de él mismo.
+     Casi todos los carteles de un evento son verticales, y recortarlos a
+     16/9 con `cover` se come justo lo que importa: en el de la ensaladilla
+     (640x899) desaparecían el título y las fechas en amarillo, que es lo
+     primero que uno busca. Con `contain` se ve completo, y el desenfoque
+     del propio cartel rellena los lados sin las franjas negras de un
+     reproductor de vídeo. La rejilla mantiene todas las tarjetas iguales. */
+  .evento-img-marco {
+    position: relative; aspect-ratio: 16 / 9; width: 100%;
+    overflow: hidden; background: var(--superficie-alta);
   }
+  .evento-img-fondo, .evento-img {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  }
+  .evento-img-fondo {
+    object-fit: cover;
+    /* La escala tapa el borde transparente que deja el desenfoque. */
+    transform: scale(1.15); filter: blur(18px) brightness(.72) saturate(1.1);
+  }
+  .evento-img { object-fit: contain; }
   .evento-img-vacia {
     position: relative; isolation: isolate; overflow: hidden;
     aspect-ratio: 16 / 9; display: flex; flex-direction: column; gap: 4px;
@@ -134,7 +150,21 @@
     width: 44px; height: 44px; border-radius: var(--r-pill); border: 1px solid var(--borde);
     background: var(--superficie-alta); color: var(--texto); font-size: 20px; cursor: pointer;
   }
-  .ficha-img { display: block; width: 100%; aspect-ratio: 16 / 9; object-fit: cover; }
+  /* En la ficha hay sitio, así que el cartel va más alto que en la tarjeta:
+     4/3 deja leer las letras pequeñas de un cartel vertical sin empujar el
+     texto fuera de la ventana. Mismo apaño del fondo desenfocado. */
+  .ficha-img-marco {
+    position: relative; aspect-ratio: 4 / 3; width: 100%;
+    overflow: hidden; background: var(--superficie-alta);
+  }
+  .ficha-img, .ficha-img-fondo {
+    position: absolute; inset: 0; width: 100%; height: 100%; display: block;
+  }
+  .ficha-img-fondo {
+    object-fit: cover;
+    transform: scale(1.15); filter: blur(18px) brightness(.72) saturate(1.1);
+  }
+  .ficha-img { object-fit: contain; }
   .ficha-cab, .ficha-seccion, .proponer-cuerpo { padding: 16px 20px; }
   /* Bloque y no flex: un flex esquiva el botón flotante de cerrar encogiéndose
      entero; un bloque solo aparta las primeras líneas del título. */

@@ -121,15 +121,30 @@
 
     const img = e.imagenCard || e.imagen;
     if (img) {
+      // Dos veces la misma imagen: el navegador la descarga una. La de
+      // atrás va desenfocada para rellenar lo que `contain` deja libre en
+      // un cartel vertical (ver `.evento-img-marco`), y no la lee nadie.
+      const marco = document.createElement('div');
+      marco.className = 'evento-img-marco';
+
+      const fondo = document.createElement('img');
+      fondo.className = 'evento-img-fondo';
+      fondo.loading = 'lazy';
+      fondo.src = img;
+      fondo.alt = '';
+      fondo.setAttribute('aria-hidden', 'true');
+
       const im = document.createElement('img');
       im.className = 'evento-img';
       im.loading = 'lazy';
       im.src = img;
       im.alt = '';
       im.addEventListener('error', () => {
-        im.replaceWith(imagenVacia(e));
+        marco.replaceWith(imagenVacia(e));
       });
-      enlace.appendChild(im);
+
+      marco.append(fondo, im);
+      enlace.appendChild(marco);
     } else {
       enlace.appendChild(imagenVacia(e));
     }

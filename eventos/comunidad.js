@@ -105,13 +105,25 @@
   function pintarFicha(e) {
     cuerpo.textContent = '';
 
-    const img = e.imagenCard || e.imagen;
+    // Aquí al revés que en la tarjeta: primero el cartel grande y la
+    // miniatura solo como respaldo. La miniatura está recortada para una
+    // lista y en la ficha hay sitio de sobra para el cartel entero.
+    const img = e.imagen || e.imagenCard;
     if (img) {
+      const marco = el('div', 'ficha-img-marco');
+
+      const fondo = el('img', 'ficha-img-fondo');
+      fondo.src = img;
+      fondo.alt = '';
+      fondo.setAttribute('aria-hidden', 'true');
+
       const im = el('img', 'ficha-img');
       im.src = img;
       im.alt = '';
-      im.addEventListener('error', () => im.remove());
-      cuerpo.appendChild(im);
+      im.addEventListener('error', () => marco.remove());
+
+      marco.append(fondo, im);
+      cuerpo.appendChild(marco);
     }
 
     const cab = el('div', 'ficha-cab');
