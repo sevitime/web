@@ -29,6 +29,38 @@
 <link rel="preload" as="image" href="/capturas/explorar.webp" type="image/webp">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css">
+<!-- El movimiento de la portada. Va aquí dentro, y no en un fichero aparte,
+     por dos motivos: la clase `anim` tiene que estar puesta antes del primer
+     pintado (si no, las tarjetas se verían un instante y luego se
+     esconderían), y si este trozo no llegara a ejecutarse la clase no se
+     pone y la página se ve entera y quieta. El contenido nunca depende de
+     que esto funcione. Los estilos están al final de estilo.css. -->
+<script>
+(function () {
+  var raiz = document.documentElement;
+  if (!('IntersectionObserver' in window) ||
+      matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  raiz.classList.add('anim');
+  document.addEventListener('DOMContentLoaded', function () {
+    try {
+      var ojo = new IntersectionObserver(function (entradas) {
+        entradas.forEach(function (e) {
+          if (!e.isIntersecting) return;
+          e.target.classList.add('visto');
+          ojo.unobserve(e.target);
+        });
+      }, { rootMargin: '0px 0px -8% 0px', threshold: 0.12 });
+      // La misma lista que esconde estilo.css bajo `.anim`.
+      document.querySelectorAll(
+        '.que-hace h2, .que-hace li, .navegador h2, .navegador-claim, ' +
+        '.navegador li, .cierre'
+      ).forEach(function (el) { ojo.observe(el); });
+    } catch (e) {
+      raiz.classList.remove('anim');
+    }
+  });
+})();
+</script>
 <script defer src="/nav.js"></script>
 <!-- Supabase (216 KB) no se carga aquí a propósito: auth.js lo pide solo si
      hay sesión, se vuelve del login o se pulsa «Entrar con Google». -->

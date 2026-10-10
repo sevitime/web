@@ -705,3 +705,90 @@ footer span { margin: 0 8px; }
   padding: 0 2px;
 }
 .aviso-teselas-cerrar:hover { color: var(--texto); }
+
+/* ---------- movimiento de la portada ---------- */
+
+/* Tres cosas, y ninguna más: el encabezado entra en cascada, las capturas
+   detrás, y las secciones aparecen al llegar a ellas. Solo `transform` y
+   `opacity`, que no recolocan nada, y todo dentro de `no-preference`: quien
+   tiene «reducir movimiento» ve la página quieta, como antes.
+
+   Las curvas son de salida (rápido al principio, suave al final): es lo que
+   hace que algo parezca que llega y se posa, en vez de arrancar con desgana. */
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes entrar {
+    from { opacity: 0; transform: translateY(14px); }
+  }
+  @keyframes entrar-captura {
+    from { opacity: 0; transform: translateY(28px) rotate(-2.5deg); }
+  }
+  /* La primera captura es la imagen más grande de la portada, la que el
+     navegador toma como medida de cuándo «ya se ve» la página (LCP). Si
+     naciera transparente, esa medida esperaría a la animación; así que esta
+     entra moviéndose pero sin fundido. */
+  @keyframes entrar-captura-visible {
+    from { transform: translateY(28px) rotate(-2.5deg); }
+  }
+
+  /* El encabezado: CSS puro, sin esperar a ningún script. */
+  .hero > * { animation: entrar 0.55s cubic-bezier(0.2, 0.7, 0.2, 1) backwards; }
+  .hero > h1 { animation-delay: 0.05s; }
+  .hero > .claim { animation-delay: 0.11s; }
+  .hero > .hero-acciones { animation-delay: 0.17s; }
+  .hero > .senas { animation-delay: 0.23s; }
+
+  /* Las capturas, una detrás de otra. También sin script: están en la
+     primera pantalla o asomando por abajo, así que entran al cargar. */
+  .capturas li {
+    animation: entrar-captura 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+    transform-origin: 50% 100%;
+  }
+  .capturas li:nth-child(1) { animation-name: entrar-captura-visible; animation-delay: 0.2s; }
+  .capturas li:nth-child(2) { animation-delay: 0.29s; }
+  .capturas li:nth-child(3) { animation-delay: 0.38s; }
+  .capturas li:nth-child(4) { animation-delay: 0.47s; }
+
+  /* Lo de más abajo aparece al llegar. La clase `anim` la pone el script de
+     index.html antes del primer pintado, y `visto` cuando el elemento entra
+     en pantalla. Sin script no hay `anim` y nada de esto se esconde. */
+  .anim .que-hace h2,
+  .anim .que-hace li,
+  .anim .navegador h2,
+  .anim .navegador-claim,
+  .anim .navegador li,
+  .anim .cierre {
+    opacity: 0;
+    transform: translateY(18px);
+    transition:
+      opacity 0.5s ease-out,
+      transform 0.6s cubic-bezier(0.2, 0.7, 0.2, 1);
+  }
+  .anim .que-hace h2.visto,
+  .anim .que-hace li.visto,
+  .anim .navegador h2.visto,
+  .anim .navegador-claim.visto,
+  .anim .navegador li.visto,
+  .anim .cierre.visto {
+    opacity: 1;
+    transform: none;
+  }
+
+  /* En escritorio las tarjetas de una fila entran a la vez en pantalla, y sin
+     escalonar aparecerían de golpe. En el móvil van en columna y cada una
+     llega cuando le toca: ahí un retraso añadido solo las haría ir tarde. */
+  @media (min-width: 720px) {
+    .anim .que-hace li:nth-child(3n + 2),
+    .anim .navegador li:nth-child(3n + 2) { transition-delay: 0.07s; }
+    .anim .que-hace li:nth-child(3n),
+    .anim .navegador li:nth-child(3n) { transition-delay: 0.14s; }
+  }
+
+  /* Al pulsar, el botón cede un poco. En el móvil no hay «pasar por
+     encima»: esta es la única respuesta que da un toque. */
+  .hero-explorar:active,
+  .badge:active,
+  .navegador a:active {
+    transform: scale(0.97);
+    transition-duration: 0.08s;
+  }
+}
