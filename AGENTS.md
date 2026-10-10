@@ -102,12 +102,21 @@ Arreglarlo pide que la app acepte también la clave de coordenadas.
   y Twitter no ejecutan JavaScript, así que leen las `og:` del fichero, que son
   genéricas. Para que la previa diga el nombre del bar hace falta una página
   **por sitio**, generada.
-- **No está en el sitemap**, por lo mismo: para Google es una sola URL, y
-  entrar sin `?k=` enseña «no encontramos ese sitio».
+- **No hay una página generada por sitio.** Serían ~40 MB en el repo y habría
+  que regenerarlas con la foto diaria, así que no se hace «por si acaso».
 
-Generar 9.700 páginas estáticas es el paso siguiente si esto demuestra servir;
-serían ~40 MB en el repo y habría que regenerarlas con la foto diaria, así que
-no se hace «por si acaso».
+**Lo que sí hace desde el 11-oct-2026, para que Google encuentre los sitios:**
+la ficha pone ella misma su título, su descripción, su `canonical`
+(`/lugar/?k=…`) y unos datos estructurados `Place` con lo que está a la vista
+(`paraBuscadores`), y las que no existen se marcan `noindex`. El HTML no lleva
+`canonical` fijo a propósito: lo pone el script. Como desde la web no hay
+enlaces a las fichas, la lista se la da `sitemap-lugares.xml`, que se genera
+con `node tool/sitemap_lugares.mjs` a partir de la foto diaria. **No van
+todos**: solo los que tienen al menos dos de horario, teléfono y web (531 de
+9.291 ese día); una ficha con un nombre y un mapa es contenido pobre. Es la
+versión ligera: Google indexa las páginas que dependen de JavaScript más
+despacio y con menos garantías que una generada, y la vista previa al
+compartir sigue siendo la genérica.
 
 La ficha enlaza a `/mapa/?modo=corregir&k=<place_key>` para abrir la corrección
 con ese sitio ya seleccionado. El mapa conserva esos parámetros durante el
@@ -203,3 +212,29 @@ reserva van autohospedados. Lo único que sale fuera es el cliente de Google
 Sign-In, que es el propio login. Lleva `noindex` y está fuera de
 `robots.txt`. Quién entra lo decide el servidor (`fn_es_admin` y RLS), no la
 página.
+
+## Versión en la dirección de estilos y scripts
+
+Cada `<link>` y `<script>` propio lleva la versión de su fichero
+(`/estilo.css?v=3f9a1c2e`). GitHub Pages deja que el navegador guarde cada
+fichero diez minutos, y sin esto un cambio de CSS o JS «no se veía» hasta
+pasado ese rato. **Después de tocar un `.css` o un `.js`, ejecuta
+`node tool/versionar.mjs` antes de commitear.** Si se olvida,
+`tool/versiones.test.mjs` falla y lo dice. `libs/` y `admin/` no se versionan.
+
+## Movimiento
+
+La portada entra animada y las listas de Rutas, Eventos y el cuadro de honor
+enseñan siluetas mientras cargan y luego entran escalonadas; entre páginas hay
+un fundido (View Transitions). Todo está al final de `estilo.css`, con tres
+reglas que conviene no romper:
+
+- **El contenido no depende del movimiento.** Sin JavaScript, o si el script
+  falla, la página se ve entera. La clase `anim` solo la pone el script de la
+  portada, y las siluetas (`.hueso`) son hijos reales del contenedor que cada
+  página borra al pintar o al fallar la carga.
+- **Con «reducir movimiento» no se anima nada**: todo va dentro de
+  `prefers-reduced-motion: no-preference`.
+- **Una lista solo «llega» la primera vez** (`SeviLlegada`, en `nav.js`).
+  Rutas y el cuadro de honor repintan al filtrar o al iniciar sesión, y volver
+  a animar en cada toque marea.

@@ -28,3 +28,15 @@
     if (!acciones.contains(event.target)) cerrar();
   });
 }());
+
+// La llegada de una lista: la primera vez que se pinta, sus tarjetas entran
+// escalonadas (estilo.css, `.llega`). Solo la primera: Rutas y el cuadro de
+// honor repintan la lista entera al filtrar, al elegir una ruta o al entrar
+// con Google, y que todo volviera a aparecer en cada toque sería un mareo.
+window.SeviLlegada = function (contenedor) {
+  if (!contenedor || contenedor.dataset.llego) return;
+  contenedor.dataset.llego = '1';
+  contenedor.removeAttribute('aria-busy');
+  contenedor.classList.add('llega');
+  setTimeout(function () { contenedor.classList.remove('llega'); }, 1500);
+};

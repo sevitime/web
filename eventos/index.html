@@ -21,10 +21,10 @@
 <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css">
-<script defer src="/nav.js"></script>
+<link rel="stylesheet" href="/estilo.css?v=772908e3">
+<script defer src="/nav.js?v=0ed4e779"></script>
 <script defer src="/libs/supabase.min.js"></script>
-<script defer src="/auth.js"></script>
+<script defer src="/auth.js?v=16f6921f"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -301,7 +301,17 @@
   <div id="chips-cat" class="filtros" role="group" aria-label="Filtrar por categoría"></div>
 
   <p id="cuenta" class="cuenta">Cargando los eventos…</p>
-  <div id="lista"></div>
+  <!-- Siluetas mientras llega la agenda; eventos.js las borra al pintar. -->
+  <div id="lista" aria-busy="true">
+    <div class="rejilla" style="--hueso-alto: 300px; margin-top: 26px">
+      <div class="hueso" aria-hidden="true"></div>
+      <div class="hueso" aria-hidden="true"></div>
+      <div class="hueso" aria-hidden="true"></div>
+      <div class="hueso" aria-hidden="true"></div>
+      <div class="hueso" aria-hidden="true"></div>
+      <div class="hueso" aria-hidden="true"></div>
+    </div>
+  </div>
   <p class="nota">Los datos vienen de las fuentes públicas que usa la app de SeviTime (salas, prensa y entradas). Los cambios de fecha o cancelaciones los manda cada fuente. Los comentarios y los eventos propuestos se revisan antes de publicarse.</p>
 </main>
 
@@ -340,8 +350,8 @@
   </form>
 </dialog>
 
-<script defer src="/eventos/clave.js"></script>
-<script defer src="/eventos/comunidad.js"></script>
-<script defer src="/eventos/eventos.js"></script>
+<script defer src="/eventos/clave.js?v=5a2d8e32"></script>
+<script defer src="/eventos/comunidad.js?v=c95282b1"></script>
+<script defer src="/eventos/eventos.js?v=685318f7"></script>
 </body>
 </html>

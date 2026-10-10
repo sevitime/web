@@ -301,10 +301,14 @@
   sb.rpc('fn_rutas_publicas').then(({ data, error }) => {
     if (error || !data) {
       resumen.textContent = 'No se pudieron cargar las rutas. Recarga en un momento.';
+      // Fuera las siluetas: si se quedaran, parecería que sigue cargando.
+      lista.textContent = '';
+      lista.removeAttribute('aria-busy');
       return;
     }
     todas = data.map((r) => ({ ...r, paradas: r.paradas || [] }));
     pintarLista();
+    if (window.SeviLlegada) window.SeviLlegada(lista);
     // En pantalla grande se abre la primera ruta; en móvil se deja limpio, que
     // ahí el mapa y la lista van apilados y abrir una llena la pantalla.
     if (todas.length && window.matchMedia('(min-width: 900px)').matches) seleccionar(todas[0]);

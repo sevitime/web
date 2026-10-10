@@ -5,7 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Un sitio de Sevilla — SeviTime</title>
 <meta name="description" content="Un sitio de Sevilla en SeviTime: dónde está, cómo llegar y qué se sabe de él.">
-<link rel="canonical" href="https://sevitime.com/lugar/">
+<!-- Sin canonical aquí a propósito: lo pone el script cuando sabe qué sitio
+     es (`/lugar/?k=…`). Uno fijo a `/lugar/` le diría a Google que todas las
+     fichas son la misma página, y uno en el HTML que luego cambia el script
+     son dos señales contradictorias. -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://sevitime.com/lugar/">
 <meta property="og:site_name" content="SeviTime">
@@ -16,21 +19,23 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
-<!-- Sin `noindex`, pero tampoco en el sitemap: es UNA página con parámetro,
-     así que para Google es una sola URL. Las páginas por sitio, de verdad
-     indexables, son el paso siguiente (ver AGENTS.md). -->
+<!-- Cada sitio es esta misma página con su `?k=`. Google ejecuta el script,
+     así que puede indexarlas una a una: el script pone el título, la
+     descripción, el canonical y los datos estructurados del sitio, y
+     `sitemap-lugares.xml` le dice cuáles hay. Las que no existen se marcan
+     `noindex`. Ver AGENTS.md. -->
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css">
+<link rel="stylesheet" href="/estilo.css?v=772908e3">
 <link rel="stylesheet" href="/libs/maplibre-gl.css">
-<script defer src="/nav.js"></script>
+<script defer src="/nav.js?v=0ed4e779"></script>
 <script defer src="/libs/maplibre-gl.js"></script>
 <script defer src="/libs/pmtiles.js"></script>
-<script defer src="/mapa/estilo-mapa.js"></script>
-<script defer src="/lugares.js"></script>
+<script defer src="/mapa/estilo-mapa.js?v=63b64d86"></script>
+<script defer src="/lugares.js?v=255ccd15"></script>
 <style>
   .sitio { max-width: 680px; margin: 0 auto; padding: 32px 24px 60px; }
 
@@ -172,8 +177,9 @@
 //     `og:` de este fichero, que son genéricas. Para que la previa diga el
 //     nombre del bar hace falta una página POR sitio, generada, que es el
 //     paso siguiente.
-//   * No la indexa Google sitio a sitio, por lo mismo: para Google esto es
-//     una sola URL.
+//   * Google sí puede indexarla sitio a sitio, porque ejecuta este script
+//     (ver `paraBuscadores`), pero más despacio y con menos garantías que
+//     una página generada.
 //
 // Se acepta así a propósito: lo que arregla hoy es que el enlace compartido
 // enseñe el sitio y ofrezca la app, que es lo que no pasaba.
@@ -186,6 +192,63 @@
   function noEncontrado() {
     ficha.hidden = true;
     aviso.hidden = false;
+    // Un enlace a un sitio que ya no está (cerró, se ocultó) no tiene nada
+    // que enseñar: que Google no lo guarde como si fuera una página.
+    meta('name', 'robots', 'noindex');
+  }
+
+  /// Crea o actualiza un <meta> de la cabecera.
+  function meta(atributo, clave, contenido) {
+    let m = document.head.querySelector('meta[' + atributo + '="' + clave + '"]');
+    if (!m) {
+      m = document.createElement('meta');
+      m.setAttribute(atributo, clave);
+      document.head.appendChild(m);
+    }
+    m.setAttribute('content', contenido);
+  }
+
+  /// Lo que lee un buscador de esta ficha: dirección propia, descripción con
+  /// lo que de verdad se enseña y los datos estructurados del sitio.
+  ///
+  /// Solo se declara lo que está a la vista en la página. Nada de
+  /// valoraciones ni de «abierto ahora»: aquí no se enseñan, y unos datos
+  /// estructurados que dicen más que la página son justo lo que Google
+  /// penaliza.
+  function paraBuscadores(p) {
+    const url = 'https://sevitime.com/lugar/?k=' + clave;
+    const canonical = document.createElement('link');
+    canonical.rel = 'canonical';
+    canonical.href = url;
+    document.head.appendChild(canonical);
+
+    const tipo = (p.label || 'Sitio').trim();
+    const sabe = [
+      p.horario ? 'horario' : '',
+      p.telefono ? 'teléfono' : '',
+      p.web ? 'web' : '',
+    ].filter(Boolean);
+    const descripcion = p.nombre + ' (' + tipo.toLowerCase() + ') en SeviTime, el mapa de Sevilla y su provincia' +
+      (sabe.length ? ', con su ' + sabe.join(', ').replace(/, ([^,]*)$/, ' y $1') : '') +
+      '.';
+    meta('name', 'description', descripcion);
+    meta('property', 'og:url', url);
+    meta('property', 'og:title', p.nombre + ' — SeviTime');
+    meta('property', 'og:description', descripcion);
+
+    const datos = {
+      '@context': 'https://schema.org',
+      '@type': 'Place',
+      name: p.nombre,
+      url: url,
+      geo: { '@type': 'GeoCoordinates', latitude: p.lat, longitude: p.lon },
+    };
+    if (p.telefono) datos.telephone = p.telefono;
+    if (p.web) datos.sameAs = p.web;
+    const ld = document.createElement('script');
+    ld.type = 'application/ld+json';
+    ld.textContent = JSON.stringify(datos);
+    document.head.appendChild(ld);
   }
 
   // Una clave con forma, antes de tocar nada: `37.38910_-5.98450`.
@@ -242,6 +305,7 @@
     nombre.textContent = p.nombre;
     nombre.classList.remove('cargando');
     document.title = p.nombre + ' — SeviTime';
+    paraBuscadores(p);
     document.getElementById('emoji').textContent = p.emoji || '📍';
     document.getElementById('tipo').textContent = p.label || '';
 

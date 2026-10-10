@@ -3,3 +3,4 @@ Allow: /
 Disallow: /admin/
 
 Sitemap: https://sevitime.com/sitemap.xml
+Sitemap: https://sevitime.com/sitemap-lugares.xml

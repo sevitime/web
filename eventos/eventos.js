@@ -242,6 +242,8 @@
     .then((d) => {
       if (!d || !Array.isArray(d.events)) {
         cuenta.textContent = 'La agenda se actualiza cada madrugada. Vuelve en un rato.';
+        lista.textContent = '';
+        lista.removeAttribute('aria-busy');
         return;
       }
       const ahora = Date.now();
@@ -250,9 +252,12 @@
         .sort((a, b) => new Date(a.inicio) - new Date(b.inicio));
       montarFiltros();
       pintar();
+      if (window.SeviLlegada) window.SeviLlegada(lista);
       window.SeviComunidad.conEventos(estado.eventos);
     })
     .catch(() => {
       cuenta.textContent = 'No se pudieron cargar los eventos. Recarga en un momento.';
+      lista.textContent = '';
+      lista.removeAttribute('aria-busy');
     });
 })();

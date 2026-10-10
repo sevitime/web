@@ -792,3 +792,96 @@ footer span { margin: 0 8px; }
     transition-duration: 0.08s;
   }
 }
+
+/* ---------- siluetas de carga ---------- */
+
+/* Mientras llegan las rutas, los eventos o la clasificación, su sitio lo
+   ocupan unas siluetas del tamaño de lo que va a venir. Antes había un
+   «Cargando…» y luego la lista aparecía de golpe empujando la página.
+
+   Son hijos de verdad del contenedor (`<li class="hueso">`): cada página los
+   borra al pintar, igual que borra la lista anterior, así que no hay clase
+   que acordarse de quitar. El alto y el margen los pone cada página con
+   `--hueso-alto` y `--hueso-margen`, que es lo único que cambia. */
+.hueso {
+  display: block;
+  list-style: none;
+  height: var(--hueso-alto, 86px);
+  margin: var(--hueso-margen, 0);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-lg);
+  background: var(--superficie);
+  position: relative;
+  overflow: hidden;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .hueso::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in srgb, var(--texto) 6%, transparent),
+      transparent
+    );
+    animation: destello 1.4s ease-in-out infinite;
+  }
+  @keyframes destello {
+    to { transform: translateX(100%); }
+  }
+}
+
+/* ---------- la llegada de una lista, y el podio ---------- */
+
+/* `llega` la pone `SeviLlegada` (nav.js) la primera vez que se pinta la
+   lista, y la quita al segundo y medio. Solo se escalonan las ocho primeras:
+   lo que queda por debajo de la pantalla no lo ve nadie entrar. */
+@media (prefers-reduced-motion: no-preference) {
+  .llega > .ruta,
+  .llega > .fila,
+  .llega .evento {
+    animation: entrar 0.45s cubic-bezier(0.2, 0.7, 0.2, 1) backwards;
+  }
+  .llega > .ruta:nth-child(2), .llega > .fila:nth-child(2), .llega .evento:nth-child(2) { animation-delay: 0.04s; }
+  .llega > .ruta:nth-child(3), .llega > .fila:nth-child(3), .llega .evento:nth-child(3) { animation-delay: 0.08s; }
+  .llega > .ruta:nth-child(4), .llega > .fila:nth-child(4), .llega .evento:nth-child(4) { animation-delay: 0.12s; }
+  .llega > .ruta:nth-child(5), .llega > .fila:nth-child(5), .llega .evento:nth-child(5) { animation-delay: 0.16s; }
+  .llega > .ruta:nth-child(6), .llega > .fila:nth-child(6), .llega .evento:nth-child(6) { animation-delay: 0.20s; }
+  .llega > .ruta:nth-child(7), .llega > .fila:nth-child(7), .llega .evento:nth-child(7) { animation-delay: 0.24s; }
+  .llega > .ruta:nth-child(n + 8), .llega > .fila:nth-child(n + 8), .llega .evento:nth-child(n + 8) { animation-delay: 0.28s; }
+
+  /* El podio: el tercero, el segundo y, el último, el primero, que además
+     recibe un destello dorado. Es la única página donde un poco de
+     ceremonia viene a cuento, y dura lo que un parpadeo. */
+  @keyframes subir-al-podio {
+    from { opacity: 0; transform: translateY(24px) scale(0.96); }
+  }
+  @keyframes destello-de-oro {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(252, 196, 64, 0); }
+    40% { box-shadow: 0 0 0 7px rgba(252, 196, 64, 0.2); }
+  }
+  .podio.llega > .podio-tarjeta {
+    animation: subir-al-podio 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) backwards;
+  }
+  .podio.llega > .podio-tarjeta.segundo { animation-delay: 0.1s; }
+  .podio.llega > .podio-tarjeta.primero {
+    animation:
+      subir-al-podio 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) 0.22s backwards,
+      destello-de-oro 0.9s ease-out 0.75s;
+  }
+}
+
+/* ---------- de una página a otra ---------- */
+
+/* Al navegar dentro de la web, la página nueva se funde con la anterior en
+   vez de dar un pantallazo. Lo hace el navegador (View Transitions): no hay
+   script, y donde no existe se navega como siempre. La barra de arriba lleva
+   nombre propio para que se quede quieta mientras cambia lo de debajo. */
+@media (prefers-reduced-motion: no-preference) {
+  @view-transition { navigation: auto; }
+  ::view-transition-old(root),
+  ::view-transition-new(root) { animation-duration: 0.2s; }
+  .top-nav { view-transition-name: barra; }
+}

@@ -24,8 +24,8 @@
 <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css">
-<script defer src="/nav.js"></script>
+<link rel="stylesheet" href="/estilo.css?v=772908e3">
+<script defer src="/nav.js?v=0ed4e779"></script>
 <script defer src="/libs/supabase.min.js"></script>
 <style>
   .ranking {
@@ -230,7 +230,17 @@
     <div id="mi-fila"></div>
   </section>
   <h2 id="lista-titulo" class="lista-titulo" hidden>Clasificación</h2>
-  <div id="lista" class="cargando">Cargando…</div>
+  <!-- Siluetas mientras llega la clasificación; al pintarla (o al fallar)
+       el script de abajo vacía la lista y se van solas. -->
+  <div id="lista" class="lista-ranking" aria-busy="true" style="--hueso-alto: 64px; --hueso-margen: 0 0 10px">
+    <span class="solo-lectores">Cargando…</span>
+    <div class="hueso" aria-hidden="true"></div>
+    <div class="hueso" aria-hidden="true"></div>
+    <div class="hueso" aria-hidden="true"></div>
+    <div class="hueso" aria-hidden="true"></div>
+    <div class="hueso" aria-hidden="true"></div>
+    <div class="hueso" aria-hidden="true"></div>
+  </div>
   <button id="ver-todos" class="ver-todos" type="button" aria-expanded="false" hidden>Ver clasificación completa</button>
 </main>
 
@@ -246,7 +256,7 @@
   <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
 </footer>
 
-<script defer src="/auth.js"></script>
+<script defer src="/auth.js?v=16f6921f"></script>
 <script>
 // auth.js va con `defer`, así que no existe `window.SEVI` mientras se parsea
 // este HTML: hay que esperar a que los scripts diferidos terminen, que es
@@ -424,6 +434,12 @@ document.addEventListener('DOMContentLoaded', function () {
       podio.appendChild(crearTarjetaPodio(fila));
     });
     pintarClasificacion();
+    // Solo la primera vez: al entrar o salir con Google se repinta todo, y
+    // el podio no tiene por qué volver a subir.
+    if (window.SeviLlegada) {
+      window.SeviLlegada(podio);
+      window.SeviLlegada(lista);
+    }
   }
 
   botonVerTodos.addEventListener('click', function () {
