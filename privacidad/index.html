@@ -13,6 +13,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Política de Privacidad — SeviTime</title>
+  <link rel="canonical" href="https://sevitime.com/privacidad/">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -86,7 +87,7 @@
 
 <header>
   <h1>Política de Privacidad</h1>
-  <p>SeviTime · Última actualización: 29 de septiembre de 2026 (el mapa de la web ya no usa MapTiler)</p>
+  <p>SeviTime · Última actualización: 9 de octubre de 2026 (derechos, plazos de conservación y dónde están los datos)</p>
 </header>
 
 <main>
@@ -272,7 +273,7 @@
     <li><strong>Datos Abiertos Junta de Andalucía</strong> — agenda cultural. No envía datos del usuario.</li>
     <li><strong>OnSevilla, Fundación Cajasol y Cartuja Center</strong> — eventos locales vía RSS. No envía datos del usuario.</li>
     <li><strong>Ticketmaster</strong> — conciertos y espectáculos con entradas. La consulta la hace nuestro servidor y no tu móvil, así que Ticketmaster no recibe ningún dato tuyo. Si tocas «Entradas» se abre su web, y a partir de ahí se aplica su política. <a href="https://www.ticketmaster.es/h/privacy.html" target="_blank">Política de privacidad</a></li>
-    <li><strong>Google Fonts</strong> — tipografía. Puede realizar peticiones a servidores de Google. <a href="https://policies.google.com/privacy" target="_blank">Política de privacidad</a></li>
+    <li><strong>Google Fonts</strong> — tipografía. <strong>La app no la descarga</strong>: lleva la fuente dentro y tiene desactivada la descarga en ejecución, así que no se piden datos a Google por este motivo. Se menciona porque la librería forma parte de la app. <a href="https://policies.google.com/privacy" target="_blank">Política de privacidad</a></li>
     <li><strong>footballwebpages.co.uk</strong> — calendarios de fútbol. No envía datos del usuario.</li>
     <li><strong>Google (inicio de sesión)</strong> — si inicias sesión con Google, usas la autenticación de Google. <a href="https://policies.google.com/privacy" target="_blank">Política de privacidad</a></li>
     <li><strong>Sentry</strong> — monitorización de errores para detectar y corregir fallos. Puede registrar información técnica del dispositivo (modelo, versión del sistema). <a href="https://sentry.io/privacy/" target="_blank">Política de privacidad</a></li>
@@ -326,15 +327,27 @@
 
   <h2>8. Base legal (RGPD)</h2>
   <p>
-    Los datos de uso anónimos se tratan al amparo del <strong>interés legítimo</strong>
-    del desarrollador para mejorar la aplicación (art. 6.1.f RGPD). Al no contener
-    dato personal alguno, los datos estadísticos anónimos quedan fuera del ámbito
-    de aplicación del RGPD conforme al Considerando 26.
+    El identificador de dispositivo (UUID) que usa la app cuando no has
+    iniciado sesión <strong>es un dato seudonimizado, no anónimo</strong>: no
+    lleva tu nombre, pero es un identificador estable, así que lo tratamos
+    como dato personal y le damos la protección del RGPD.
   </p>
   <p>
-    La sincronización de favoritos mediante UUID anónimo se realiza con tu
-    <strong>consentimiento implícito</strong> al usar la funcionalidad de favoritos,
-    y puede eliminarse desinstalando la app.
+    Los <strong>datos de uso</strong> se tratan al amparo del
+    <strong>interés legítimo</strong> en saber qué partes de la app se usan y
+    poder mejorarla (art. 6.1.f RGPD). Hemos valorado que ese interés no pasa
+    por encima de tus derechos porque lo que se recoge es lo mínimo —un sí o
+    un no por día, nunca qué buscaste, qué miraste ni dónde estabas—, se queda
+    en nuestro servidor de la Unión Europea, no se comparte con nadie, no se
+    usa para perfilarte ni para publicidad, y <strong>puedes oponerte
+    desactivándolo</strong> en Ajustes → Privacidad sin perder ninguna
+    funcionalidad.
+  </p>
+  <p>
+    La sincronización de favoritos, pendientes y visitados mediante el UUID se
+    trata para <strong>poder prestarte esa función</strong> (art. 6.1.b RGPD):
+    sin un identificador no hay forma de devolverte tu lista. Deja de tratarse
+    al desinstalar la app o si nos pides que lo borremos.
   </p>
   <p>
     Los datos asociados a tu cuenta de Google se tratan con tu
@@ -356,17 +369,60 @@
   </p>
 
   <h2>9. Tus derechos</h2>
-  <p>Puedes ejercer tus derechos de acceso, rectificación, supresión y portabilidad
-  escribiendo a <a href="mailto:sevitimeapp@gmail.com">sevitimeapp@gmail.com</a>.
-  Si has iniciado sesión, puedes cerrar sesión desde la app o la web, y borrar tu
-  cuenta y sus datos desde Ajustes (en la app). Si usas la app de forma anónima,
-  basta con desinstalarla o contactarnos indicando tu UUID (visible bajo petición).</p>
+  <p>Puedes ejercer los derechos de <strong>acceso, rectificación, supresión,
+  portabilidad, limitación del tratamiento y oposición</strong> escribiendo a
+  <a href="mailto:sevitimeapp@gmail.com">sevitimeapp@gmail.com</a>. Contestamos
+  en el plazo de un mes. También puedes <strong>retirar tu consentimiento</strong>
+  en cualquier momento cuando el tratamiento se base en él, sin que eso afecte a
+  lo hecho antes de retirarlo.</p>
+  <p>La mayoría no necesita que nos escribas: puedes cerrar sesión desde la app o
+  la web, borrar tu cuenta y todos sus datos desde Ajustes (en la app), editar o
+  borrar tus reseñas, rutas y comentarios, y oponerte a los datos de uso con el
+  interruptor de Ajustes → Privacidad. Si usas la app de forma anónima, basta con
+  desinstalarla o contactarnos indicando tu UUID (visible bajo petición).</p>
+  <p>Si crees que no hemos atendido bien tu solicitud, puedes
+  <strong>reclamar ante la Agencia Española de Protección de Datos</strong>
+  (<a href="https://www.aepd.es" target="_blank" rel="noopener">www.aepd.es</a>,
+  C/ Jorge Juan 6, 28001 Madrid), que es la autoridad de control competente.</p>
 
-  <h2>10. Menores</h2>
+  <h2>10. Cuánto tiempo guardamos cada cosa</h2>
+  <ul>
+    <li><strong>Lo asociado a tu cuenta</strong> (favoritos, reseñas, rutas,
+    aportaciones, comentarios, asistencia a eventos, perfil): mientras tengas la
+    cuenta. Al borrarla se borra todo en el acto, salvo lo que se indica en
+    <a href="borrar-cuenta.html">qué se borra al eliminar la cuenta</a>.</li>
+    <li><strong>Avisos del buzón</strong>: 180 días, o antes si los borras tú.</li>
+    <li><strong>Mensajes que nos escribes</strong>: mientras hagan falta para
+    atenderte y, como mucho, hasta que borres tu cuenta o nos lo pidas.</li>
+    <li><strong>Datos de uso</strong>: 24 meses. Pasado ese plazo se borran
+    solos; para saber si la gente vuelve no sirve de nada un dato más viejo.</li>
+    <li><strong>Identificador para los avisos push</strong>: mientras los tengas
+    activados. Al desactivarlos o desinstalar, deja de usarse.</li>
+    <li><strong>Informes de error (Sentry)</strong>: 90 días, el plazo del
+    propio servicio.</li>
+    <li><strong>Fotos</strong>: lo que dure la aportación a la que acompañan.
+    Las que llegan a ilustrar la ficha de un sitio se quedan publicadas, sin
+    autor, hasta que pidas que las retiremos.</li>
+  </ul>
+
+  <h2>11. Dónde están tus datos</h2>
+  <p>El grueso de los datos <strong>no sale de la Unión Europea</strong>:
+  la base de datos y los ficheros están en <strong>Supabase</strong> (Irlanda,
+  región <code>eu-west-1</code>) y los informes de error en <strong>Sentry</strong>
+  (Alemania). Supabase y Sentry actúan como <strong>encargados del tratamiento</strong>,
+  con los contratos que exige el art. 28 del RGPD.</p>
+  <p>Hay dos excepciones, las dos de Google: el <strong>inicio de sesión con
+  Google</strong> y los <strong>avisos push (Firebase Cloud Messaging)</strong>,
+  que pueden tratar datos en Estados Unidos. Esa transferencia se ampara en la
+  decisión de adecuación del Marco de Privacidad de Datos UE-EE. UU., al que
+  Google está adherido. Las dos son opcionales: sin iniciar sesión y sin
+  activar los avisos, ningún dato tuyo llega a Google por nuestra parte.</p>
+
+  <h2>12. Menores</h2>
   <p>SeviTime no está dirigida a menores de 14 años. No recogemos conscientemente
   datos de menores.</p>
 
-  <h2>11. Cambios en esta política</h2>
+  <h2>13. Cambios en esta política</h2>
   <p>Cualquier cambio relevante se notificará mediante la actualización de la fecha
   al inicio de este documento. Te recomendamos revisarla periódicamente.</p>
 
