@@ -2,37 +2,42 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://sevitime.com/</loc>
-    <lastmod>2026-09-18</lastmod>
+    <lastmod>2026-10-11</lastmod>
     <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://sevitime.com/mapa/</loc>
-    <lastmod>2026-09-19</lastmod>
+    <lastmod>2026-10-11</lastmod>
     <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://sevitime.com/rutas/</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-11</lastmod>
     <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://sevitime.com/eventos/</loc>
-    <lastmod>2026-09-20</lastmod>
+    <lastmod>2026-10-11</lastmod>
     <changefreq>daily</changefreq>
   </url>
   <url>
     <loc>https://sevitime.com/ranking/</loc>
-    <lastmod>2026-09-19</lastmod>
+    <lastmod>2026-10-11</lastmod>
     <changefreq>monthly</changefreq>
   </url>
   <url>
     <loc>https://sevitime.com/privacidad/</loc>
-    <lastmod>2026-09-22</lastmod>
+    <lastmod>2026-10-09</lastmod>
     <changefreq>yearly</changefreq>
   </url>
   <url>
     <loc>https://sevitime.com/derechos/</loc>
     <lastmod>2026-10-07</lastmod>
     <changefreq>yearly</changefreq>
+  </url>
+  <url>
+    <loc>https://sevitime.com/sitios/</loc>
+    <lastmod>2026-10-11</lastmod>
+    <changefreq>monthly</changefreq>
   </url>
 </urlset>

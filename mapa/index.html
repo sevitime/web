@@ -333,6 +333,42 @@
     font-size: var(--t-etiqueta); color: var(--texto); background: var(--atrib-bg);
     padding: 2px 6px; border-radius: var(--r-sm);
   }
+  /* ---- Tarjeta de un sitio ----
+     La ventanita de MapLibre con los colores del tema: de serie es blanca
+     con texto negro, y en oscuro parecía de otra web. */
+  .maplibregl-popup-content {
+    background: var(--superficie) !important; color: var(--texto);
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    padding: 14px 16px 12px; box-shadow: var(--sombra-2);
+    font-family: 'Inter', sans-serif;
+  }
+  .maplibregl-popup-anchor-bottom .maplibregl-popup-tip,
+  .maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip,
+  .maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip { border-top-color: var(--superficie) !important; }
+  .maplibregl-popup-anchor-top .maplibregl-popup-tip,
+  .maplibregl-popup-anchor-top-left .maplibregl-popup-tip,
+  .maplibregl-popup-anchor-top-right .maplibregl-popup-tip { border-bottom-color: var(--superficie) !important; }
+  .maplibregl-popup-anchor-left .maplibregl-popup-tip { border-right-color: var(--superficie) !important; }
+  .maplibregl-popup-anchor-right .maplibregl-popup-tip { border-left-color: var(--superficie) !important; }
+  .maplibregl-popup-close-button {
+    color: var(--tenue); font-size: 20px; width: 32px; height: 32px; line-height: 1;
+  }
+  .maplibregl-popup-close-button:hover { background: transparent; color: var(--texto); }
+  .tarjeta-sitio { display: flex; flex-direction: column; gap: 2px; padding-right: 18px; }
+  .tarjeta-sitio-nombre { font-size: var(--t-item); font-weight: 700; color: var(--texto); overflow-wrap: anywhere; }
+  .tarjeta-sitio-tipo { font-size: var(--t-etiqueta); color: var(--apagado); }
+  .tarjeta-sitio-acciones { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
+  .tarjeta-sitio-ficha, .tarjeta-sitio-corregir {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 40px; padding: 0 14px; border-radius: var(--r-sm);
+    font: inherit; font-size: var(--t-cuerpo); font-weight: 700;
+    text-decoration: none; cursor: pointer;
+  }
+  .tarjeta-sitio-ficha { background: var(--verde-solido); color: #fff; border: 1px solid transparent; }
+  .tarjeta-sitio-corregir { background: transparent; color: var(--texto); border: 1px solid var(--borde); }
+  .tarjeta-sitio-ficha:focus-visible, .tarjeta-sitio-corregir:focus-visible {
+    outline: 3px solid var(--verde-claro); outline-offset: 2px;
+  }
 </style>
 </head>
 <body>
@@ -1080,9 +1116,9 @@ window.addEventListener('DOMContentLoaded', function () {
     } else {
       map.flyTo({ center: centro, zoom: 17 });
     }
-    // Mismo recorrido que tocar su pin: se reporta ese sitio (nombre, OSM y
-    // coordenadas reales); sin sesión, se invita a entrar.
-    if (!usuarioActual) { abrirPanelLogin(); return; }
+    // Mismo recorrido que tocar su pin: con sesión se reporta ese sitio
+    // (nombre, OSM y coordenadas reales); sin ella, se enseña su tarjeta.
+    if (!usuarioActual) { mostrarTarjetaSitio(p, centro); return; }
     marker = new maplibregl.Marker({ color: prefiereOscuro.matches ? '#FF6B6B' : '#d64545' })
       .setLngLat(centro).addTo(map);
     abrirPanelReportar(p.nombre, p.lat, p.lon, {
@@ -1298,7 +1334,60 @@ window.addEventListener('DOMContentLoaded', function () {
 
   // Aportar pide cuenta, como en la app: así cada aviso va firmado y se puede
   // moderar mejor. Sin sesión, tocar el mapa abre este panel en vez del formulario.
+  // ---- Tarjeta de un sitio (sin sesión) ----
+  //
+  // Hasta el 11-oct-2026, tocar un sitio sin haber entrado abría el panel de
+  // «Entra con Google». Para quien solo está mirando el mapa eso es un muro:
+  // pregunta «¿qué es esto?» y le contestan «identifícate». Ahora sale una
+  // tarjeta con el nombre, qué es y dos salidas: ver su ficha o corregirlo
+  // (y entrar se pide ahí, que es cuando hace falta).
+  let tarjetaSitio = null;
+
+  function cerrarTarjetaSitio() {
+    if (tarjetaSitio) { tarjetaSitio.remove(); tarjetaSitio = null; }
+  }
+
+  function mostrarTarjetaSitio(p, lngLat) {
+    cerrarTarjetaSitio();
+    const caja = document.createElement('div');
+    caja.className = 'tarjeta-sitio';
+
+    const nombre = document.createElement('strong');
+    nombre.className = 'tarjeta-sitio-nombre';
+    nombre.textContent = p.nombre;
+    caja.appendChild(nombre);
+
+    if (p.label) {
+      const tipo = document.createElement('span');
+      tipo.className = 'tarjeta-sitio-tipo';
+      tipo.textContent = (p.emoji ? p.emoji + ' ' : '') + p.label;
+      caja.appendChild(tipo);
+    }
+
+    const acciones = document.createElement('div');
+    acciones.className = 'tarjeta-sitio-acciones';
+    const ficha = document.createElement('a');
+    ficha.className = 'tarjeta-sitio-ficha';
+    ficha.href = '/lugar/?k=' + window.sevitimeLugares.claveDe(Number(p.lat), Number(p.lon));
+    ficha.textContent = 'Ver ficha';
+    const corregir = document.createElement('button');
+    corregir.type = 'button';
+    corregir.className = 'tarjeta-sitio-corregir';
+    corregir.textContent = 'Corregir';
+    corregir.addEventListener('click', function () {
+      cerrarTarjetaSitio();
+      abrirPanelLogin();
+    });
+    acciones.append(ficha, corregir);
+    caja.appendChild(acciones);
+
+    tarjetaSitio = new maplibregl.Popup({ offset: 14, closeButton: true, maxWidth: '260px' })
+      .setLngLat(lngLat).setDOMContent(caja).addTo(map);
+    tarjetaSitio.on('close', function () { tarjetaSitio = null; });
+  }
+
   function abrirPanelLogin() {
+    cerrarTarjetaSitio();
     apagarModos();
     panelLogin.classList.add('visible');
     actualizarScrim();
@@ -1337,12 +1426,24 @@ window.addEventListener('DOMContentLoaded', function () {
         return;
       }
     }
-    if (!usuarioActual) { abrirPanelLogin(); return; }
     const radio = 8; // píxeles de tolerancia alrededor del clic
     const caja = [
       [e.point.x - radio, e.point.y - radio],
       [e.point.x + radio, e.point.y + radio],
     ];
+    if (!usuarioActual) {
+      // Sin sesión se puede mirar: un sitio enseña su tarjeta. Tocar un
+      // hueco sigue siendo «quiero añadir algo», y eso sí pide entrar.
+      const tocado = sitiosVisibles && map.getLayer('sitios')
+        ? map.queryRenderedFeatures(caja, { layers: ['sitios'] })[0]
+        : null;
+      if (tocado) {
+        mostrarTarjetaSitio(tocado.properties, tocado.geometry.coordinates);
+        return;
+      }
+      abrirPanelLogin();
+      return;
+    }
     // Los únicos puntos del mapa son los de SeviTime: si tocas uno, se reporta
     // ese sitio (nombre, coordenadas y elemento OSM exactos, los mismos que usa
     // la app); si tocas un hueco, se añade uno nuevo.

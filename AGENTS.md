@@ -109,11 +109,17 @@ Arreglarlo pide que la app acepte también la clave de coordenadas.
 la ficha pone ella misma su título, su descripción, su `canonical`
 (`/lugar/?k=…`) y unos datos estructurados `Place` con lo que está a la vista
 (`paraBuscadores`), y las que no existen se marcan `noindex`. El HTML no lleva
-`canonical` fijo a propósito: lo pone el script. Como desde la web no hay
-enlaces a las fichas, la lista se la da `sitemap-lugares.xml`, que se genera
-con `node tool/sitemap_lugares.mjs` a partir de la foto diaria. **No van
-todos**: solo los que tienen al menos dos de horario, teléfono y web (531 de
-9.291 ese día); una ficha con un nombre y un mapa es contenido pobre. Es la
+`canonical` fijo a propósito: lo pone el script. Como desde la web no había
+más camino a las fichas que el mapa (y Google no toca mapas), hay dos listas
+generadas con `node tool/sitemap_lugares.mjs` a partir de `lugares.js`:
+`sitemap-lugares.xml` y **`/sitios/`**, una página con un enlace normal a cada
+ficha, ordenada por tipo y enlazada desde el pie de la portada. `sitios/` no
+se edita a mano; un test comprueba que las dos listas coinciden. **No van
+todos**: solo los que tienen al menos dos de horario, teléfono y web (534 de
+más de 9.000 ese día); una ficha con un nombre y un mapa es contenido pobre.
+Tras regenerar, `node tool/versionar.mjs`. En el mapa, tocar un sitio sin
+sesión enseña una tarjeta con «Ver ficha» y «Corregir» (antes abría el panel
+de entrar con Google, que para quien solo mira era un muro). Es la
 versión ligera: Google indexa las páginas que dependen de JavaScript más
 despacio y con menos garantías que una generada, y la vista previa al
 compartir sigue siendo la genérica.
@@ -238,3 +244,11 @@ reglas que conviene no romper:
 - **Una lista solo «llega» la primera vez** (`SeviLlegada`, en `nav.js`).
   Rutas y el cuadro de honor repintan al filtrar o al iniciar sesión, y volver
   a animar en cada toque marea.
+
+## Eventos para buscadores
+
+`eventos/eventos.js` describe los eventos de la agenda en `schema.org/Event`
+(`paraBuscadores`) al cargar. Solo lo que está a la vista en las tarjetas, y
+la dirección se queda en «provincia de Sevilla, España» porque del sitio se
+sabe el nombre, no la calle. Límite conocido: Google prefiere una página por
+evento y aquí van todos en una, así que puede entenderlos y no destacarlos.

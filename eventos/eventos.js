@@ -237,6 +237,50 @@
     pintarChips(chipsCat, cats, estado.categoria, (id) => { estado.categoria = id; pintar(); });
   }
 
+  /// Los eventos, descritos en el formato que entienden los buscadores
+  /// (schema.org/Event), para que puedan enseñarlos con su fecha y su sitio.
+  ///
+  /// Solo lo que ya está a la vista en las tarjetas: nombre, cuándo, dónde
+  /// y, si los hay, la descripción, el cartel y el enlace de la fuente. Se
+  /// describen los que hay sin filtrar, una vez, al cargar: lo que elija
+  /// ver cada visitante no cambia lo que hay en la agenda.
+  ///
+  /// La dirección es solo «provincia de Sevilla, España»: del sitio se sabe
+  /// el nombre («Sala Pandora»), no la calle, y no se inventa.
+  ///
+  /// Límite conocido: Google prefiere que cada evento tenga su propia
+  /// página, y aquí van todos en una. Puede que los entienda y no los
+  /// destaque.
+  function paraBuscadores(eventos) {
+    const datos = eventos.slice(0, 60).map((e) => {
+      const ev = {
+        '@type': 'Event',
+        name: e.nombre,
+        startDate: e.inicio,
+        eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+        location: {
+          '@type': 'Place',
+          name: e.lugar || 'Sevilla',
+          address: {
+            '@type': 'PostalAddress',
+            addressRegion: 'Sevilla',
+            addressCountry: 'ES',
+          },
+        },
+      };
+      if (e.fin) ev.endDate = e.fin;
+      if (e.descripcion) ev.description = e.descripcion;
+      if (e.imagen || e.imagenCard) ev.image = e.imagen || e.imagenCard;
+      if (e.url) ev.url = e.url;
+      return ev;
+    });
+    if (!datos.length) return;
+    const ld = document.createElement('script');
+    ld.type = 'application/ld+json';
+    ld.textContent = JSON.stringify({ '@context': 'https://schema.org', '@graph': datos });
+    document.head.appendChild(ld);
+  }
+
   fetch(SNAPSHOT_URL)
     .then((r) => (r.ok ? r.json() : null))
     .then((d) => {
@@ -253,6 +297,7 @@
       montarFiltros();
       pintar();
       if (window.SeviLlegada) window.SeviLlegada(lista);
+      paraBuscadores(estado.eventos);
       window.SeviComunidad.conEventos(estado.eventos);
     })
     .catch(() => {

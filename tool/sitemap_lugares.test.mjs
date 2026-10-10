@@ -1,48 +1,68 @@
-// Qué fichas entran en `sitemap-lugares.xml`.
+// Qué fichas entran en `sitemap-lugares.xml` y en el listado `/sitios/`.
 //
 //   node --test tool/sitemap_lugares.test.mjs
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { test } from 'node:test';
 
-import { claveDe, entradas, xml } from './sitemap_lugares.mjs';
+import { elegir, pagina, xml } from './sitemap_lugares.mjs';
 
-const bar = (tags, extra = {}) => ({ type: 'node', id: 1, lat: 37.3891, lon: -5.9845, tags, ...extra });
-
-test('la clave es la de la app: cinco decimales y un guion bajo', () => {
-  assert.equal(claveDe(37.393612, -5.987041), '37.39361_-5.98704');
-  assert.equal(claveDe(37.4, -6), '37.40000_-6.00000');
+const claveDe = (lat, lon) => lat.toFixed(5) + '_' + lon.toFixed(5);
+const sitio = (nombre, extra = {}) => ({
+  nombre, lat: 37.3891, lon: -5.9845, label: 'Bar', emoji: '🍺',
+  telefono: '', web: '', horario: '', ...extra,
 });
 
 test('solo entran los sitios con nombre y al menos dos datos', () => {
-  const lista = entradas([
-    bar({ name: 'Solo nombre' }),
-    bar({ name: 'Un dato', phone: '954000000' }, { lat: 37.1 }),
-    bar({ name: 'Dos datos', phone: '954000000', opening_hours: 'Mo-Su 09:00-23:00' }, { lat: 37.2 }),
-    bar({ phone: '954000000', website: 'https://ejemplo.es' }, { lat: 37.3 }),
-  ]);
-  assert.deepEqual(lista.map(([k]) => k), ['37.20000_-5.98450']);
+  const lista = elegir([
+    sitio('Solo nombre'),
+    sitio('Un dato', { telefono: '954000000', lat: 37.1 }),
+    sitio('Dos datos', { telefono: '954000000', horario: 'Mo-Su 09:00-23:00', lat: 37.2 }),
+    sitio('', { telefono: '954000000', web: 'https://ejemplo.es', lat: 37.3 }),
+  ], claveDe);
+  assert.deepEqual(lista.map((s) => s.clave), ['37.20000_-5.98450']);
 });
 
-test('los datos de contacto valen también con el prefijo contact:', () => {
-  const lista = entradas([
-    bar({ name: 'Bar', 'contact:phone': '954000000', 'contact:website': 'https://ejemplo.es' }),
-  ]);
+test('dos sitios en el mismo punto no repiten la ficha', () => {
+  const dos = { telefono: '954', web: 'https://m.es' };
+  const lista = elegir([sitio('Museo', dos), sitio('Museo (entrada)', dos)], claveDe);
   assert.equal(lista.length, 1);
 });
 
-test('un sitio dibujado como edificio usa su centro, y no se repite la clave', () => {
-  const lista = entradas([
-    { type: 'way', id: 2, center: { lat: 37.5, lon: -5.9 }, timestamp: '2026-03-01T10:00:00Z',
-      tags: { name: 'Museo', website: 'https://m.es', opening_hours: 'Tu-Su 10:00-20:00' } },
-    { type: 'node', id: 3, lat: 37.5, lon: -5.9,
-      tags: { name: 'Museo (entrada)', website: 'https://m.es', phone: '954' } },
-  ]);
-  assert.deepEqual(lista, [['37.50000_-5.90000', '2026-03-01']]);
+test('salen por tipo y, dentro, por nombre, con las tildes en su sitio', () => {
+  const dos = { telefono: '954', web: 'https://m.es' };
+  const lista = elegir([
+    sitio('Zurbarán', { ...dos, lat: 37.1 }),
+    sitio('Ávila', { ...dos, lat: 37.2 }),
+    sitio('Museo', { ...dos, lat: 37.3, label: 'Atracción' }),
+    sitio('Bodega', { ...dos, lat: 37.4 }),
+  ], claveDe);
+  assert.deepEqual(lista.map((s) => s.nombre), ['Museo', 'Ávila', 'Bodega', 'Zurbarán']);
 });
 
-test('el XML lleva una URL por ficha, con fecha solo si la hay', () => {
-  const salida = xml([['37.50000_-5.90000', '2026-03-01'], ['37.60000_-5.80000', '']]);
+test('el XML lleva una dirección por ficha', () => {
+  const salida = xml([{ clave: '37.50000_-5.90000' }, { clave: '37.60000_-5.80000' }]);
   assert.equal((salida.match(/<url>/g) || []).length, 2);
-  assert.match(salida, /<loc>https:\/\/sevitime\.com\/lugar\/\?k=37\.50000_-5\.90000<\/loc>\n    <lastmod>2026-03-01<\/lastmod>/);
-  assert.equal((salida.match(/<lastmod>/g) || []).length, 1);
+  assert.match(salida, /<loc>https:\/\/sevitime\.com\/lugar\/\?k=37\.50000_-5\.90000<\/loc>/);
+});
+
+test('el listado enlaza cada ficha y no se cree lo que venga en un nombre', () => {
+  const portada = readFileSync('index.html', 'utf8');
+  const html = pagina([
+    { clave: '37.50000_-5.90000', nombre: 'Bar <b>Pepe</b> & Hijos', tipo: 'Bar', emoji: '🍺' },
+    { clave: '37.60000_-5.80000', nombre: 'Museo', tipo: 'Atracción', emoji: '' },
+  ], portada);
+  assert.match(html, /<a href="\/lugar\/\?k=37\.50000_-5\.90000">Bar &lt;b&gt;Pepe&lt;\/b&gt; &amp; Hijos<\/a>/);
+  assert.equal((html.match(/<a href="\/lugar\/\?k=/g) || []).length, 2);
+  assert.match(html, /<link rel="canonical" href="https:\/\/sevitime\.com\/sitios\/">/);
+  // La barra y el pie son los de la portada, no una copia.
+  assert.ok(html.includes('<nav class="top-nav">') && html.includes('<footer>'));
+});
+
+test('el sitemap y el listado publicados dicen lo mismo', () => {
+  const claves = (texto, patron) => [...texto.matchAll(patron)].map((m) => m[1]).sort();
+  const delSitemap = claves(readFileSync('sitemap-lugares.xml', 'utf8'), /\/lugar\/\?k=([0-9._-]+)<\/loc>/g);
+  const delListado = claves(readFileSync('sitios/index.html', 'utf8'), /href="\/lugar\/\?k=([0-9._-]+)"/g);
+  assert.ok(delSitemap.length >= 100);
+  assert.deepEqual(delListado, delSitemap, 'Regenera los dos: node tool/sitemap_lugares.mjs');
 });
