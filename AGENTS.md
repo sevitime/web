@@ -14,6 +14,15 @@ La copia completa de esta web está en `/home/selu/Documentos/sevitime-web` y
 se guarda junto a la copia de la app, pero los repositorios Git siguen siendo
 independientes.
 
+## La web tiene que comportarse como la app
+
+En lo que comparten, la web y la app funcionan igual, se llaman igual y piden
+lo mismo sin sesión de Google: ver es libre, participar pide cuenta. La tabla
+de qué hace cada una está en el repo de la app,
+`/home/selu/Documentos/sevitime/docs/paridad_app_web.md`. **Mírala antes de
+añadir o cambiar una función aquí, y actualiza su línea** (es un commit en el
+otro repo). No quites un punto donde hoy se pide entrar sin hablarlo.
+
 ## Categorías de lugares (compartidas con la app)
 
 `lugares.js` incrusta un bloque `CATEGORIAS_LUGARES` (categoría, etiqueta,
