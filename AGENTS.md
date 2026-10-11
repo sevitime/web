@@ -133,6 +133,15 @@ versión ligera: Google indexa las páginas que dependen de JavaScript más
 despacio y con menos garantías que una generada, y la vista previa al
 compartir sigue siendo la genérica.
 
+**Nota y reseñas (desde el 11-oct-2026):** la ficha enseña la media de
+`place_ratings` y las reseñas aprobadas de `fn_resenas_publicas`, de cinco en
+cinco, con sus fotos, igual que la app y también sin sesión. **Solo se leen**:
+valorar, reseñar y marcar una reseña como útil piden cuenta en la app y aquí
+no se ofrecen; la ficha manda a la app. Lo que viene de una reseña es texto de
+un usuario y se pinta con `textContent`. Quien no tiene apodo llega como
+«Usuario de SeviTime» y no se enlaza a ningún perfil. Si las reseñas no se
+pueden leer, la sección no sale: no se dice «no tiene reseñas» sin saberlo.
+
 La ficha enlaza a `/mapa/?modo=corregir&k=<place_key>` para abrir la corrección
 con ese sitio ya seleccionado. El mapa conserva esos parámetros durante el
 acceso con Google; no debe obligar a buscar de nuevo el lugar compartido.

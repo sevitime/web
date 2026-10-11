@@ -75,6 +75,37 @@
   .sitio-datos li:last-child { border-bottom: 0; }
   .sitio-datos .etiqueta { color: var(--apagado); min-width: 96px; }
   .sitio-datos a { color: var(--verde-claro); }
+  /* Una web o un horario largos no tienen dónde partirse: sin esto empujaban
+     la página y aparecía desplazamiento horizontal en el móvil. */
+  .sitio-datos li > :last-child { min-width: 0; overflow-wrap: anywhere; }
+
+  /* ---- Lo que dice la gente ---- */
+  .opiniones { margin: 0 0 28px; }
+  .opiniones h2 { font-size: var(--t-seccion); font-weight: 700; color: var(--texto); margin-bottom: 8px; }
+  .opiniones-nota { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+  .opiniones-media { font-size: var(--t-display); font-weight: 800; color: var(--texto); line-height: 1; font-variant-numeric: tabular-nums; }
+  .estrellas { color: var(--dorado, #F9A825); letter-spacing: 1px; white-space: nowrap; }
+  .opiniones-cuantas { color: var(--apagado); font-size: var(--t-cuerpo); }
+  .opiniones-vacio { color: var(--apagado); font-size: var(--t-cuerpo); }
+  .resenas { list-style: none; padding: 0; margin: 10px 0 0; }
+  .resena { padding: 14px 0; border-bottom: 1px solid var(--borde); }
+  .resena:last-child { border-bottom: 0; }
+  .resena-cab { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 10px; }
+  .resena-autor { font-weight: 700; color: var(--texto); text-decoration: none; overflow-wrap: anywhere; }
+  a.resena-autor:hover { color: var(--verde-claro); text-decoration: underline; }
+  .resena-fecha, .resena-util, .resena-epoca { font-size: var(--t-etiqueta); color: var(--tenue); }
+  .resena-epoca { display: block; margin-top: 2px; font-style: italic; }
+  .resena-texto { margin-top: 6px; color: var(--texto); font-size: var(--t-cuerpo); overflow-wrap: anywhere; white-space: pre-line; }
+  .resena-fotos { display: flex; gap: 8px; margin-top: 10px; overflow-x: auto; }
+  .resena-fotos img { width: 96px; height: 96px; object-fit: cover; border-radius: var(--r-sm); border: 1px solid var(--borde); }
+  .resena-fotos a:focus-visible, .resenas-mas:focus-visible, a.resena-autor:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .resenas-mas {
+    margin-top: 10px; min-height: 44px; width: 100%; border-radius: 999px;
+    border: 1px solid var(--borde); background: var(--superficie); color: var(--texto);
+    font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .resenas-mas:hover { border-color: var(--verde-claro); }
+  .opiniones-pie { margin-top: 12px; font-size: var(--t-etiqueta); color: var(--tenue); }
 
   .sitio-acciones { display: grid; gap: 10px; }
   .sitio-cta, .sitio-corregir {
@@ -140,6 +171,18 @@
 
     <ul class="sitio-datos" id="datos"></ul>
 
+    <!-- Lo que dice la gente: la nota media y las reseñas publicadas. Se
+         ven sin sesión, igual que en la app. Escribir una o valorar pide
+         cuenta, y eso se hace en la app. -->
+    <section class="opiniones" id="opiniones" aria-labelledby="opiniones-titulo" hidden>
+      <h2 id="opiniones-titulo">Lo que dice la gente</h2>
+      <div class="opiniones-nota" id="opiniones-nota" hidden></div>
+      <p class="opiniones-vacio" id="opiniones-vacio" hidden>Todavía no tiene reseñas.</p>
+      <ul class="resenas" id="resenas"></ul>
+      <button class="resenas-mas" id="resenas-mas" type="button" hidden>Ver más reseñas</button>
+      <p class="opiniones-pie">Para valorar este sitio o dejar tu reseña, ábrelo en SeviTime e inicia sesión.</p>
+    </section>
+
     <div class="sitio-acciones">
       <a class="sitio-cta" id="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
         Ábrelo en SeviTime
@@ -149,7 +192,7 @@
       </a>
     </div>
     <p class="sitio-cta-pie" id="cta-pie">
-      Con la app ves si está abierto ahora, lo que dice la gente y cómo llegar.
+      Con la app ves si está abierto ahora, dejas tu reseña y sabes cómo llegar.
     </p>
   </div>
 
@@ -249,6 +292,199 @@
     ld.type = 'application/ld+json';
     ld.textContent = JSON.stringify(datos);
     document.head.appendChild(ld);
+    datosEstructurados = { nodo: ld, datos: datos };
+  }
+
+  // ---- Lo que dice la gente ------------------------------------------------
+  //
+  // Hasta el 11-oct-2026 la ficha de la web solo enseñaba los datos del
+  // sitio; la de la app, además, su nota y sus reseñas. Aquí se enseñan las
+  // dos cosas tal como salen en la app: la media de `place_ratings` y las
+  // reseñas aprobadas de `fn_resenas_publicas`, de cinco en cinco.
+  //
+  // Solo se leen. Valorar, reseñar y marcar una reseña como útil piden
+  // cuenta en la app, y aquí no se ofrecen: se manda a la app.
+  //
+  // Todo lo que viene de una reseña es texto de un usuario: se pinta con
+  // `textContent`, nunca como HTML.
+  const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
+  const POR_TANDA = 5;
+  let datosEstructurados = null;
+  let resenasPintadas = 0;
+
+  function pedir(ruta, opciones) {
+    const o = opciones || {};
+    return fetch(SUPABASE_URL + '/rest/v1/' + ruta, {
+      method: o.cuerpo ? 'POST' : 'GET',
+      headers: {
+        apikey: SUPABASE_KEY,
+        Authorization: 'Bearer ' + SUPABASE_KEY,
+        'Content-Type': 'application/json',
+      },
+      body: o.cuerpo ? JSON.stringify(o.cuerpo) : undefined,
+    }).then(function (r) {
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
+    });
+  }
+
+  function estrellas(nota) {
+    const n = Math.max(0, Math.min(5, Math.round(nota)));
+    const s = document.createElement('span');
+    s.className = 'estrellas';
+    s.setAttribute('role', 'img');
+    s.setAttribute('aria-label', n + ' de 5 estrellas');
+    s.textContent = '★★★★★'.slice(0, n) + '☆☆☆☆☆'.slice(0, 5 - n);
+    return s;
+  }
+
+  function pintarNota(fila) {
+    const votos = fila ? Number(fila.vote_count) || 0 : 0;
+    const media = fila ? Number(fila.average_rating) || 0 : 0;
+    if (votos < 1 || media <= 0) return;
+    const caja = document.getElementById('opiniones-nota');
+    const numero = document.createElement('span');
+    numero.className = 'opiniones-media';
+    numero.textContent = media.toLocaleString('es-ES', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+    const cuantas = document.createElement('span');
+    cuantas.className = 'opiniones-cuantas';
+    cuantas.textContent = votos === 1 ? '1 valoración' : votos.toLocaleString('es-ES') + ' valoraciones';
+    caja.append(numero, estrellas(media), cuantas);
+    caja.hidden = false;
+
+    // La nota, también para los buscadores: es un dato que está a la vista.
+    if (datosEstructurados) {
+      datosEstructurados.datos.aggregateRating = {
+        '@type': 'AggregateRating',
+        ratingValue: Math.round(media * 10) / 10,
+        ratingCount: votos,
+        bestRating: 5,
+        worstRating: 1,
+      };
+      datosEstructurados.nodo.textContent = JSON.stringify(datosEstructurados.datos);
+    }
+  }
+
+  function tarjetaResena(r) {
+    const li = document.createElement('li');
+    li.className = 'resena';
+
+    const cab = document.createElement('div');
+    cab.className = 'resena-cab';
+    const quien = (r.nombre_publico || '').trim();
+    let autor;
+    // Quien no ha elegido apodo llega como «Usuario de SeviTime»: no es un
+    // nombre, así que no hay perfil al que enlazar.
+    if (quien && quien !== 'Usuario de SeviTime') {
+      autor = document.createElement('a');
+      autor.href = '/perfil/?n=' + encodeURIComponent(quien);
+      autor.textContent = quien;
+    } else {
+      autor = document.createElement('span');
+      autor.textContent = quien || 'Usuario de SeviTime';
+    }
+    autor.className = 'resena-autor';
+    cab.append(autor, estrellas(r.rating));
+    const cuando = new Date(r.created_at);
+    if (!isNaN(cuando)) {
+      const fecha = document.createElement('span');
+      fecha.className = 'resena-fecha';
+      fecha.textContent = cuando.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
+      cab.appendChild(fecha);
+    }
+    if (r.utiles_count > 0) {
+      const util = document.createElement('span');
+      util.className = 'resena-util';
+      util.textContent = r.utiles_count === 1 ? 'Útil para 1 persona' : 'Útil para ' + r.utiles_count + ' personas';
+      cab.appendChild(util);
+    }
+    li.appendChild(cab);
+
+    // Una reseña de cuando el local era otro negocio: se dice, para que no
+    // se lea como una opinión del de ahora.
+    if (r.epoca_anterior) {
+      const epoca = document.createElement('span');
+      epoca.className = 'resena-epoca';
+      epoca.textContent = r.nombre_epoca
+        ? 'De cuando se llamaba «' + r.nombre_epoca + '»'
+        : 'De una etapa anterior del local';
+      li.appendChild(epoca);
+    }
+
+    const texto = (r.comentario || '').trim();
+    if (texto) {
+      const p = document.createElement('p');
+      p.className = 'resena-texto';
+      p.textContent = texto;
+      li.appendChild(p);
+    }
+
+    const fotos = (Array.isArray(r.fotos) && r.fotos.length ? r.fotos : (r.foto_url ? [r.foto_url] : []))
+      .filter(function (u) { return typeof u === 'string' && /^https:\/\//.test(u); });
+    if (fotos.length) {
+      const tira = document.createElement('div');
+      tira.className = 'resena-fotos';
+      fotos.forEach(function (url, i) {
+        const a = document.createElement('a');
+        a.href = url;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        const img = document.createElement('img');
+        img.src = url;
+        img.loading = 'lazy';
+        img.width = 96;
+        img.height = 96;
+        img.referrerPolicy = 'no-referrer';
+        img.alt = 'Foto ' + (i + 1) + ' de la reseña de ' + (quien || 'alguien de SeviTime');
+        a.appendChild(img);
+        tira.appendChild(a);
+      });
+      li.appendChild(tira);
+    }
+    return li;
+  }
+
+  function cargarResenas() {
+    const boton = document.getElementById('resenas-mas');
+    boton.disabled = true;
+    // Se pide una de más para saber si quedan, sin una segunda llamada.
+    return pedir('rpc/fn_resenas_publicas', {
+      cuerpo: { p_place_key: clave, p_limit: POR_TANDA + 1, p_offset: resenasPintadas },
+    }).then(function (filas) {
+      const lista = document.getElementById('resenas');
+      (filas || []).slice(0, POR_TANDA).forEach(function (r) {
+        lista.appendChild(tarjetaResena(r));
+        resenasPintadas++;
+      });
+      boton.hidden = !filas || filas.length <= POR_TANDA;
+      boton.disabled = false;
+    });
+  }
+
+  function pintarOpiniones() {
+    const seccion = document.getElementById('opiniones');
+    Promise.all([
+      pedir('place_ratings?select=average_rating,vote_count&place_key=eq.' + encodeURIComponent(clave))
+        .then(function (filas) { pintarNota(filas && filas[0]); })
+        .catch(function () {}),
+      cargarResenas().then(function () { return true; }, function () { return false; }),
+    ]).then(function (resultado) {
+      const hayNota = !document.getElementById('opiniones-nota').hidden;
+      const seLeyeron = resultado[1];
+      // Si las reseñas no se han podido leer y tampoco hay nota, la sección
+      // no se enseña: «todavía no tiene reseñas» sería afirmar algo que no
+      // se sabe.
+      if (!seLeyeron && !hayNota) return;
+      document.getElementById('opiniones-vacio').hidden =
+        !seLeyeron || hayNota || resenasPintadas > 0;
+      seccion.hidden = false;
+    });
+    document.getElementById('resenas-mas').addEventListener('click', function () {
+      cargarResenas().catch(function () {
+        document.getElementById('resenas-mas').disabled = false;
+      });
+    });
   }
 
   // Una clave con forma, antes de tocar nada: `37.38910_-5.98450`.
@@ -306,6 +542,7 @@
     nombre.classList.remove('cargando');
     document.title = p.nombre + ' — SeviTime';
     paraBuscadores(p);
+    pintarOpiniones();
     document.getElementById('emoji').textContent = p.emoji || '📍';
     document.getElementById('tipo').textContent = p.label || '';
 
