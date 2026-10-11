@@ -105,8 +105,8 @@
       rutas.forEach((ruta) => {
         const enlace = document.createElement('a');
         enlace.className = 'perfil-ruta';
-        enlace.href = 'https://sevitime.github.io/ruta/?id=' + encodeURIComponent(ruta.id) +
-          '&n=' + encodeURIComponent(ruta.nombre);
+        // Dentro de la propia web: `/rutas/?id=` abre esa ruta desplegada.
+        enlace.href = '/rutas/?id=' + encodeURIComponent(ruta.id);
         const icono = document.createElement('span');
         icono.className = 'perfil-ruta-icono';
         icono.setAttribute('aria-hidden', 'true');

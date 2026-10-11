@@ -100,6 +100,39 @@
   }
   .sello.rec { background: var(--ok-bg); color: var(--ok-fg); }
 
+  /* Las acciones de la ruta abierta. Envuelven: en un móvil no caben las
+     cuatro en una línea. */
+  .ruta-acciones {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    padding: 4px 14px 14px;
+  }
+  .ruta-accion {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-height: 40px; padding: 0 14px; border-radius: var(--r-pill);
+    border: 1px solid var(--borde); background: transparent; color: var(--texto);
+    font: inherit; font-size: var(--t-etiqueta); font-weight: 600;
+    text-decoration: none; cursor: pointer;
+    transition: border-color .15s ease, color .15s ease, transform .1s ease;
+  }
+  .ruta-accion:active { transform: scale(.97); }
+  .ruta-accion:focus-visible, .ruta-autor:focus-visible, .ruta-entrar:focus-visible {
+    outline: 3px solid var(--verde-claro); outline-offset: 2px;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .ruta-accion:hover { border-color: var(--verde-claro); }
+  }
+  .ruta-util.marcado { border-color: var(--verde-claro); color: var(--verde-claro); }
+  .ruta-autor {
+    margin-left: auto; font-size: var(--t-etiqueta); font-weight: 600;
+    color: var(--verde-claro); text-decoration: none; padding: 8px 0;
+  }
+  .ruta-autor:hover { text-decoration: underline; }
+  .ruta-aviso { flex: 1 0 100%; font-size: var(--t-etiqueta); color: var(--apagado); overflow-wrap: anywhere; }
+  .ruta-entrar {
+    border: none; background: none; padding: 0; font: inherit; font-weight: 700;
+    color: var(--verde-claro); cursor: pointer; text-decoration: underline;
+  }
+
   .paradas { border-top: 1px solid var(--borde); }
   .parada {
     display: flex; gap: 10px; align-items: flex-start; width: 100%; text-align: left;
@@ -205,6 +238,6 @@
   </div>
 </main>
 
-<script defer src="/rutas/rutas.js?v=2d9a5bbc"></script>
+<script defer src="/rutas/rutas.js?v=e38fb781"></script>
 </body>
 </html>

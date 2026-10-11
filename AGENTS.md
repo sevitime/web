@@ -135,11 +135,31 @@ públicos de `fn_perfil_publico` y `fn_rutas_de_usuario`. La página usa la copi
 autohospedada de Supabase y mantiene `noindex`, porque todos los nombres pasan
 por un único HTML con parámetro.
 
-Los enlaces antiguos `sevitime.github.io/perfil/` siguen existiendo y no se
-redirigen: son App Links compartidos por versiones publicadas de la app y su
-dominio conserva `/.well-known/assetlinks.json`. Las rutas de usuario que salen
-en el perfil siguen apuntando a `sevitime.github.io/ruta/` hasta que exista una
-ficha de ruta equivalente en este repositorio.
+Los enlaces antiguos `sevitime.github.io/perfil/` y `sevitime.github.io/ruta/`
+siguen existiendo y no se redirigen: son App Links compartidos por versiones
+publicadas de la app y su dominio conserva `/.well-known/assetlinks.json`.
+
+## `/rutas/?id=`: el enlace de una ruta
+
+Desde el 11-oct-2026 cada ruta tiene dirección propia dentro de la web:
+`/rutas/?id=<id>` abre la página de Rutas con esa ruta desplegada, también en
+el móvil. Es adonde llevan las rutas de un perfil (antes iban a
+`sevitime.github.io/ruta/`) y lo que copia el botón «Compartir». La barra de
+direcciones, el título y el `canonical` siguen a la ruta que abre la persona;
+la que la página abre sola en pantalla grande no los toca, para que `/rutas/`
+siga siendo `/rutas/`.
+
+**El reparto con y sin sesión es el de la app, y hay que mantenerlo igual en
+los dos sitios** (lo pidió el usuario: la web tiene que funcionar como la app
+en lo que se pueda, y entrar con Google tiene que seguir teniendo premio):
+mirar es libre —sitios, fichas, rutas, eventos, perfiles—; participar pide
+cuenta —«Me ha servido», valorar, crear una ruta, proponer un evento, sugerir
+o corregir un sitio—. Al pulsar algo que pide cuenta sin tenerla no se hace
+nada: se dice «Inicia sesión para…» con el acceso a mano.
+
+«Me ha servido» escribe en `rutas_utiles` igual que la app (la RLS impide
+marcar la propia). El acceso con Google vuelve a `/rutas/` a secas, así que la
+ruta abierta se guarda en `sessionStorage` y se reabre a la vuelta.
 
 ## Sitios ocultos: la web no puede fallar enseñándolos
 
