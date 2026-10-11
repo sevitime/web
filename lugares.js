@@ -763,6 +763,39 @@ const CATEGORIAS_LUGARES = {
     });
   }
 
+  // Datos aprobados: solo completan fichas existentes y sobreviven al alta.
+  function datosPropios() {
+    return fetch(SUPABASE_URL + '/rest/v1/datos_lugares?select=*&order=actualizado_at.asc', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    }).then((r) => r.ok ? r.json() : []).catch(() => []);
+  }
+
+  function completarConDatosPropios(sitio, filas) {
+    let elegido = null;
+    let tieneVinculo = false;
+    for (const fila of filas) {
+      const mismoId = sitio.osmId != null && sitio.osmId === fila.osm_id &&
+        sitio.osmType === fila.osm_type;
+      if (sitio.osmId != null && fila.osm_id != null && !mismoId) continue;
+      const dato = { nombre: fila.nombre, lat: mismoId ? sitio.lat : fila.lat,
+        lon: mismoId ? sitio.lon : fila.lon };
+      if (!sonMismoLugar(sitio, dato)) continue;
+      if (mismoId || !tieneVinculo) elegido = fila;
+      tieneVinculo = tieneVinculo || mismoId;
+    }
+    if (!elegido) return sitio;
+    const d = elegido;
+    return { ...sitio,
+      telefono: d.telefono || sitio.telefono,
+      web: d.web || sitio.web,
+      horario: d.horario || sitio.horario,
+      horarioPropio: Boolean(d.horario),
+      imagenUrl: d.imagen_url || sitio.imagenUrl,
+      sinImagen: d.sin_imagen,
+      descripcion: d.descripcion || sitio.descripcion,
+    };
+  }
+
   // Un alta manual -> lugar con la misma forma que los de la foto.
   function aLugarManual(m) {
     const nombre = (m.nombre || '').trim();
@@ -811,13 +844,15 @@ const CATEGORIAS_LUGARES = {
         .then((d) => (d.elements || []).map(aLugar).filter(Boolean)),
       manuales().then((filas) => filas.map(aLugarManual).filter(Boolean)),
       ocultos(),
-    ]).then(([snap, man, filasOcultas]) => {
+      datosPropios(),
+    ]).then(([snap, man, filasOcultas, datos]) => {
       const visible = (p) => !estaOculto(p, filasOcultas);
       // Los ocultos se quitan ANTES de juntar: si no, un alta en el mismo
       // punto que un sitio oculto (La Paraíta sobre el «Bar» de OSM) se
       // descartaba por repetida y luego se ocultaba el otro, y no quedaba
       // ninguno. Y otra vez al final, por si la oculta es un alta.
-      return juntar(snap.filter(visible), man).filter(visible);
+      return juntar(snap.filter(visible), man).filter(visible)
+        .map((p) => completarConDatosPropios(p, datos));
     });
   }
 
@@ -825,6 +860,6 @@ const CATEGORIAS_LUGARES = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, juntar, estaOculto, ocultos,
-    cargarCurado,
+    cargarCurado, completarConDatosPropios,
   };
 })();

@@ -234,6 +234,13 @@ Lo que se ve en la web tiene que coincidir con lo de la app. Cómo se consigue:
   `reportes_lugares`) que la app; se moderan en el panel de la app.
 - **Tiles del mapa:** el mismo `.pmtiles` propio.
 
+**Datos propios permanentes:** `lugares.js` lee `datos_lugares` además de las
+altas activas. Completa los campos aprobados de las fichas OSM existentes sin
+crear pines nuevos. Los datos sobreviven a retirar el alta manual. Compara id
+OSM y nombre cuando hay vínculo; sin vínculo, nombre y proximidad. Conserva
+las coordenadas OSM que identifican las reseñas. La moderación sigue en el
+panel de la app y requiere cuenta. Pruebas: `tool/datos_lugares.test.mjs`.
+
 **Datos curados:** tanto la app como la ficha emergente de la pantalla unificada leen
 `curated_places` (descripción, foto, horario verificado, etiquetas y
 recomendación editorial). La web los pide solo al abrir un sitio y conserva la
