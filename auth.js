@@ -111,6 +111,11 @@
       // entrar, así que esto es solo el acceso, no la seguridad.
       sb.rpc('fn_es_admin')
         .then(function (res) {
+          // El contador de visitas espera esta respuesta para no sumar las
+          // nuestras (ver `visitas.js`). Se le avisa siempre, admin o no, y
+          // antes del `return`: si no, las visitas de quien tiene sesión y
+          // no es admin se quedarían esperando el tiempo de espera entero.
+          if (window.SeviVisitas) window.SeviVisitas.decidir(res.data === true);
           if (res.data !== true || !salir.isConnected) return;
           var panel = document.createElement('a');
           panel.className = 'auth-panel';
@@ -119,7 +124,11 @@
           panel.title = 'Panel de administrador';
           seccion.insertBefore(panel, salir);
         })
-        .catch(function () {});
+        .catch(function () {
+          // Sin respuesta no se sabe: que cuente, que perder visitas reales
+          // es peor que colar alguna nuestra.
+          if (window.SeviVisitas) window.SeviVisitas.decidir(false);
+        });
 
       // El XP real, con sesión. Sin sesión esto no devolvería nada.
       sb.rpc('fn_mis_puntos')
@@ -133,6 +142,10 @@
           xp.textContent = '';
         });
     } else {
+      // Había una sesión guardada pero ya no vale: es un visitante como
+      // cualquier otro y el contador no tiene que esperar más.
+      if (window.SeviVisitas) window.SeviVisitas.decidir(false);
+
       var boton = document.createElement('button');
       boton.className = 'auth-entrar';
       boton.type = 'button';

@@ -87,6 +87,47 @@ el texto en `sevitime/privacidad`, hay que copiarlo aquí en el mismo commit (y
 al revés). El pie de `index.html`, `404.html` y `ranking/index.html` enlaza a
 `/privacidad/`.
 
+## Contador de visitas (`visitas.js`)
+
+La web no medía nada hasta el 12 de octubre de 2026. Ahora `visitas.js` suma
+uno a `(día, página)` en la tabla `web_visitas` de Supabase. **Un contador, no
+una analítica:** no guarda identificador de ninguna clase —ni cookie, ni
+`localStorage`, ni IP, ni huella—, así que son páginas vistas y no visitantes
+únicos, y por eso **la web no pide permiso de cookies**. En cuanto se guardara
+un identificador para contar, la ePrivacy pediría banner; no lo hay y no lo va
+a haber.
+
+No se usó una herramienta de terceros por la regla de arriba: la política
+promete que la web no habla con terceros. Y tampoco había alternativa gratis
+por otro lado —GitHub Pages no da visitas, y el DNS está en Cloudflare pero sin
+proxy, así que no hay analítica de Cloudflare; encender el proxy naranja sobre
+Pages se juega el certificado y los App Links—.
+
+Detalles que hay que respetar al tocarlo:
+
+- **Va con un `fetch` pelado al endpoint REST, sin cargar `supabase-js`.** La
+  librería son 216 KB y `auth.js` se parte en dos justamente para no
+  descargarla a quien solo pasa por la portada. Contar visitas no puede costar
+  más que la página que cuenta.
+- **La página se manda sin `?id=` ni `#ancla`**: qué tipo de página, nunca qué
+  sitio ni qué ruta se estaba mirando. Y `fn_web_visita` la pasa además por
+  **lista blanca** en el servidor: lo que no esté previsto entra como `otra`.
+  Si se añade una página al sitio y se quiere contar, hay que añadirla a esa
+  lista (`docs/sql/web_visitas.sql` en el repo de la app) **y** a los nombres
+  de `lib/screens/admin/widgets/uso_paginas_web.dart`; si no, se suma a «otra».
+- **Las visitas de los administradores no cuentan**, y el filtro está aquí, no
+  en el servidor: el `fetch` va con la clave pública, así que para Postgres
+  somos `anon`. `visitas.js` no dispara si hay marca `sevi_no_contar` en
+  `localStorage`, y la marca se pone sola cuando `auth.js` pregunta
+  `fn_es_admin()` y sale `true`. Por eso **`auth.js` tiene que seguir avisando
+  con `window.SeviVisitas.decidir(...)`** en las tres salidas de su
+  comprobación: si se quita, con sesión iniciada las visitas esperan el tiempo
+  de espera entero. Para un navegador o un móvil donde no se vaya a iniciar
+  sesión: entrar una vez en `sevitime.com/?nocontar=1`.
+- `explorar/` queda fuera a propósito: es solo un `window.location.replace`
+  a `/mapa/`, y contarla sería contar dos veces la misma visita.
+- Lo ve el administrador en `/admin/` → «Uso de la app» → «Visitas de la web».
+
 ## `/lugar/`: la página de un sitio
 
 Existe para que **compartir un bar desde la app lleve a SeviTime y no a Google
