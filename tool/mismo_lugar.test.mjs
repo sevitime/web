@@ -8,7 +8,7 @@ import assert from 'node:assert/strict';
 
 globalThis.window = globalThis;
 await import('../lugares.js');
-const { sonMismoLugar, radioMismoSitio, juntar, estaOculto } =
+const { sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto } =
   globalThis.sevitimeLugares;
 
 const aqui = (nombre) => ({ nombre, lat: 37.4224, lon: -5.9855 });
@@ -121,4 +121,72 @@ test('un alta encima de un oculto se queda (La Paraíta sobre el «Bar»)', () =
   const visible = (p) => !estaOculto(p, [fila]);
   const todos = juntar([bar].filter(visible), [paraita]).filter(visible);
   assert.deepEqual(todos.map((p) => p.nombre), ['La Paraíta Los Militares']);
+});
+
+// --- Dos fichas de OSM que son el mismo sitio -------------------------------
+// Los mismos casos que test/services/juntar_osm_test.dart en la app.
+
+const deOsm = (nombre, tipo, metrosAlNorte, extra = {}) => ({
+  nombre, tipo, lat: 37.3772 + metrosAlNorte / 111000, lon: -5.9869,
+  telefono: '', web: '', horario: '', ...extra,
+});
+const sinVotos = () => false;
+
+test('juntarDeOsm: la Giralda como atracción y como torre es un solo sitio',
+  () => {
+    const r = juntarDeOsm(
+      [deOsm('La Giralda', 'attraction', 0), deOsm('La Giralda', 'tower', 3)],
+      sinVotos);
+    assert.equal(r.length, 1);
+  });
+
+test('juntarDeOsm: la Plaza de España, tres veces, queda en una', () => {
+  const r = juntarDeOsm([
+    deOsm('Plaza de España', 'attraction', 0),
+    deOsm('Plaza de España', 'artwork', 56),
+    deOsm('Plaza de España', 'attraction', 151),
+  ], sinVotos);
+  assert.equal(r.length, 1);
+});
+
+test('juntarDeOsm: se queda la ficha que tiene los votos', () => {
+  const conVotos = deOsm('Castillo de San Jorge', 'marketplace', 37);
+  const clave = (p) => globalThis.sevitimeLugares.claveDe(p.lat, p.lon);
+  const r = juntarDeOsm(
+    [deOsm('Castillo de San Jorge', 'archaeological_site', 0), conVotos],
+    (p) => clave(p) === clave(conVotos));
+  assert.equal(r.length, 1);
+  assert.equal(clave(r[0]), clave(conVotos));
+  assert.deepEqual(r[0].clavesFusionadas.length, 1);
+});
+
+test('juntarDeOsm: lo que no se junta', () => {
+  // Un bar no es la plaza que le da nombre, ni el kiosko es la torre, ni el
+  // monumento es la plaza donde está, ni los aseos son la plaza.
+  const dos = (a, ta, b, tb, m) =>
+    juntarDeOsm([deOsm(a, ta, 0), deOsm(b, tb, m)], sinVotos).length;
+  assert.equal(dos('Bar Alfalfa', 'bar', 'Plaza de la Alfalfa', 'drinking_water', 49), 2);
+  assert.equal(dos('Bar Kiosko Torre de los perdigones', 'bar', 'Torre de los Perdigones', 'viewpoint', 17), 2);
+  assert.equal(dos('Triunfo de Nuestra Señora del Patrocinio', 'memorial', 'Plaza del Triunfo', 'attraction', 33), 2);
+  assert.equal(dos('Plaza de San Leandro', 'toilets', 'Plaza de San Leandro', 'park', 8), 2);
+  assert.equal(dos('Bar Alfalfa', 'bar', 'Alfalfa 8', 'restaurant', 61), 2);
+});
+
+test('juntarDeOsm: la que queda recoge lo que solo tenía la otra', () => {
+  const r = juntarDeOsm([
+    deOsm('Parque Las Pilas', 'park', 0, { telefono: '954 00 00 00' }),
+    deOsm('Parque Las Pilas', 'park', 162, { web: 'https://ejemplo.es' }),
+  ], sinVotos);
+  assert.equal(r.length, 1);
+  assert.equal(r[0].telefono, '954 00 00 00');
+  assert.equal(r[0].web, 'https://ejemplo.es');
+});
+
+test('juntarDeOsm: el resultado no depende del orden', () => {
+  const clave = (p) => globalThis.sevitimeLugares.claveDe(p.lat, p.lon);
+  const unos = [deOsm('Caños de Carmona', 'aqueduct', 0),
+    deOsm('Caños de Carmona', 'aqueduct', 131)];
+  const otros = [...unos].reverse();
+  assert.equal(clave(juntarDeOsm([...unos], sinVotos)[0]),
+    clave(juntarDeOsm([...otros], sinVotos)[0]));
 });

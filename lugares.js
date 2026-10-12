@@ -682,6 +682,118 @@ const CATEGORIAS_LUGARES = {
     return esElMismoNombre(na, nb);
   }
 
+  // --- Dos fichas de OSM que son el mismo sitio ----------------------------
+  //
+  // Réplica de `juntarDeOsm` de la app. Cuando un mapeador añade por segunda
+  // vez un parque que ya estaba, o lo parte en dos polígonos, OSM tiene dos
+  // elementos y se enseñaban dos tarjetas: 179 de los 8.429 de la foto.
+
+  // Lo que de un nombre dice CUÁL es el sitio. Vacío si no identifica nada
+  // («Jardines», «Casa Palacio»).
+  function nucleoDeNombre(nombre) {
+    return nucleo(normalizarNombre(nombre));
+  }
+
+  // Si dos tipos pueden ser el mismo sitio: la misma categoría, o los dos del
+  // bloque monumental, donde es normal que el mismo sitio esté como
+  // `attraction` en un elemento y como `tower` en otro (la Giralda).
+  function mismaFamilia(a, b) {
+    if (infoDe(a).categoria === infoDe(b).categoria) return true;
+    return bloqueDe(a) === 'monumental' && bloqueDe(b) === 'monumental';
+  }
+
+  // Aquí NO vale `sonMismoLugar`: esa regla compara un alta manual —un punto
+  // que alguien marcó para ESE sitio— con lo que OSM tenga cerca, y a 80 m
+  // acepta parecidos. Dos elementos de OSM en la misma plaza no son ese caso:
+  // comparten el topónimo. Con la regla laxa se juntaban «Bar Alfalfa» con la
+  // «Plaza de la Alfalfa» (a 49 m) y el «Triunfo de Nuestra Señora del
+  // Patrocinio» con la «Plaza del Triunfo» (a 33 m).
+  function esElMismoSitioEnOsm(a, b, nucleoA, nucleoB) {
+    if (!nucleoA || nucleoA !== nucleoB) return false;
+    if (!mismaFamilia(a.tipo, b.tipo)) return false;
+    return metros(a, b) <= radioMismoSitio(a.tipo, b.tipo);
+  }
+
+  // Cuál de las dos se queda. Primero la que tiene votos, porque las
+  // reseñas y los votos cuelgan de las coordenadas y si gana la otra dejan
+  // de verse. Luego la que trae más datos. Y si siguen empatadas, la de
+  // clave menor, para que el resultado sea el mismo en cada carga.
+  function cuantosDatos(p) {
+    return [p.telefono, p.web, p.horario].filter(Boolean).length;
+  }
+
+  function cualSeQueda(a, b, tieneVotos) {
+    const va = tieneVotos(a), vb = tieneVotos(b);
+    if (va !== vb) return va ? a : b;
+    const da = cuantosDatos(a), db = cuantosDatos(b);
+    if (da !== db) return da > db ? a : b;
+    return claveDe(a.lat, a.lon) <= claveDe(b.lat, b.lon) ? a : b;
+  }
+
+  function juntarDeOsm(lugares, tieneVotos) {
+    if (lugares.length < 2) return lugares;
+    const nucleos = lugares.map((p) => nucleoDeNombre(p.nombre));
+    const paso = RADIO_SITIO_GRANDE / 111000;
+    const celdas = new Map();
+    lugares.forEach((p, i) => {
+      const k = Math.floor(p.lat / paso) + ':' + Math.floor(p.lon / paso);
+      if (!celdas.has(k)) celdas.set(k, []);
+      celdas.get(k).push(i);
+    });
+
+    const absorbidas = new Set();
+    for (const [k, idxs] of celdas) {
+      const [gx, gy] = k.split(':').map(Number);
+      const vecinos = [];
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          const otros = celdas.get((gx + dx) + ':' + (gy + dy));
+          if (otros) vecinos.push(...otros);
+        }
+      }
+      for (const i of idxs) {
+        if (absorbidas.has(i)) continue;
+        for (const j of vecinos) {
+          if (j === i || absorbidas.has(i) || absorbidas.has(j)) continue;
+          const a = lugares[i], b = lugares[j];
+          if (claveDe(a.lat, a.lon) === claveDe(b.lat, b.lon)) continue;
+          if (!esElMismoSitioEnOsm(a, b, nucleos[i], nucleos[j])) continue;
+          const gana = cualSeQueda(a, b, tieneVotos);
+          const pierde = gana === a ? b : a;
+          gana.telefono = gana.telefono || pierde.telefono;
+          gana.web = gana.web || pierde.web;
+          gana.horario = gana.horario || pierde.horario;
+          gana.clavesFusionadas = [
+            ...(gana.clavesFusionadas || []),
+            ...(pierde.clavesFusionadas || []),
+            claveDe(pierde.lat, pierde.lon),
+          ];
+          absorbidas.add(gana === a ? j : i);
+        }
+      }
+    }
+    return absorbidas.size === 0
+      ? lugares
+      : lugares.filter((_, i) => !absorbidas.has(i));
+  }
+
+  // Las claves que tienen votos, para que gane la ficha que la gente usó.
+  // La tabla entera son 94 filas hoy; si llega a miles habrá que pedir solo
+  // las del área que se está viendo. Si falla, se devuelve un conjunto vacío
+  // y entonces manda el criterio de siempre: no se junta nada mal, como
+  // mucho se queda la ficha con menos datos.
+  function clavesConVotos() {
+    const url = SUPABASE_URL +
+      '/rest/v1/place_ratings?select=place_key&vote_count=gt.0&limit=5000';
+    return fetch(url, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((filas) => new Set(
+        (Array.isArray(filas) ? filas : []).map((f) => f.place_key)))
+      .catch(() => new Set());
+  }
+
   // --- Sitios ocultos (`lugares_ocultos`) -----------------------------------
   //
   // Los cerrados que se aprueban en la app, y los que se tapan para dejar
@@ -894,20 +1006,26 @@ const CATEGORIAS_LUGARES = {
         .then((d) => (d.elements || []).map(aLugar).filter(Boolean)),
       manuales().then((filas) => filas.map(aLugarManual).filter(Boolean)),
       ocultos(),
-    ]).then(([snap, man, filasOcultas]) => {
+      clavesConVotos(),
+    ]).then(([snap, man, filasOcultas, conVotos]) => {
       const visible = (p) => !estaOculto(p, filasOcultas);
       // Los ocultos se quitan ANTES de juntar: si no, un alta en el mismo
       // punto que un sitio oculto (La Paraíta sobre el «Bar» de OSM) se
       // descartaba por repetida y luego se ocultaba el otro, y no quedaba
       // ninguno. Y otra vez al final, por si la oculta es un alta.
-      return juntar(snap.filter(visible), man).filter(visible);
+      //
+      // Las dos fichas de OSM del mismo sitio se juntan antes que las altas,
+      // igual que en la app: el alta se compara entonces con una sola.
+      const deOsm = juntarDeOsm(snap.filter(visible),
+        (p) => conVotos.has(claveDe(p.lat, p.lon)));
+      return juntar(deOsm, man).filter(visible);
     });
   }
 
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
-    sonMismoLugar, radioMismoSitio, juntar, estaOculto, ocultos,
+    sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     cargarCurado,
   };
 })();
