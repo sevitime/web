@@ -545,12 +545,71 @@ const CATEGORIAS_LUGARES = {
   }
 
   // Palabras que dicen qué es el sitio, no cuál.
+  // Palabras que dicen qué es el sitio, no cuál. Sin las de los sitios
+  // grandes, el parecido entre dos plazas distintas venía de la palabra
+  // «plaza», y con el radio de una plaza eso junta medio centro.
   const GENERICAS = new Set([
     'bar', 'bares', 'cafeteria', 'cafe', 'cerveceria', 'restaurante',
     'taberna', 'bodega', 'pub', 'meson', 'freiduria', 'heladeria',
-    'pasteleria', 'confiteria', 'casa', 'el', 'la', 'los', 'las', 'de',
-    'del', 'y',
+    'pasteleria', 'confiteria', 'casa',
+    'plaza', 'plazuela', 'parque', 'jardin', 'jardines', 'paseo', 'bulevar',
+    'mercado', 'mercadillo', 'iglesia', 'parroquia', 'capilla', 'ermita',
+    'convento', 'monasterio', 'museo', 'teatro', 'puente', 'torre', 'muralla',
+    'murallas', 'monumento', 'monumentos', 'patio', 'patios', 'palacio',
+    'edificio', 'puerta', 'azulejo', 'cruz', 'municipal', 'senorial',
+    'sin', 'titulo',
+    'el', 'la', 'los', 'las', 'de', 'del', 'y', 'a', 'al',
   ]);
+
+  // Radio de un local: lo que mide un bar, y lo que valía para todo.
+  const RADIO_LOCAL = 80;
+
+  // Radio de un sitio por el que se anda. Medido sobre la foto diaria de los
+  // 8.429 sitios: el alta de la Plaza de España está a 220 m de su ficha de
+  // OSM, porque de un polígono solo conocemos su centro y nadie marca el
+  // punto ahí.
+  const RADIO_SITIO_GRANDE = 250;
+
+  const TIPOS_GRANDES = new Set([
+    'park', 'garden', 'nature_reserve', 'square', 'marketplace', 'stadium',
+    'place_of_worship', 'mosque', 'synagogue', 'attraction', 'viewpoint',
+    ...HISTORIA, ...CULTURA,
+  ]);
+
+  // Los tres bloques que no se mezclan: un recinto al aire libre, un templo y
+  // un sitio monumental comparten nombre en Sevilla sin ser la misma cosa
+  // («Iglesia de San Pedro» y «Plaza de San Pedro», a 84 m). Dentro de
+  // «monumental» sí se cruzan las categorías, que es lo que hace falta para
+  // juntar un alta puesta como monumento con su ficha de OSM como atracción.
+  function bloqueDe(tipo) {
+    if (tipo === 'square') return 'recinto';
+    switch (infoDe(tipo).categoria) {
+      case 'parques': return 'recinto';
+      case 'iglesias': return 'templo';
+      case 'historia':
+      case 'cultura':
+      case 'atracciones': return 'monumental';
+      default: return null;
+    }
+  }
+
+  // Hasta dónde pueden estar dos fichas y seguir siendo el mismo sitio: los
+  // 80 m de siempre, salvo que LOS DOS sean sitios grandes del mismo bloque.
+  // Que los dos lo sean, y no el mayor, porque «Bar la colina» y el «Parque
+  // de la Colina» están a 81 m y no son el mismo sitio.
+  function radioMismoSitio(tipoA, tipoB) {
+    if (!TIPOS_GRANDES.has(tipoA) || !TIPOS_GRANDES.has(tipoB)) {
+      return RADIO_LOCAL;
+    }
+    const ba = bloqueDe(tipoA);
+    if (!ba || ba !== bloqueDe(tipoB)) return RADIO_LOCAL;
+    return RADIO_SITIO_GRANDE;
+  }
+
+  // El radio más amplio que puede llegar a usar un sitio de este tipo.
+  function radioMaximoDe(tipo) {
+    return radioMismoSitio(tipo, tipo);
+  }
 
   // El nombre sin lo genérico ni espacios, con las letras que suenan igual
   // igualadas: «Cafetería Kimera» y «Quimera» dan lo mismo.
@@ -589,18 +648,38 @@ const CATEGORIAS_LUGARES = {
     return distanciaEdicion(a, b) <= margen;
   }
 
+  // Que uno contenga al otro, o que compartan primera palabra larga, solo
+  // cuenta si eso dice CUÁL es el sitio: «Bar» está dentro de «Bar Pepe» y
+  // «Plaza» es la primera palabra de todas las plazas. Con 80 m de radio daba
+  // igual; con el radio de un parque, un nombre genérico se tragaría a todos
+  // sus vecinos.
   function pareceElMismo(a, b) {
     if (!a || !b) return false;
-    if (a.includes(b) || b.includes(a)) return true;
-    const primera = (n) => n.split(' ').find((w) => w.length >= 4) || '';
+    const corto = a.length <= b.length ? a : b;
+    const largo = a.length <= b.length ? b : a;
+    if (largo.includes(corto) && nucleo(corto)) return true;
+    const primera = (n) =>
+      n.split(' ').find((w) => w.length >= 4 && !GENERICAS.has(w)) || '';
     const pa = primera(a), pb = primera(b);
     if (pa && pa === pb) return true;
     return casiIguales(nucleo(a), nucleo(b));
   }
 
-  function sonMismoLugar(a, b, radioM = 80) {
-    if (metros(a, b) > radioM) return false;
-    return pareceElMismo(normalizarNombre(a.nombre), normalizarNombre(b.nombre));
+  // Mas alla de los 80 m no vale el parecido laxo: a 80 m «Bar Paco» y «Bar
+  // Pepe» son dos bares y el margen de una letra esta bien gastado; a 200 m
+  // el parecido ya no es indicio de nada, asi que se pide el mismo nombre.
+  function esElMismoNombre(a, b) {
+    const na = nucleo(a);
+    return !!na && na === nucleo(b);
+  }
+
+  function sonMismoLugar(a, b, radioM) {
+    const na = normalizarNombre(a.nombre), nb = normalizarNombre(b.nombre);
+    const d = metros(a, b);
+    if (d <= (radioM != null ? radioM : RADIO_LOCAL)) return pareceElMismo(na, nb);
+    if (radioM != null) return false;
+    if (d > radioMismoSitio(a.tipo, b.tipo)) return false;
+    return esElMismoNombre(na, nb);
   }
 
   // --- Sitios ocultos (`lugares_ocultos`) -----------------------------------
@@ -783,9 +862,13 @@ const CATEGORIAS_LUGARES = {
   function juntar(snap, man) {
     const vistos = new Set(snap.map((p) => claveDe(p.lat, p.lon)));
     for (const m of man) {
-      // Un cuadrado de ~100 m antes de medir: son miles de sitios por alta.
+      // Un cuadrado antes de medir: son miles de sitios por alta. Se escala
+      // con lo que mide el sitio, o el prefiltro descartaría la plaza que
+      // luego sí se aceptaría por radio.
+      const lado = radioMaximoDe(m.tipo) / RADIO_LOCAL;
       const cerca = snap.filter((p) =>
-        Math.abs(p.lat - m.lat) < 0.001 && Math.abs(p.lon - m.lon) < 0.0013);
+        Math.abs(p.lat - m.lat) < 0.001 * lado &&
+        Math.abs(p.lon - m.lon) < 0.0013 * lado);
       const osm = cerca.find((p) => sonMismoLugar(p, m));
       if (osm) {
         osm.telefono = osm.telefono || m.telefono;
@@ -824,7 +907,7 @@ const CATEGORIAS_LUGARES = {
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
-    sonMismoLugar, juntar, estaOculto, ocultos,
+    sonMismoLugar, radioMismoSitio, juntar, estaOculto, ocultos,
     cargarCurado,
   };
 })();

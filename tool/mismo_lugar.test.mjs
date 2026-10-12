@@ -8,7 +8,8 @@ import assert from 'node:assert/strict';
 
 globalThis.window = globalThis;
 await import('../lugares.js');
-const { sonMismoLugar, juntar, estaOculto } = globalThis.sevitimeLugares;
+const { sonMismoLugar, radioMismoSitio, juntar, estaOculto } =
+  globalThis.sevitimeLugares;
 
 const aqui = (nombre) => ({ nombre, lat: 37.4224, lon: -5.9855 });
 const cerca = (nombre) => ({ nombre, lat: 37.4225, lon: -5.9856 });
@@ -30,6 +31,60 @@ test('lejos, aunque se llamen igual, no', () => {
     sonMismoLugar({ nombre: 'CD Demo', lat: 37.42, lon: -5.98 },
       { nombre: 'CD Demo', lat: 37.43, lon: -5.98 }),
     false);
+});
+
+// Los mismos casos que el grupo «sitios grandes» del test de la app.
+const aUnosMetros = (nombre, tipo, metrosAlNorte) => ({
+  nombre, tipo, lat: 37.3772 + metrosAlNorte / 111000, lon: -5.9869,
+});
+
+test('sitios grandes: el radio es lo que mide el sitio', () => {
+  const plaza = (m) => sonMismoLugar(
+    aUnosMetros('Plaza de España', 'square', 0),
+    aUnosMetros('Plaza de España', 'square', m));
+  assert.equal(plaza(200), true);
+  assert.equal(plaza(500), false);
+  assert.equal(
+    sonMismoLugar(aUnosMetros('Bar Pepe', 'bar', 0),
+      aUnosMetros('Bar Pepe', 'bar', 200)),
+    false);
+  // El radio ampliado pide que los DOS sean sitios grandes del mismo bloque.
+  // «Bar la colina» y el «Parque de la Colina» están a 81 m y no son el mismo
+  // sitio; «Iglesia de San Pedro» y «Plaza de San Pedro», a 84 m, tampoco.
+  assert.equal(radioMismoSitio('bar', 'park'), 80);
+  assert.equal(radioMismoSitio('park', 'garden'), 250);
+  assert.equal(radioMismoSitio('place_of_worship', 'park'), 80);
+  assert.equal(radioMismoSitio('bar', 'bar'), 80);
+  assert.equal(radioMismoSitio(null, 'park'), 80);
+  // Un alta como monumento y su ficha de OSM como atracción sí: es el caso de
+  // la Plaza de España, y cruza dos categorías.
+  assert.equal(radioMismoSitio('monument', 'attraction'), 250);
+});
+
+test('con el radio ampliado, los nombres tienen que discriminar', () => {
+  const a150 = (x, y, tipo = 'square') => sonMismoLugar(
+    aUnosMetros(x, tipo, 0), aUnosMetros(y, tipo, 150));
+  assert.equal(a150('Plaza de España', 'Plaza Nueva'), false);
+  assert.equal(a150('Plaza del Salvador', 'Plaza de la Alfalfa'), false);
+  assert.equal(a150('Jardines de Murillo', 'Jardín Americano', 'park'), false);
+  assert.equal(a150('Parque de María Luisa', 'Parque del Alamillo', 'park'),
+    false);
+  assert.equal(a150('Bar', 'Bar Pepe', 'bar'), false);
+  assert.equal(a150('Plaza', 'Plaza de España'), false);
+  assert.equal(a150('Plaza de España', 'Plaza de Espana'), true);
+  assert.equal(a150('Parque de María Luisa', 'Parque María Luisa', 'park'),
+    true);
+});
+
+test('juntar: una plaza se junta con su ficha de OSM a 200 m', () => {
+  const osm = { nombre: 'Plaza de España', tipo: 'square',
+    lat: 37.3772, lon: -5.9869, telefono: '', web: '', horario: '', osmId: 9 };
+  const alta = { nombre: 'Plaza de España', tipo: 'square',
+    lat: 37.3772 + 200 / 111000, lon: -5.9869,
+    telefono: '', web: 'https://ejemplo.es', horario: '' };
+  const todos = juntar([osm], [alta]);
+  assert.equal(todos.length, 1);
+  assert.equal(todos[0].web, 'https://ejemplo.es');
 });
 
 test('juntar: una sola tarjeta, la de OSM, completada con el alta', () => {
