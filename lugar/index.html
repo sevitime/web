@@ -79,6 +79,14 @@
      la página y aparecía desplazamiento horizontal en el móvil. */
   .sitio-datos li > :last-child { min-width: 0; overflow-wrap: anywhere; }
 
+  .sitio-extra { margin: 0 0 28px; }
+  .sitio-extra h2 { font-size: var(--t-seccion); color: var(--texto); margin: 0 0 10px; }
+  .extra-lista { list-style: none; padding: 0; margin: 0; }
+  .extra-lista li { padding: 12px 0; border-bottom: 1px solid var(--borde); }
+  .extra-lista li:last-child { border-bottom: 0; }
+  .extra-lista a { color: var(--verde-claro); font-weight: 650; }
+  .extra-nota { color: var(--apagado); margin: 4px 0 0; }
+
   /* ---- Lo que dice la gente ---- */
   .opiniones { margin: 0 0 28px; }
   .opiniones h2 { font-size: var(--t-seccion); font-weight: 700; color: var(--texto); margin-bottom: 8px; }
@@ -170,6 +178,16 @@
     </div>
 
     <ul class="sitio-datos" id="datos"></ul>
+
+    <section class="sitio-extra" id="videos-sitio" aria-labelledby="videos-titulo" hidden>
+      <h2 id="videos-titulo">Vídeos</h2>
+      <ul class="extra-lista" id="lista-videos"></ul>
+    </section>
+
+    <section class="sitio-extra" id="rutas-sitio" aria-labelledby="rutas-titulo" hidden>
+      <h2 id="rutas-titulo">Rutas que pasan por aquí</h2>
+      <ul class="extra-lista" id="lista-rutas"></ul>
+    </section>
 
     <!-- Lo que dice la gente: la nota media y las reseñas publicadas. Se
          ven sin sesión, igual que en la app. Escribir una o valorar pide
@@ -366,6 +384,56 @@
     }
   }
 
+  // Datos editoriales, vídeos y rutas son de lectura pública. Se cargan
+  // después de tener la ficha y cada bloque falla de forma independiente.
+  function pintarExtras(p) {
+    pedir('place_videos?select=youtube_id,titulo,es_short&activo=eq.true&place_name=eq.' + encodeURIComponent(p.nombre) + '&order=orden.asc&limit=5')
+      .then(function (filas) {
+        if (!Array.isArray(filas) || !filas.length) return;
+        const lista = document.getElementById('lista-videos');
+        filas.forEach(function (v) {
+          if (typeof v.youtube_id !== 'string' || !/^[\w-]{11}$/.test(v.youtube_id)) return;
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(v.youtube_id);
+          a.target = '_blank'; a.rel = 'noopener noreferrer';
+          a.textContent = (v.titulo || p.nombre) + (v.es_short ? ' · Short' : '');
+          li.appendChild(a); lista.appendChild(li);
+        });
+        if (lista.children.length) document.getElementById('videos-sitio').hidden = false;
+      }).catch(function () {});
+
+    pedir('rpc/fn_rutas_de_lugar', { cuerpo: { p_place_key: clave } })
+      .then(function (filas) {
+        if (!Array.isArray(filas) || !filas.length) return;
+        const lista = document.getElementById('lista-rutas');
+        filas.slice(0, 5).forEach(function (r) {
+          const id = Number(r.id);
+          const nombre = typeof r.nombre === 'string' ? r.nombre : '';
+          if (!Number.isInteger(id) || !nombre) return;
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = '/rutas/?id=' + encodeURIComponent(id);
+          a.textContent = nombre;
+          li.appendChild(a);
+          const detalle = [
+            Number(r.paradas) > 1 ? Number(r.paradas) + ' paradas' : 'Recomendación',
+            Number(r.minutos) > 0 ? Number(r.minutos) + ' min' : '',
+          ].filter(Boolean).join(' · ');
+          const meta = document.createElement('p');
+          meta.className = 'extra-nota'; meta.textContent = detalle;
+          li.appendChild(meta);
+          if (typeof r.nota === 'string' && r.nota.trim()) {
+            const nota = document.createElement('p');
+            nota.className = 'extra-nota'; nota.textContent = r.nota;
+            li.appendChild(nota);
+          }
+          lista.appendChild(li);
+        });
+        if (lista.children.length) document.getElementById('rutas-sitio').hidden = false;
+      }).catch(function () {});
+  }
+
   function tarjetaResena(r) {
     const li = document.createElement('li');
     li.className = 'resena';
@@ -543,6 +611,7 @@
     document.title = p.nombre + ' — SeviTime';
     paraBuscadores(p);
     pintarOpiniones();
+    pintarExtras(p);
     document.getElementById('emoji').textContent = p.emoji || '📍';
     document.getElementById('tipo').textContent = p.label || '';
 
