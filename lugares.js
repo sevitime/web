@@ -1005,6 +1005,60 @@ const CATEGORIAS_LUGARES = {
       .catch(() => []);
   }
 
+  // Datos aprobados: solo completan fichas existentes y sobreviven al alta.
+  // La URL de foto se pide aparte y solo si sigue constando el permiso web
+  // para esa misma alta y esa misma imagen.
+  function datosPropios() {
+    const columnas = 'alta_id,nombre,tipo,lat,lon,osm_type,osm_id,telefono,web,horario,descripcion,imagen_url,sin_imagen,cocina,actualizado_at';
+    return fetch(SUPABASE_URL + '/rest/v1/datos_lugares?select=' + columnas + '&order=actualizado_at.asc', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    }).then((r) => r.ok ? r.json() : []).catch(() => []);
+  }
+
+  // `datos_lugares` guarda la foto para que la app la conserve incluso al
+  // retirar un alta. En la web solo se incorpora si la misma foto sigue
+  // registrada con permiso explícito en su alta de origen.
+  function fotosWebAutorizadas() {
+    const url = SUPABASE_URL +
+      '/rest/v1/lugares_manuales?select=id,imagen_url,foto_web_autorizada_at' +
+      '&foto_web_autorizada_at=not.is.null&imagen_url=not.is.null&limit=1000';
+    return fetch(url, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    }).then((r) => r.ok ? r.json() : [])
+      .then((filas) => new Map((Array.isArray(filas) ? filas : [])
+        .filter((f) => f.id != null && f.imagen_url && f.foto_web_autorizada_at)
+        .map((f) => [String(f.id), f.imagen_url])))
+      .catch(() => new Map());
+  }
+
+  function completarConDatosPropios(sitio, filas, fotosAutorizadas) {
+    let elegido = null;
+    let tieneVinculo = false;
+    for (const fila of filas) {
+      const mismoId = sitio.osmId != null && sitio.osmId === fila.osm_id &&
+        sitio.osmType === fila.osm_type;
+      if (sitio.osmId != null && fila.osm_id != null && !mismoId) continue;
+      const dato = { nombre: fila.nombre, lat: mismoId ? sitio.lat : fila.lat,
+        lon: mismoId ? sitio.lon : fila.lon };
+      if (!sonMismoLugar(sitio, dato)) continue;
+      if (mismoId || !tieneVinculo) elegido = fila;
+      tieneVinculo = tieneVinculo || mismoId;
+    }
+    if (!elegido) return sitio;
+    const d = elegido;
+    const fotoAutorizada = fotosAutorizadas &&
+      fotosAutorizadas.get(String(d.alta_id)) === d.imagen_url;
+    return { ...sitio,
+      telefono: d.telefono || sitio.telefono,
+      web: d.web || sitio.web,
+      horario: d.horario || sitio.horario,
+      horarioPropio: Boolean(d.horario),
+      imagenUrl: fotoAutorizada ? d.imagen_url : sitio.imagenUrl,
+      sinImagen: d.sin_imagen,
+      descripcion: d.descripcion || sitio.descripcion,
+    };
+  }
+
   // Los datos editoriales no hacen falta para dibujar miles de pines. Se
   // piden solo al abrir la ficha de un sitio y se guardan por nombre durante
   // la visita. Así la web enseña la misma información enriquecida que la app
@@ -1106,7 +1160,9 @@ const CATEGORIAS_LUGARES = {
       ocultos(),
       clavesConVotos(),
       fusiones(),
-    ]).then(([snap, man, filasOcultas, conVotos, filasFusiones]) => {
+      datosPropios(),
+      fotosWebAutorizadas(),
+    ]).then(([snap, man, filasOcultas, conVotos, filasFusiones, datos, fotosAutorizadas]) => {
       const visible = (p) => !estaOculto(p, filasOcultas);
       // Los ocultos se quitan ANTES de juntar: si no, un alta en el mismo
       // punto que un sitio oculto (La Paraíta sobre el «Bar» de OSM) se
@@ -1117,7 +1173,8 @@ const CATEGORIAS_LUGARES = {
       // igual que en la app: el alta se compara entonces con una sola.
       const deOsm = juntarDeOsm(snap.filter(visible),
         (p) => conVotos.has(claveDe(p.lat, p.lon)), filasFusiones);
-      return juntar(deOsm, man).filter(visible);
+      return juntar(deOsm, man).filter(visible)
+        .map((sitio) => completarConDatosPropios(sitio, datos, fotosAutorizadas));
     });
   }
 
@@ -1126,6 +1183,6 @@ const CATEGORIAS_LUGARES = {
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones,
-    cargarCurado,
+    cargarCurado, completarConDatosPropios,
   };
 })();
