@@ -40,6 +40,7 @@
   let todas = [];
   let seleccionada = null;
   let filtro = 'todas';
+  let duracion = 'cualquiera';
   let marcadores = [];
 
   // --- Una ruta, su enlace ---
@@ -76,6 +77,7 @@
   }
 
   const chips = document.getElementById('chips');
+  const duraciones = document.getElementById('duraciones');
   const lista = document.getElementById('lista');
   const resumen = document.getElementById('resumen');
   const mapaResumen = document.getElementById('mapa-resumen');
@@ -186,9 +188,13 @@
 
   // --- Lista ---
   function rutasFiltradas() {
-    if (filtro === 'rutas') return todas.filter((r) => r.paradas.length > 1);
-    if (filtro === 'recomendaciones') return todas.filter((r) => r.paradas.length === 1);
-    return todas;
+    let rutas = todas;
+    if (filtro === 'rutas') rutas = rutas.filter((r) => r.paradas.length > 1);
+    if (filtro === 'recomendaciones') rutas = rutas.filter((r) => r.paradas.length === 1);
+    if (duracion === 'corta') rutas = rutas.filter((r) => r.minutos <= 60);
+    if (duracion === 'media') rutas = rutas.filter((r) => r.minutos > 60 && r.minutos <= 120);
+    if (duracion === 'larga') rutas = rutas.filter((r) => r.minutos > 120);
+    return rutas;
   }
 
   function pintarChips() {
@@ -206,6 +212,25 @@
         pintarLista();
       });
       chips.appendChild(b);
+    });
+    [
+      { id: 'cualquiera', etiqueta: 'Cualquier duración' },
+      { id: 'corta', etiqueta: 'Hasta 1 h' },
+      { id: 'media', etiqueta: '1–2 h' },
+      { id: 'larga', etiqueta: 'Más de 2 h' },
+    ].forEach((f) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'chip' + (f.id === duracion ? ' seleccionado' : '');
+      b.dataset.duracion = f.id;
+      b.textContent = f.etiqueta;
+      b.addEventListener('click', () => {
+        duracion = f.id;
+        duraciones.querySelectorAll('.chip').forEach((c) => c.classList.toggle('seleccionado', c.dataset.duracion === f.id));
+        if (seleccionada && !rutasFiltradas().some((r) => r.id === seleccionada.id)) limpiarSeleccion();
+        pintarLista();
+      });
+      duraciones.appendChild(b);
     });
   }
 

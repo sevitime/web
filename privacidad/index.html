@@ -87,7 +87,7 @@
 
 <header>
   <h1>Política de Privacidad</h1>
-  <p>SeviTime · Última actualización: 11 de octubre de 2026 (aviso semanal con los planes del fin de semana)</p>
+  <p>SeviTime · Última actualización: 12 de octubre de 2026 (contador de visitas de la web, sin identificador)</p>
 </header>
 
 <main>
@@ -260,6 +260,18 @@
       siempre con el identificador anónimo. Desde la 1.0.8 ya no se envía nada
       de eso, y lo recogido se borrará cuando nadie use esas versiones.
     </li>
+    <li>
+      <strong>Visitas de la web (sevitime.com):</strong> contamos cuántas
+      veces se ve cada página —la portada, el mapa, la ficha de un sitio, las
+      rutas…— sumando uno a un contador por día y por página. <strong>No se
+      guarda ningún identificador</strong>: ni cookie, ni dato en tu
+      navegador, ni tu dirección IP, ni nada que permita distinguirte o
+      reconocerte en otra visita. Tampoco se guarda qué sitio ni qué ruta
+      estabas mirando, solo qué tipo de página era. Son números agregados,
+      como el contador de un museo en la puerta, y por eso la web no te pide
+      permiso de cookies: no hay nada que pedir. El contador está en nuestro
+      servidor de Supabase; aquí tampoco hay herramientas de terceros.
+    </li>
   </ul>
 
   <h2>6. Servicios de terceros</h2>
@@ -299,16 +311,21 @@
   </p>
   <p>
     <strong>Qué hacemos con ella.</strong> Las revisamos a mano antes de
-    publicar nada. Si la foto es buena, puede pasar a ser la imagen con la que
-    ese sitio aparece en la app, y en ese caso la verá cualquiera que lo
-    consulte. Al enviarla nos das permiso para usarla con esa finalidad. Las
-    fotos de las reseñas y de las paradas de una ruta se publican junto a la
-    reseña o la ruta una vez aprobadas.
+    publicar nada. Las fotos que envías para sugerir un sitio, aportar sus
+    datos, corregir su foto o reportar un problema pueden pasar a ser la
+    imagen de ese sitio en la app si se aprueban. Para usar una de ellas como
+    imagen general del sitio en la web, te pedimos una autorización opcional
+    y separada, desmarcada por defecto. Si no la marcas, no se mostrará con
+    ese propósito en la web. Las
+    fotos de reseñas y rutas se publican junto a su reseña o parada aprobada;
+    no se reutilizan como imagen general del sitio por esta autorización.
   </p>
   <p>
     <strong>Sigue siendo tuya.</strong> No cedes la propiedad de la foto ni
-    renuncias a nada: nos autorizas a mostrarla dentro de SeviTime, y puedes
-    pedirnos que la retiremos cuando quieras escribiendo a
+    renuncias a nada: nos autorizas a mostrarla en la app para el propósito
+    explicado en el formulario; el uso como imagen general del sitio en la web
+    solo se activa si marcas la casilla opcional. Puedes pedirnos que la
+    retiremos o retirar ese permiso web escribiendo a
     <a href="mailto:sevitimeapp@gmail.com">sevitimeapp@gmail.com</a>. Tampoco la
     publicamos en otros servicios: cuando enviamos un aviso a OpenStreetMap
     incluimos el enlace a la foto para que quien mantiene el mapa pueda
@@ -369,8 +386,11 @@
   </p>
   <p>
     Las fotos que envías se tratan con tu <strong>consentimiento</strong>
-    (art. 6.1.a RGPD), que das al enviarlas después de que la app te explique,
-    en ese mismo momento, que pueden acabar publicadas como imagen del sitio.
+    (art. 6.1.a RGPD), que das al enviarlas después de que la app te explique
+    su uso. La publicación de una foto como imagen general del sitio en la web
+    requiere además la casilla opcional que se presenta junto a esa foto; no
+    marcarla no afecta al envío ni a los demás usos descritos aquí. Puedes
+    retirar ese permiso web escribiéndonos.
   </p>
 
   <h2>9. Tus derechos</h2>
@@ -406,8 +426,9 @@
     <li><strong>Informes de error (Sentry)</strong>: 90 días, el plazo del
     propio servicio.</li>
     <li><strong>Fotos</strong>: lo que dure la aportación a la que acompañan.
-    Las que llegan a ilustrar la ficha de un sitio se quedan publicadas, sin
-    autor, hasta que pidas que las retiremos.</li>
+    Las que llegan a ilustrar la ficha de un sitio se quedan publicadas en la
+    app; en la web solo se muestran si diste el permiso opcional. No llevan
+    autor público y puedes pedir que las retiremos o retirar el permiso web.</li>
   </ul>
 
   <h2>11. Dónde están tus datos</h2>
@@ -437,5 +458,6 @@
   SeviTime &copy; 2026 · <a href="mailto:sevitimeapp@gmail.com">sevitimeapp@gmail.com</a>
 </footer>
 
+<script defer src="/visitas.js?v=2c5ad387"></script>
 </body>
 </html>

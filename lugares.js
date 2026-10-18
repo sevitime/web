@@ -545,12 +545,71 @@ const CATEGORIAS_LUGARES = {
   }
 
   // Palabras que dicen qué es el sitio, no cuál.
+  // Palabras que dicen qué es el sitio, no cuál. Sin las de los sitios
+  // grandes, el parecido entre dos plazas distintas venía de la palabra
+  // «plaza», y con el radio de una plaza eso junta medio centro.
   const GENERICAS = new Set([
     'bar', 'bares', 'cafeteria', 'cafe', 'cerveceria', 'restaurante',
     'taberna', 'bodega', 'pub', 'meson', 'freiduria', 'heladeria',
-    'pasteleria', 'confiteria', 'casa', 'el', 'la', 'los', 'las', 'de',
-    'del', 'y',
+    'pasteleria', 'confiteria', 'casa',
+    'plaza', 'plazuela', 'parque', 'jardin', 'jardines', 'paseo', 'bulevar',
+    'mercado', 'mercadillo', 'iglesia', 'parroquia', 'capilla', 'ermita',
+    'convento', 'monasterio', 'museo', 'teatro', 'puente', 'torre', 'muralla',
+    'murallas', 'monumento', 'monumentos', 'patio', 'patios', 'palacio',
+    'edificio', 'puerta', 'azulejo', 'cruz', 'municipal', 'senorial',
+    'sin', 'titulo',
+    'el', 'la', 'los', 'las', 'de', 'del', 'y', 'a', 'al',
   ]);
+
+  // Radio de un local: lo que mide un bar, y lo que valía para todo.
+  const RADIO_LOCAL = 80;
+
+  // Radio de un sitio por el que se anda. Medido sobre la foto diaria de los
+  // 8.429 sitios: el alta de la Plaza de España está a 220 m de su ficha de
+  // OSM, porque de un polígono solo conocemos su centro y nadie marca el
+  // punto ahí.
+  const RADIO_SITIO_GRANDE = 250;
+
+  const TIPOS_GRANDES = new Set([
+    'park', 'garden', 'nature_reserve', 'square', 'marketplace', 'stadium',
+    'place_of_worship', 'mosque', 'synagogue', 'attraction', 'viewpoint',
+    ...HISTORIA, ...CULTURA,
+  ]);
+
+  // Los tres bloques que no se mezclan: un recinto al aire libre, un templo y
+  // un sitio monumental comparten nombre en Sevilla sin ser la misma cosa
+  // («Iglesia de San Pedro» y «Plaza de San Pedro», a 84 m). Dentro de
+  // «monumental» sí se cruzan las categorías, que es lo que hace falta para
+  // juntar un alta puesta como monumento con su ficha de OSM como atracción.
+  function bloqueDe(tipo) {
+    if (tipo === 'square') return 'recinto';
+    switch (infoDe(tipo).categoria) {
+      case 'parques': return 'recinto';
+      case 'iglesias': return 'templo';
+      case 'historia':
+      case 'cultura':
+      case 'atracciones': return 'monumental';
+      default: return null;
+    }
+  }
+
+  // Hasta dónde pueden estar dos fichas y seguir siendo el mismo sitio: los
+  // 80 m de siempre, salvo que LOS DOS sean sitios grandes del mismo bloque.
+  // Que los dos lo sean, y no el mayor, porque «Bar la colina» y el «Parque
+  // de la Colina» están a 81 m y no son el mismo sitio.
+  function radioMismoSitio(tipoA, tipoB) {
+    if (!TIPOS_GRANDES.has(tipoA) || !TIPOS_GRANDES.has(tipoB)) {
+      return RADIO_LOCAL;
+    }
+    const ba = bloqueDe(tipoA);
+    if (!ba || ba !== bloqueDe(tipoB)) return RADIO_LOCAL;
+    return RADIO_SITIO_GRANDE;
+  }
+
+  // El radio más amplio que puede llegar a usar un sitio de este tipo.
+  function radioMaximoDe(tipo) {
+    return radioMismoSitio(tipo, tipo);
+  }
 
   // El nombre sin lo genérico ni espacios, con las letras que suenan igual
   // igualadas: «Cafetería Kimera» y «Quimera» dan lo mismo.
@@ -589,18 +648,248 @@ const CATEGORIAS_LUGARES = {
     return distanciaEdicion(a, b) <= margen;
   }
 
+  // Que uno contenga al otro, o que compartan primera palabra larga, solo
+  // cuenta si eso dice CUÁL es el sitio: «Bar» está dentro de «Bar Pepe» y
+  // «Plaza» es la primera palabra de todas las plazas. Con 80 m de radio daba
+  // igual; con el radio de un parque, un nombre genérico se tragaría a todos
+  // sus vecinos.
   function pareceElMismo(a, b) {
     if (!a || !b) return false;
-    if (a.includes(b) || b.includes(a)) return true;
-    const primera = (n) => n.split(' ').find((w) => w.length >= 4) || '';
+    const corto = a.length <= b.length ? a : b;
+    const largo = a.length <= b.length ? b : a;
+    if (largo.includes(corto) && nucleo(corto)) return true;
+    const primera = (n) =>
+      n.split(' ').find((w) => w.length >= 4 && !GENERICAS.has(w)) || '';
     const pa = primera(a), pb = primera(b);
     if (pa && pa === pb) return true;
     return casiIguales(nucleo(a), nucleo(b));
   }
 
-  function sonMismoLugar(a, b, radioM = 80) {
-    if (metros(a, b) > radioM) return false;
-    return pareceElMismo(normalizarNombre(a.nombre), normalizarNombre(b.nombre));
+  // Mas alla de los 80 m no vale el parecido laxo: a 80 m «Bar Paco» y «Bar
+  // Pepe» son dos bares y el margen de una letra esta bien gastado; a 200 m
+  // el parecido ya no es indicio de nada, asi que se pide el mismo nombre.
+  function esElMismoNombre(a, b) {
+    const na = nucleo(a);
+    return !!na && na === nucleo(b);
+  }
+
+  function sonMismoLugar(a, b, radioM) {
+    const na = normalizarNombre(a.nombre), nb = normalizarNombre(b.nombre);
+    const d = metros(a, b);
+    if (d <= (radioM != null ? radioM : RADIO_LOCAL)) return pareceElMismo(na, nb);
+    if (radioM != null) return false;
+    if (d > radioMismoSitio(a.tipo, b.tipo)) return false;
+    return esElMismoNombre(na, nb);
+  }
+
+  // --- Dos fichas de OSM que son el mismo sitio ----------------------------
+  //
+  // Réplica de `juntarDeOsm` de la app. Cuando un mapeador añade por segunda
+  // vez un parque que ya estaba, o lo parte en dos polígonos, OSM tiene dos
+  // elementos y se enseñaban dos tarjetas: 179 de los 8.429 de la foto.
+
+  // Lo que de un nombre dice CUÁL es el sitio. Vacío si no identifica nada
+  // («Jardines», «Casa Palacio»).
+  function nucleoDeNombre(nombre) {
+    return nucleo(normalizarNombre(nombre));
+  }
+
+  // Si dos tipos pueden ser el mismo sitio: la misma categoría, o los dos del
+  // bloque monumental, donde es normal que el mismo sitio esté como
+  // `attraction` en un elemento y como `tower` en otro (la Giralda).
+  function mismaFamilia(a, b) {
+    if (infoDe(a).categoria === infoDe(b).categoria) return true;
+    return bloqueDe(a) === 'monumental' && bloqueDe(b) === 'monumental';
+  }
+
+  // Aquí NO vale `sonMismoLugar`: esa regla compara un alta manual —un punto
+  // que alguien marcó para ESE sitio— con lo que OSM tenga cerca, y a 80 m
+  // acepta parecidos. Dos elementos de OSM en la misma plaza no son ese caso:
+  // comparten el topónimo. Con la regla laxa se juntaban «Bar Alfalfa» con la
+  // «Plaza de la Alfalfa» (a 49 m) y el «Triunfo de Nuestra Señora del
+  // Patrocinio» con la «Plaza del Triunfo» (a 33 m).
+  function esElMismoSitioEnOsm(a, b, nucleoA, nucleoB) {
+    if (!nucleoA || nucleoA !== nucleoB) return false;
+    if (!mismaFamilia(a.tipo, b.tipo)) return false;
+    return metros(a, b) <= radioMismoSitio(a.tipo, b.tipo);
+  }
+
+  // Cuál de las dos se queda. Primero la que tiene votos, porque las
+  // reseñas y los votos cuelgan de las coordenadas y si gana la otra dejan
+  // de verse. Luego la que trae más datos. Y si siguen empatadas, la de
+  // clave menor, para que el resultado sea el mismo en cada carga.
+  function cuantosDatos(p) {
+    return [p.telefono, p.web, p.horario].filter(Boolean).length;
+  }
+
+  function cualSeQueda(a, b, tieneVotos) {
+    const va = tieneVotos(a), vb = tieneVotos(b);
+    if (va !== vb) return va ? a : b;
+    const da = cuantosDatos(a), db = cuantosDatos(b);
+    if (da !== db) return da > db ? a : b;
+    return claveDe(a.lat, a.lon) <= claveDe(b.lat, b.lon) ? a : b;
+  }
+
+  // Las fusiones hechas a mano (`fusiones_lugares`) son los pares que esta
+  // regla NO puede ver: el mismo sitio con el rótulo escrito de otra forma
+  // («La Palmera» / «Farmacia La Palmera», a 3 m) o con una errata en OSM
+  // («Almenrara» / «Almenara»). Bajar el listón del nombre para pillarlos se
+  // tragaba dos farmacias distintas de la misma calle, así que los dice una
+  // persona desde el panel. Igual que en la app (`juntar_osm.dart`).
+  function ladoDeFusion(fila, p) {
+    const clave = claveDe(p.lat, p.lon);
+    const casa = (k, tipo, id) => {
+      if (k === clave) return true;
+      if (id == null || p.osmId == null) return false;
+      return Number(id) === Number(p.osmId) && (tipo == null || tipo === p.osmType);
+    };
+    if (casa(fila.a_place_key, fila.a_osm_type, fila.a_osm_id)) return 'a';
+    if (casa(fila.b_place_key, fila.b_osm_type, fila.b_osm_id)) return 'b';
+    return null;
+  }
+
+  function juntarDeOsm(lugares, tieneVotos, filasFusiones) {
+    if (lugares.length < 2) return lugares;
+    const nucleos = lugares.map((p) => nucleoDeNombre(p.nombre));
+    const paso = RADIO_SITIO_GRANDE / 111000;
+    const celdas = new Map();
+    lugares.forEach((p, i) => {
+      const k = Math.floor(p.lat / paso) + ':' + Math.floor(p.lon / paso);
+      if (!celdas.has(k)) celdas.set(k, []);
+      celdas.get(k).push(i);
+    });
+
+    const absorbidas = new Set();
+    // Dónde acabó cada ficha absorbida, para seguir la pista en una cadena de
+    // tres: «Sol y Sombra», «Sol y Sombra 2» y «Salón Sol y Sombra» son el
+    // mismo sitio y entran como dos pares.
+    const quedoEn = new Map();
+    const vivo = (i) => {
+      let actual = i;
+      while (quedoEn.has(actual)) actual = quedoEn.get(actual);
+      return actual;
+    };
+
+    const absorber = (gana, pierde, nombre) => {
+      if (nombre) gana.nombre = nombre;
+      gana.telefono = gana.telefono || pierde.telefono;
+      gana.web = gana.web || pierde.web;
+      gana.horario = gana.horario || pierde.horario;
+      gana.clavesFusionadas = [
+        ...(gana.clavesFusionadas || []),
+        ...(pierde.clavesFusionadas || []),
+        claveDe(pierde.lat, pierde.lon),
+      ];
+    };
+
+    // Primero lo que ha dicho una persona, que manda sobre el criterio
+    // automático.
+    for (const fila of (filasFusiones || [])) {
+      let uno = -1, otro = -1;
+      for (let i = 0; i < lugares.length; i++) {
+        const lado = ladoDeFusion(fila, lugares[i]);
+        if (lado === 'a' && uno < 0) uno = i;
+        if (lado === 'b' && otro < 0) otro = i;
+        if (uno >= 0 && otro >= 0) break;
+      }
+      if (uno < 0 || otro < 0) continue;
+      const i = vivo(uno), j = vivo(otro);
+      if (i === j) continue;
+      const a = lugares[i], b = lugares[j];
+      const gana = cualSeQueda(a, b, tieneVotos);
+      const iGana = gana === a ? i : j;
+      const iPierde = gana === a ? j : i;
+      absorber(gana, lugares[iPierde], fila.nombre);
+      absorbidas.add(iPierde);
+      quedoEn.set(iPierde, iGana);
+    }
+
+    for (const [k, idxs] of celdas) {
+      const [gx, gy] = k.split(':').map(Number);
+      const vecinos = [];
+      for (let dx = -1; dx <= 1; dx++) {
+        for (let dy = -1; dy <= 1; dy++) {
+          const otros = celdas.get((gx + dx) + ':' + (gy + dy));
+          if (otros) vecinos.push(...otros);
+        }
+      }
+      for (const i of idxs) {
+        if (absorbidas.has(i)) continue;
+        for (const j of vecinos) {
+          if (j === i || absorbidas.has(i) || absorbidas.has(j)) continue;
+          const a = lugares[i], b = lugares[j];
+          if (claveDe(a.lat, a.lon) === claveDe(b.lat, b.lon)) continue;
+          if (!esElMismoSitioEnOsm(a, b, nucleos[i], nucleos[j])) continue;
+          const gana = cualSeQueda(a, b, tieneVotos);
+          const iGana = gana === a ? i : j;
+          const iPierde = gana === a ? j : i;
+          absorber(gana, lugares[iPierde]);
+          absorbidas.add(iPierde);
+          quedoEn.set(iPierde, iGana);
+        }
+      }
+    }
+    return absorbidas.size === 0
+      ? lugares
+      : lugares.filter((_, i) => !absorbidas.has(i));
+  }
+
+  // Las claves que tienen votos, para que gane la ficha que la gente usó.
+  // La tabla entera son 94 filas hoy; si llega a miles habrá que pedir solo
+  // las del área que se está viendo. Si falla, se devuelve un conjunto vacío
+  // y entonces manda el criterio de siempre: no se junta nada mal, como
+  // mucho se queda la ficha con menos datos.
+  function clavesConVotos() {
+    const url = SUPABASE_URL +
+      '/rest/v1/place_ratings?select=place_key&vote_count=gt.0&limit=5000';
+    return fetch(url, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((filas) => new Set(
+        (Array.isArray(filas) ? filas : []).map((f) => f.place_key)))
+      .catch(() => new Set());
+  }
+
+  // --- Fusiones hechas a mano (`fusiones_lugares`) --------------------------
+  //
+  // Los pares que un administrador ha dicho que son el mismo sitio, para los
+  // duplicados que no se llaman igual. Con respaldo en el navegador por lo
+  // mismo que los ocultos: si Supabase falla, lo que no se quiere es volver a
+  // enseñar dos tarjetas del mismo bar.
+  const CLAVE_FUSIONES = 'sevitime_fusiones';
+
+  function fusionesGuardadas() {
+    try {
+      const crudo = localStorage.getItem(CLAVE_FUSIONES);
+      const filas = crudo ? JSON.parse(crudo) : null;
+      return Array.isArray(filas) ? filas : [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function fusiones() {
+    const url = SUPABASE_URL +
+      '/rest/v1/fusiones_lugares?activo=eq.true' +
+      '&select=a_place_key,a_osm_type,a_osm_id,b_place_key,b_osm_type,b_osm_id,nombre';
+    return fetch(url, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    })
+      .then((r) => {
+        if (!r.ok) throw new Error('fusiones_lugares: ' + r.status);
+        return r.json();
+      })
+      .then((filas) => {
+        if (!Array.isArray(filas)) throw new Error('fusiones_lugares: no es lista');
+        try {
+          localStorage.setItem(CLAVE_FUSIONES, JSON.stringify(filas));
+        } catch (e) {
+          // Que no quepa no es motivo para romper el mapa.
+        }
+        return filas;
+      })
+      .catch(() => fusionesGuardadas());
   }
 
   // --- Sitios ocultos (`lugares_ocultos`) -----------------------------------
@@ -716,6 +1005,60 @@ const CATEGORIAS_LUGARES = {
       .catch(() => []);
   }
 
+  // Datos aprobados: solo completan fichas existentes y sobreviven al alta.
+  // La URL de foto se pide aparte y solo si sigue constando el permiso web
+  // para esa misma alta y esa misma imagen.
+  function datosPropios() {
+    const columnas = 'alta_id,nombre,tipo,lat,lon,osm_type,osm_id,telefono,web,horario,descripcion,imagen_url,sin_imagen,cocina,actualizado_at';
+    return fetch(SUPABASE_URL + '/rest/v1/datos_lugares?select=' + columnas + '&order=actualizado_at.asc', {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    }).then((r) => r.ok ? r.json() : []).catch(() => []);
+  }
+
+  // `datos_lugares` guarda la foto para que la app la conserve incluso al
+  // retirar un alta. En la web solo se incorpora si la misma foto sigue
+  // registrada con permiso explícito en su alta de origen.
+  function fotosWebAutorizadas() {
+    const url = SUPABASE_URL +
+      '/rest/v1/lugares_manuales?select=id,imagen_url,foto_web_autorizada_at' +
+      '&foto_web_autorizada_at=not.is.null&imagen_url=not.is.null&limit=1000';
+    return fetch(url, {
+      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
+    }).then((r) => r.ok ? r.json() : [])
+      .then((filas) => new Map((Array.isArray(filas) ? filas : [])
+        .filter((f) => f.id != null && f.imagen_url && f.foto_web_autorizada_at)
+        .map((f) => [String(f.id), f.imagen_url])))
+      .catch(() => new Map());
+  }
+
+  function completarConDatosPropios(sitio, filas, fotosAutorizadas) {
+    let elegido = null;
+    let tieneVinculo = false;
+    for (const fila of filas) {
+      const mismoId = sitio.osmId != null && sitio.osmId === fila.osm_id &&
+        sitio.osmType === fila.osm_type;
+      if (sitio.osmId != null && fila.osm_id != null && !mismoId) continue;
+      const dato = { nombre: fila.nombre, lat: mismoId ? sitio.lat : fila.lat,
+        lon: mismoId ? sitio.lon : fila.lon };
+      if (!sonMismoLugar(sitio, dato)) continue;
+      if (mismoId || !tieneVinculo) elegido = fila;
+      tieneVinculo = tieneVinculo || mismoId;
+    }
+    if (!elegido) return sitio;
+    const d = elegido;
+    const fotoAutorizada = fotosAutorizadas &&
+      fotosAutorizadas.get(String(d.alta_id)) === d.imagen_url;
+    return { ...sitio,
+      telefono: d.telefono || sitio.telefono,
+      web: d.web || sitio.web,
+      horario: d.horario || sitio.horario,
+      horarioPropio: Boolean(d.horario),
+      imagenUrl: fotoAutorizada ? d.imagen_url : sitio.imagenUrl,
+      sinImagen: d.sin_imagen,
+      descripcion: d.descripcion || sitio.descripcion,
+    };
+  }
+
   // Los datos editoriales no hacen falta para dibujar miles de pines. Se
   // piden solo al abrir la ficha de un sitio y se guardan por nombre durante
   // la visita. Así la web enseña la misma información enriquecida que la app
@@ -763,39 +1106,6 @@ const CATEGORIAS_LUGARES = {
     });
   }
 
-  // Datos aprobados: solo completan fichas existentes y sobreviven al alta.
-  function datosPropios() {
-    return fetch(SUPABASE_URL + '/rest/v1/datos_lugares?select=*&order=actualizado_at.asc', {
-      headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
-    }).then((r) => r.ok ? r.json() : []).catch(() => []);
-  }
-
-  function completarConDatosPropios(sitio, filas) {
-    let elegido = null;
-    let tieneVinculo = false;
-    for (const fila of filas) {
-      const mismoId = sitio.osmId != null && sitio.osmId === fila.osm_id &&
-        sitio.osmType === fila.osm_type;
-      if (sitio.osmId != null && fila.osm_id != null && !mismoId) continue;
-      const dato = { nombre: fila.nombre, lat: mismoId ? sitio.lat : fila.lat,
-        lon: mismoId ? sitio.lon : fila.lon };
-      if (!sonMismoLugar(sitio, dato)) continue;
-      if (mismoId || !tieneVinculo) elegido = fila;
-      tieneVinculo = tieneVinculo || mismoId;
-    }
-    if (!elegido) return sitio;
-    const d = elegido;
-    return { ...sitio,
-      telefono: d.telefono || sitio.telefono,
-      web: d.web || sitio.web,
-      horario: d.horario || sitio.horario,
-      horarioPropio: Boolean(d.horario),
-      imagenUrl: d.imagen_url || sitio.imagenUrl,
-      sinImagen: d.sin_imagen,
-      descripcion: d.descripcion || sitio.descripcion,
-    };
-  }
-
   // Un alta manual -> lugar con la misma forma que los de la foto.
   function aLugarManual(m) {
     const nombre = (m.nombre || '').trim();
@@ -816,9 +1126,13 @@ const CATEGORIAS_LUGARES = {
   function juntar(snap, man) {
     const vistos = new Set(snap.map((p) => claveDe(p.lat, p.lon)));
     for (const m of man) {
-      // Un cuadrado de ~100 m antes de medir: son miles de sitios por alta.
+      // Un cuadrado antes de medir: son miles de sitios por alta. Se escala
+      // con lo que mide el sitio, o el prefiltro descartaría la plaza que
+      // luego sí se aceptaría por radio.
+      const lado = radioMaximoDe(m.tipo) / RADIO_LOCAL;
       const cerca = snap.filter((p) =>
-        Math.abs(p.lat - m.lat) < 0.001 && Math.abs(p.lon - m.lon) < 0.0013);
+        Math.abs(p.lat - m.lat) < 0.001 * lado &&
+        Math.abs(p.lon - m.lon) < 0.0013 * lado);
       const osm = cerca.find((p) => sonMismoLugar(p, m));
       if (osm) {
         osm.telefono = osm.telefono || m.telefono;
@@ -844,22 +1158,31 @@ const CATEGORIAS_LUGARES = {
         .then((d) => (d.elements || []).map(aLugar).filter(Boolean)),
       manuales().then((filas) => filas.map(aLugarManual).filter(Boolean)),
       ocultos(),
+      clavesConVotos(),
+      fusiones(),
       datosPropios(),
-    ]).then(([snap, man, filasOcultas, datos]) => {
+      fotosWebAutorizadas(),
+    ]).then(([snap, man, filasOcultas, conVotos, filasFusiones, datos, fotosAutorizadas]) => {
       const visible = (p) => !estaOculto(p, filasOcultas);
       // Los ocultos se quitan ANTES de juntar: si no, un alta en el mismo
       // punto que un sitio oculto (La Paraíta sobre el «Bar» de OSM) se
       // descartaba por repetida y luego se ocultaba el otro, y no quedaba
       // ninguno. Y otra vez al final, por si la oculta es un alta.
-      return juntar(snap.filter(visible), man).filter(visible)
-        .map((p) => completarConDatosPropios(p, datos));
+      //
+      // Las dos fichas de OSM del mismo sitio se juntan antes que las altas,
+      // igual que en la app: el alta se compara entonces con una sola.
+      const deOsm = juntarDeOsm(snap.filter(visible),
+        (p) => conVotos.has(claveDe(p.lat, p.lon)), filasFusiones);
+      return juntar(deOsm, man).filter(visible)
+        .map((sitio) => completarConDatosPropios(sitio, datos, fotosAutorizadas));
     });
   }
 
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
-    sonMismoLugar, juntar, estaOculto, ocultos,
+    sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
+    fusiones,
     cargarCurado, completarConDatosPropios,
   };
 })();
