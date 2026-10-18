@@ -250,7 +250,7 @@
     // Abre la app si está instalada y, si no pasa nada, va a Play. Mismo
     // truco que `/lugar/`, con el formato que la app ya entiende.
     var cta = document.getElementById('cta');
-    var enApp = 'sevitime://lugar/' + encodeURIComponent(p.nombre);
+    var enApp = 'sevitime://place/' + encodeURIComponent(p.nombre);
     cta.href = enApp;
     cta.addEventListener('click', function (e) {
       e.preventDefault();
@@ -280,6 +280,10 @@
       'top-right');
     new maplibregl.Marker({ color: oscuro ? '#26A69A' : '#00897B' })
       .setLngLat([p.lon, p.lat]).addTo(map);
+    // Si el mapa base no carga -el bloqueo de IPs de Cloudflare durante los
+    // partidos lo tumba a ratos-, que lo diga en vez de dejar un rectángulo
+    // vacío con un pin flotando. Lo mismo que hacen /mapa/ y /rutas/.
+    if (window.vigilarTeselas) vigilarTeselas(map);
   }
 
   fetch(RPC, {

@@ -731,6 +731,10 @@
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right');
     new maplibregl.Marker({ color: oscuro ? '#26A69A' : '#00897B' })
       .setLngLat([lon, lat]).addTo(map);
+    // Si el mapa base no carga -el bloqueo de IPs de Cloudflare durante los
+    // partidos lo tumba a ratos-, que lo diga en vez de dejar un rectángulo
+    // vacío con un pin flotando. Lo mismo que hacen /mapa/ y /rutas/.
+    if (window.vigilarTeselas) vigilarTeselas(map);
   }
 
   function fila(etiqueta, valor, href) {
@@ -776,8 +780,11 @@
 
     // El botón intenta abrir la app y, si no pasa nada, se va a Play.
     //
-    // El formato es el que la app YA entiende: `sevitime://lugar/<nombre>`
-    // (`EnlaceEntrante._desdeEsquema`). Por eso esto funciona con la 1.0.20
+    // El formato es el que la app YA entiende: `sevitime://place/<nombre>`
+    // (`EnlaceEntrante._desdeEsquema`). Decía `lugar/` desde el 29-sep-2026
+    // y la app NO lo reconoce: abría la portada en vez del sitio. Salió el
+    // 18-oct-2026 probando el punto de encuentro en el móvil.
+    // Por eso esto funciona con la 1.0.20
     // que la gente tiene instalada, sin esperar a una versión nueva.
     //
     // Busca por nombre, que es su punto débil: en el centro hay 45
@@ -785,7 +792,7 @@
     // compartido de un bar con nombre propio acierta; lo que lo arreglaría
     // del todo es que la app acepte también la clave de coordenadas, y eso
     // sí pide versión nueva.
-    const app = 'sevitime://lugar/' + encodeURIComponent(p.nombre);
+    const app = 'sevitime://place/' + encodeURIComponent(p.nombre);
     const cta = document.getElementById('cta');
     cta.href = app;
     cta.addEventListener('click', function (e) {

@@ -141,9 +141,15 @@ La clave del sitio va en `?k=`, y es la **misma** que usa la app
 hay tabla de equivalencias que mantener. Los datos salen de `lugares.js`, o
 sea de la foto diaria más las altas menos los ocultos: lo mismo que el mapa.
 
-El botón abre `sevitime://lugar/<nombre>`, que es el formato que la app **ya**
+El botón abre `sevitime://place/<nombre>`, que es el formato que la app **ya**
 entiende (`EnlaceEntrante._desdeEsquema`), y cae a Google Play si no pasa nada
-en 1,2 s. Por eso funciona con la 1.0.20 ya instalada, sin versión nueva. Su
+en 1,2 s. Por eso funciona con la 1.0.20 ya instalada, sin versión nueva.
+
+**Ojo con el nombre del destino:** del 29-sep al 18-oct-2026 esto decía
+`sevitime://lugar/` —y este documento lo daba por bueno—, y la app **no**
+reconoce `lugar`: el botón abría la portada en vez del sitio. Salió probando
+el punto de encuentro en un móvil de verdad. La app acepta las dos desde la
+1.0.31, pero lo que se manda desde aquí es `place`. Su
 punto débil es que la app busca por nombre: en el centro hay 45 «Caixabank».
 Arreglarlo pide que la app acepte también la clave de coordenadas.
 
