@@ -287,7 +287,15 @@ origen conserva permiso explícito para esa URL. Pruebas:
 **Datos curados:** tanto la app como la ficha emergente de la pantalla unificada leen
 `curated_places` (descripción, foto, horario verificado, etiquetas y
 recomendación editorial). La web los pide solo al abrir un sitio y conserva la
-respuesta durante la visita, para no retrasar la carga del mapa.
+respuesta durante la visita, para no retrasar la carga del mapa. Una foto de
+usuario solo se muestra en la web con permiso registrado para app y web, sin
+publicar el nombre de quien la aportó; las fotos externas requieren autor,
+fuente y licencia conforme a sus condiciones. Las filas antiguas sin alcance
+verificado no se muestran como foto curada. Lo mismo con las fotos de Wikimedia
+Commons de `lugar_destacado`: sin `foto_credito` del que se puedan sacar autor
+y licencia, la web no publica la foto, aunque la app sí la siga enseñando. Una
+foto CC sin atribución es un incumplimiento de su licencia, no un hueco
+estético.
 
 **Latencia:** las altas manuales aparecen al momento (lectura directa). Los
 cambios que van solo a OSM (notas) aparecen cuando OSM los aplica y se regenera
