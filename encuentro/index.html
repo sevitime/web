@@ -42,6 +42,10 @@
   }
   .quien { color: var(--apagado); font-weight: 600; margin: 0 0 4px; }
   .pista { color: var(--texto); margin: 10px 0 0; }
+  /* El perfil de quien te espera. Va pequeño y debajo: lo que importa es
+     dónde habéis quedado, no la red social. */
+  .sigueme { margin: 8px 0 0; font-size: 13px; color: var(--apagado); }
+  .sigueme a { color: var(--verde-claro); }
 
   /* El tiempo que queda es el dato que más importa: va grande y con el color
      de marca, no escondido en letra pequeña. */
@@ -158,6 +162,8 @@
 
     <p class="donde-estoy oculto" id="donde-estoy"></p>
 
+    <p class="sigueme oculto" id="sigueme"></p>
+
     <p class="nota-caduca">
       Este enlace lo ha creado quien te espera y <strong>deja de valer
       solo</strong>. No dice dónde está ninguna persona: dice en qué sitio
@@ -238,6 +244,23 @@
     document.getElementById('quien').textContent =
       p.de ? p.de + ' te espera en' : 'Te esperan en';
     document.title = 'Quedamos en ' + p.nombre + ' — SeviTime';
+
+    // Quien te espera es, casi seguro, alguien que conoces: es el único
+    // momento del producto en el que se cruzan dos amigos de verdad. Si
+    // tiene apodo público, se ofrece su perfil —el enlace abre la app a
+    // quien la tenga, porque sevitime.github.io es App Link verificado— y
+    // ahí está el botón de seguir. No se insiste más: la página es para
+    // quedar, no para captar seguidores.
+    if (p.de) {
+      var sig = document.getElementById('sigueme');
+      var enlace = document.createElement('a');
+      enlace.href = 'https://sevitime.github.io/perfil/?n=' +
+        encodeURIComponent(p.de);
+      enlace.textContent = 'Ver el perfil de ' + p.de;
+      sig.appendChild(enlace);
+      sig.appendChild(document.createTextNode(' en SeviTime'));
+      sig.classList.remove('oculto');
+    }
 
     if (p.nota) {
       var pista = document.getElementById('pista');
