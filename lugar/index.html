@@ -477,20 +477,33 @@
         if (!f || f.image_use_scope !== 'external_license' || !esHttps(f.image_url) ||
             !f.image_author || !f.image_license || !esHttps(f.image_source_url) ||
             !esHttps(f.image_license_url)) return null;
-        return { externa: true, ...f };
+        return { tipo: 'externa', ...f };
       }).catch(function () { return null; });
 
-    Promise.all([manual, curada]).then(function (resultados) {
-      const f = resultados[0] ? { ...resultados[0], externa: false } : resultados[1];
+    // Las fotos editoriales de Wikimedia ya tienen su crédito en
+    // `lugar_destacado.foto_credito`. Son independientes de las fotos que
+    // aportan usuarios y no requieren el permiso opcional de estas últimas.
+    const commons = pedir('lugar_destacado?select=nombre,imagen_url,foto_credito&nombre=eq.' + encodeURIComponent(p.nombre) + '&activo=eq.true&limit=1')
+      .then(function (filas) {
+        const f = filas && filas[0];
+        if (!f || !esHttps(f.imagen_url) ||
+            !/^https:\/\/commons\.wikimedia\.org\//i.test(f.imagen_url)) return null;
+        return { tipo: 'commons', ...f };
+      }).catch(function () { return null; });
+
+    Promise.all([manual, curada, commons]).then(function (resultados) {
+      const f = resultados[0]
+        ? { ...resultados[0], tipo: 'usuario' }
+        : (resultados[1] || resultados[2]);
       if (!f) return;
       const imagen = document.getElementById('foto-sitio-imagen');
-      imagen.src = f.externa ? f.image_url : f.imagen_url;
-      imagen.alt = f.externa && f.image_title ? f.image_title : 'Foto del sitio ' + p.nombre;
+      imagen.src = f.tipo === 'externa' ? f.image_url : f.imagen_url;
+      imagen.alt = f.tipo === 'externa' && f.image_title ? f.image_title : 'Foto del sitio ' + p.nombre;
       imagen.addEventListener('error', function () {
         document.getElementById('foto-sitio').hidden = true;
       }, { once: true });
       const credito = document.getElementById('foto-sitio-credito');
-      if (f.externa) {
+      if (f.tipo === 'externa') {
         const autor = document.createElement('span');
         autor.textContent = f.image_author + (f.image_title ? ' · «' + f.image_title + '»' : '');
         const fuente = document.createElement('a');
@@ -502,6 +515,36 @@
         licencia.textContent = f.image_license;
         licencia.target = '_blank'; licencia.rel = 'noopener noreferrer';
         credito.append(autor, document.createTextNode(' · '), fuente, document.createTextNode(' · '), licencia);
+      } else if (f.tipo === 'commons') {
+        const creditoCommons = (f.foto_credito || '').trim();
+        const archivo = new URL(f.imagen_url).pathname.match(/Special:FilePath\/([^/]+)/i);
+        const enlaceFuente = document.createElement('a');
+        enlaceFuente.href = archivo
+          ? 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(decodeURIComponent(archivo[1]))
+          : f.imagen_url;
+        enlaceFuente.textContent = 'Wikimedia Commons';
+        enlaceFuente.target = '_blank'; enlaceFuente.rel = 'noopener noreferrer';
+        if (creditoCommons) {
+          const partes = creditoCommons.replace(/\s*·\s*Wikimedia Commons\s*$/i, '').split(' · ');
+          const licencia = partes.find(function (parte) { return /^CC\s/i.test(parte); });
+          const autor = partes.filter(function (parte) { return !/^CC\s/i.test(parte); }).join(' · ');
+          if (autor) credito.append(document.createTextNode(autor + (licencia ? ' · ' : '')));
+          if (licencia) {
+            const codigo = licencia.match(/^CC\s+(BY(?:-SA)?)\s+(\d+(?:\.\d+)?)(?:\s+([a-z-]+))?/i);
+            if (codigo) {
+              const enlaceLicencia = document.createElement('a');
+              const tipoLicencia = codigo[1].toLowerCase() === 'by-sa' ? 'by-sa' : 'by';
+              const idioma = codigo[3] ? codigo[3].toLowerCase() + '/' : '';
+              enlaceLicencia.href = 'https://creativecommons.org/licenses/' + tipoLicencia + '/' + codigo[2] + '/' + idioma;
+              enlaceLicencia.textContent = licencia;
+              enlaceLicencia.target = '_blank'; enlaceLicencia.rel = 'noopener noreferrer';
+              credito.append(enlaceLicencia, document.createTextNode(' · '));
+            } else {
+              credito.append(document.createTextNode(licencia + ' · '));
+            }
+          }
+        }
+        credito.append(enlaceFuente);
       } else {
         credito.textContent = 'Foto aportada a SeviTime';
       }
