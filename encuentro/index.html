@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Un punto de encuentro — SeviTime</title>
+<meta name="description" content="Alguien te ha mandado dónde queda en Sevilla. El enlace caduca solo.">
+<!-- `noindex` SIEMPRE, y no solo cuando el punto no existe: cada enlace es
+     privado, lo manda una persona a quien quiere y caduca. Que Google lo
+     indexara sería publicar dónde ha quedado alguien. Por lo mismo no hay
+     `canonical`: esta página no es contenido, es un recado. -->
+<meta name="robots" content="noindex, nofollow">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="SeviTime">
+<meta property="og:locale" content="es_ES">
+<!-- La vista previa de WhatsApp es a propósito genérica: los rastreadores no
+     ejecutan JavaScript, así que lo único que podrían leer es lo que haya en
+     el fichero. Mejor que no diga el sitio: la previa la ve cualquiera a
+     quien le reenvíen el mensaje. -->
+<meta property="og:title" content="Un punto de encuentro en SeviTime">
+<meta property="og:description" content="Abre el enlace para ver dónde queda. Caduca solo.">
+<meta property="og:image" content="https://sevitime.com/social.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css?v=772908e3">
+<link rel="stylesheet" href="/libs/maplibre-gl.css">
+<script defer src="/nav.js?v=0ed4e779"></script>
+<script defer src="/libs/maplibre-gl.js"></script>
+<script defer src="/libs/pmtiles.js"></script>
+<script defer src="/mapa/estilo-mapa.js?v=63b64d86"></script>
+<style>
+  .quedada { max-width: 680px; margin: 0 auto; padding: 32px 24px 60px; }
+  .quedada h1 {
+    font-size: var(--t-display); font-weight: 800; color: var(--texto);
+    letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 6px;
+  }
+  .quien { color: var(--apagado); font-weight: 600; margin: 0 0 4px; }
+  .pista { color: var(--texto); margin: 10px 0 0; }
+
+  /* El tiempo que queda es el dato que más importa: va grande y con el color
+     de marca, no escondido en letra pequeña. */
+  .queda {
+    display: inline-flex; align-items: center; gap: 8px;
+    margin: 18px 0 0; padding: 10px 14px; border-radius: 999px;
+    background: var(--ok-bg); color: var(--ok-fg);
+    font-weight: 700;
+  }
+  .queda svg { width: 18px; height: 18px; }
+
+  .mapa-caja { position: relative; margin: 22px 0; }
+  #mapa-punto {
+    height: 260px; border-radius: 16px; background: var(--gris-bg);
+  }
+  .atribucion {
+    position: absolute; right: 8px; bottom: 8px; font-size: 11px;
+    background: var(--atrib-bg);
+    color: var(--apagado); padding: 2px 8px; border-radius: 999px;
+  }
+  .atribucion a { color: inherit; }
+
+  .acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 8px; }
+  .cta, .cta-sec {
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 8px; padding: 14px 20px; border-radius: 14px; font-weight: 700;
+    text-decoration: none; min-height: 48px;
+  }
+  .cta { background: var(--verde); color: #fff; }
+  .cta-sec {
+    background: transparent; color: var(--texto);
+    border: 1px solid var(--borde);
+  }
+
+  .nota-caduca {
+    margin-top: 22px; font-size: 13px; color: var(--tenue);
+    line-height: 1.5;
+  }
+
+  .vacio { text-align: center; padding: 40px 0; }
+  .vacio h1 { font-size: var(--t-titulo); }
+  .vacio p { color: var(--apagado); }
+  .oculto { display: none !important; }
+</style>
+</head>
+<body>
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="/mapa/" class="nav-link">Explorar</a>
+      <a href="/rutas/" class="nav-link">Rutas</a>
+      <a href="/eventos/" class="nav-link">Eventos</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Añadir o corregir sitios</span>
+      </a>
+      </div>
+    </div>
+  </div>
+</nav>
+
+<main class="quedada">
+  <div id="punto" class="oculto">
+    <p class="quien" id="quien"></p>
+    <h1 id="donde">…</h1>
+    <p class="pista oculto" id="pista"></p>
+
+    <span class="queda" id="queda">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+           stroke-linecap="round" aria-hidden="true">
+        <circle cx="12" cy="12" r="9"></circle>
+        <path d="M12 7v5l3 2"></path>
+      </svg>
+      <span id="queda-texto"></span>
+    </span>
+
+    <div class="mapa-caja">
+      <div id="mapa-punto"></div>
+      <div class="atribucion">
+        © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+      </div>
+    </div>
+
+    <div class="acciones">
+      <a class="cta" id="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
+        Abrir en SeviTime
+      </a>
+      <a class="cta-sec" id="como-llegar" href="#" target="_blank" rel="noopener">
+        Cómo llegar
+      </a>
+    </div>
+
+    <p class="nota-caduca">
+      Este enlace lo ha creado quien te espera y <strong>deja de valer
+      solo</strong>. No dice dónde está ninguna persona: dice en qué sitio
+      habéis quedado. SeviTime no guarda a dónde va nadie.
+    </p>
+  </div>
+
+  <div id="vacio" class="vacio oculto">
+    <h1>Este punto de encuentro ya no está en pie</h1>
+    <p>
+      Los enlaces de «quedar aquí» caducan solos, así que este ya no dice
+      nada. Pídele a quien te lo mandó que te mande otro.
+    </p>
+    <p class="acciones" style="justify-content:center">
+      <a class="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
+        Descubrir Sevilla con SeviTime
+      </a>
+    </p>
+  </div>
+</main>
+
+<script defer src="/visitas.js?v=2c5ad387"></script>
+
+<script>
+(function () {
+  // Se llama a la función por REST, sin cargar supabase-js: son 216 KB para
+  // una sola lectura sin sesión, y esta página la abre alguien con el móvil
+  // en la calle. Es la misma decisión que `visitas.js`.
+  var RPC = 'https://kdqiwhvtovafugpcrumf.supabase.co/rest/v1/rpc/fn_punto_encuentro';
+  var KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
+  var PLAY = 'https://play.google.com/store/apps/details?id=com.selu.sevitime';
+
+  var caja = document.getElementById('punto');
+  var vacio = document.getElementById('vacio');
+  var temporizador = null;
+
+  function noHayNada() {
+    if (temporizador) clearInterval(temporizador);
+    caja.classList.add('oculto');
+    vacio.classList.remove('oculto');
+  }
+
+  var id = new URLSearchParams(location.search).get('p') || '';
+  // Con forma de uuid o no se pregunta nada: así un enlace mal copiado no
+  // acaba en una petición al servidor.
+  if (!/^[0-9a-fA-F-]{36}$/.test(id)) {
+    noHayNada();
+    return;
+  }
+
+  function minutosQueQuedan(caduca) {
+    return Math.ceil((caduca.getTime() - Date.now()) / 60000);
+  }
+
+  // «48 minutos», «1 hora», «1h 20min». Igual que en la app
+  // (`PuntoEncuentro.loQueQueda`), para que el enlace y la app no cuenten el
+  // tiempo de dos maneras.
+  function loQueQueda(min) {
+    if (min <= 0) return 'se ha terminado';
+    if (min < 60) return min === 1 ? '1 minuto' : min + ' minutos';
+    var horas = Math.floor(min / 60);
+    var resto = min % 60;
+    if (resto === 0) return horas === 1 ? '1 hora' : horas + ' horas';
+    return horas + 'h ' + resto + 'min';
+  }
+
+  function hora(d) {
+    return ('0' + d.getHours()).slice(-2) + ':' + ('0' + d.getMinutes()).slice(-2);
+  }
+
+  function pintar(p) {
+    var caduca = new Date(p.caduca);
+    if (!(caduca.getTime() > Date.now())) { noHayNada(); return; }
+
+    // Todo lo que viene del servidor lo ha escrito una persona: se pinta con
+    // `textContent`, nunca con `innerHTML`.
+    document.getElementById('donde').textContent = p.nombre;
+    document.getElementById('quien').textContent =
+      p.de ? p.de + ' te espera en' : 'Te esperan en';
+    document.title = 'Quedamos en ' + p.nombre + ' — SeviTime';
+
+    if (p.nota) {
+      var pista = document.getElementById('pista');
+      pista.textContent = '«' + p.nota + '»';
+      pista.classList.remove('oculto');
+    }
+
+    function refrescarTiempo() {
+      var min = minutosQueQuedan(caduca);
+      if (min <= 0) { noHayNada(); return; }
+      document.getElementById('queda-texto').textContent =
+        'Hasta las ' + hora(caduca) + ' · quedan ' + loQueQueda(min);
+    }
+    refrescarTiempo();
+    // Se refresca solo: quien abre el enlace y lo deja en pantalla mientras
+    // va de camino tiene que ver que el tiempo corre, y cuando se acaba, que
+    // se acabó.
+    temporizador = setInterval(refrescarTiempo, 20000);
+
+    caja.classList.remove('oculto');
+    pintarMapa(p);
+
+    document.getElementById('como-llegar').href =
+      'https://www.google.com/maps/dir/?api=1&destination=' + p.lat + ',' + p.lon;
+
+    // Abre la app si está instalada y, si no pasa nada, va a Play. Mismo
+    // truco que `/lugar/`, con el formato que la app ya entiende.
+    var cta = document.getElementById('cta');
+    var enApp = 'sevitime://lugar/' + encodeURIComponent(p.nombre);
+    cta.href = enApp;
+    cta.addEventListener('click', function (e) {
+      e.preventDefault();
+      var empezo = Date.now();
+      var aPlay = setTimeout(function () {
+        if (document.hidden || Date.now() - empezo > 2500) return;
+        location.href = PLAY;
+      }, 1200);
+      window.addEventListener('pagehide', function () { clearTimeout(aPlay); },
+        { once: true });
+      location.href = enApp;
+    });
+  }
+
+  function pintarMapa(p) {
+    if (!window.maplibregl || !window.sevitimeEstiloMapa) return;
+    var oscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (window.usarProtocoloTeselas) window.usarProtocoloTeselas();
+    var map = new maplibregl.Map({
+      container: 'mapa-punto',
+      style: sevitimeEstiloMapa(oscuro),
+      center: [p.lon, p.lat],
+      zoom: 16,
+      attributionControl: false,
+    });
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }),
+      'top-right');
+    new maplibregl.Marker({ color: oscuro ? '#26A69A' : '#00897B' })
+      .setLngLat([p.lon, p.lat]).addTo(map);
+  }
+
+  fetch(RPC, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      apikey: KEY,
+      Authorization: 'Bearer ' + KEY,
+    },
+    body: JSON.stringify({ p_id: id }),
+  })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (filas) {
+      // La función devuelve lo mismo —nada— para un punto caducado y para un
+      // identificador inventado, así que esta página tampoco los distingue.
+      if (!filas || !filas.length) { noHayNada(); return; }
+      pintar(filas[0]);
+    })
+    .catch(function () { noHayNada(); });
+})();
+</script>
+</body>
+</html>
