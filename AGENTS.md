@@ -293,9 +293,11 @@ publicar el nombre de quien la aportó; las fotos externas requieren autor,
 fuente y licencia conforme a sus condiciones. Las filas antiguas sin alcance
 verificado no se muestran como foto curada. Lo mismo con las fotos de Wikimedia
 Commons de `lugar_destacado`: sin `foto_credito` del que se puedan sacar autor
-y licencia, la web no publica la foto, aunque la app sí la siga enseñando. Una
-foto CC sin atribución es un incumplimiento de su licencia, no un hueco
-estético.
+y licencia, la web no publica la foto, aunque la app sí la siga enseñando. El
+formato es `Autor · <licencia> · Wikimedia Commons`, con `CC BY 4.0`,
+`CC BY-SA 3.0 es`, `CC0` o `Dominio público` como licencia. Las de CC0 y
+dominio público no obligan a atribuir, pero se acreditan igual: publicar una
+foto sin decir de quién es no se arregla porque la licencia lo permita.
 
 **Latencia:** las altas manuales aparecen al momento (lectura directa). Los
 cambios que van solo a OSM (notas) aparecen cuando OSM los aplica y se regenera

@@ -450,14 +450,32 @@
   // El autor y la licencia de un crédito de Commons, o `null` si no están.
   //
   // `foto_credito` se guarda como «Autor · CC BY-SA 4.0 · Wikimedia Commons».
+  // La licencia no siempre es una CC con versión: de las 150 fotos del
+  // catálogo, 33 son CC0 o dominio público, que no obligan a atribuir. Se
+  // acredita igual, así que aquí valen las tres formas.
+  const ES_LICENCIA = /^(CC[\s0]|Dominio público$)/i;
+
   function partesDelCredito(texto) {
     const limpio = (texto || '').replace(/\s*·\s*Wikimedia Commons\s*$/i, '').trim();
     if (!limpio) return null;
     const trozos = limpio.split(' · ');
-    const licencia = trozos.find(function (t) { return /^CC\s/i.test(t); });
-    const autor = trozos.filter(function (t) { return !/^CC\s/i.test(t); }).join(' · ');
+    const licencia = trozos.find(function (t) { return ES_LICENCIA.test(t); });
+    const autor = trozos.filter(function (t) { return !ES_LICENCIA.test(t); }).join(' · ');
     if (!autor || !licencia) return null;
     return { autor: autor, licencia: licencia };
+  }
+
+  // El enlace al texto de la licencia, o `null` si no lo tiene (el dominio
+  // público no es una licencia que enlazar: es la ausencia de una).
+  function enlaceDeLicencia(licencia) {
+    if (/^CC0/i.test(licencia)) {
+      return 'https://creativecommons.org/publicdomain/zero/1.0/';
+    }
+    const cc = licencia.match(/^CC\s+(BY(?:-SA)?)\s+(\d+(?:\.\d+)?)(?:\s+([a-z-]+))?/i);
+    if (!cc) return null;
+    const tipo = cc[1].toLowerCase() === 'by-sa' ? 'by-sa' : 'by';
+    return 'https://creativecommons.org/licenses/' + tipo + '/' + cc[2] + '/' +
+      (cc[3] ? cc[3].toLowerCase() + '/' : '');
   }
 
   function pintarFotoSitio(p) {
@@ -547,12 +565,10 @@
         enlaceFuente.textContent = 'Wikimedia Commons';
         enlaceFuente.target = '_blank'; enlaceFuente.rel = 'noopener noreferrer';
         credito.append(document.createTextNode(f.partes.autor + ' · '));
-        const codigo = f.partes.licencia.match(/^CC\s+(BY(?:-SA)?)\s+(\d+(?:\.\d+)?)(?:\s+([a-z-]+))?/i);
-        if (codigo) {
+        const href = enlaceDeLicencia(f.partes.licencia);
+        if (href) {
           const enlaceLicencia = document.createElement('a');
-          const tipoLicencia = codigo[1].toLowerCase() === 'by-sa' ? 'by-sa' : 'by';
-          const idioma = codigo[3] ? codigo[3].toLowerCase() + '/' : '';
-          enlaceLicencia.href = 'https://creativecommons.org/licenses/' + tipoLicencia + '/' + codigo[2] + '/' + idioma;
+          enlaceLicencia.href = href;
           enlaceLicencia.textContent = f.partes.licencia;
           enlaceLicencia.target = '_blank'; enlaceLicencia.rel = 'noopener noreferrer';
           credito.append(enlaceLicencia, document.createTextNode(' · '));
