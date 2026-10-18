@@ -78,6 +78,11 @@
   /* Una web o un horario largos no tienen dónde partirse: sin esto empujaban
      la página y aparecía desplazamiento horizontal en el móvil. */
   .sitio-datos li > :last-child { min-width: 0; overflow-wrap: anywhere; }
+  .foto-sitio { margin: 0 0 28px; }
+  .foto-sitio h2 { font-size: var(--t-seccion); color: var(--texto); margin: 0 0 10px; }
+  .foto-sitio figure { margin: 0; }
+  .foto-sitio img { display: block; width: 100%; max-height: 420px; object-fit: cover; border-radius: 14px; border: 1px solid var(--borde); }
+  .foto-sitio figcaption { margin-top: 6px; color: var(--apagado); font-size: var(--t-etiqueta); }
 
   .sitio-extra { margin: 0 0 28px; }
   .sitio-extra h2 { font-size: var(--t-seccion); color: var(--texto); margin: 0 0 10px; }
@@ -178,6 +183,14 @@
     </div>
 
     <ul class="sitio-datos" id="datos"></ul>
+
+    <section class="foto-sitio" id="foto-sitio" aria-labelledby="foto-sitio-titulo" hidden>
+      <h2 id="foto-sitio-titulo">Foto del sitio</h2>
+      <figure>
+        <img id="foto-sitio-imagen" alt="" loading="lazy">
+        <figcaption id="foto-sitio-credito"></figcaption>
+      </figure>
+    </section>
 
     <section class="sitio-extra" id="videos-sitio" aria-labelledby="videos-titulo" hidden>
       <h2 id="videos-titulo">Vídeos</h2>
@@ -434,6 +447,68 @@
       }).catch(function () {});
   }
 
+  function pintarFotoSitio(p) {
+    function esHttps(url) {
+      try { return new URL(url).protocol === 'https:'; }
+      catch (_) { return false; }
+    }
+    const cercania = 0.0005;
+    const parametros = new URLSearchParams({
+      select: 'imagen_url,foto_web_autorizada_at,lat,lon',
+      nombre: 'eq.' + p.nombre,
+      activo: 'eq.true',
+      foto_web_autorizada_at: 'not.is.null',
+      and: '(lat.gte.' + (p.lat - cercania) + ',lat.lte.' + (p.lat + cercania) +
+        ',lon.gte.' + (p.lon - cercania) + ',lon.lte.' + (p.lon + cercania) + ')',
+      limit: '30',
+    });
+    // La selección final se hace por distancia exacta entre altas homónimas.
+    const manual = pedir('lugares_manuales?' + parametros.toString())
+      .then(function (filas) {
+        return (filas || [])
+          .filter(function (f) { return esHttps(f.imagen_url); })
+          .sort(function (a, b) {
+            return Math.hypot(a.lat - p.lat, a.lon - p.lon) - Math.hypot(b.lat - p.lat, b.lon - p.lon);
+          })[0] || null;
+      }).catch(function () { return null; });
+    const curada = pedir('curated_places?select=image_url,image_use_scope,image_permission_recorded_at,image_author,image_title,image_license,image_source_url,image_license_url&name=eq.' + encodeURIComponent(p.nombre) + '&limit=1')
+      .then(function (filas) {
+        const f = filas && filas[0];
+        if (!f || f.image_use_scope !== 'external_license' || !esHttps(f.image_url) ||
+            !f.image_author || !f.image_license || !esHttps(f.image_source_url) ||
+            !esHttps(f.image_license_url)) return null;
+        return { externa: true, ...f };
+      }).catch(function () { return null; });
+
+    Promise.all([manual, curada]).then(function (resultados) {
+      const f = resultados[0] ? { ...resultados[0], externa: false } : resultados[1];
+      if (!f) return;
+      const imagen = document.getElementById('foto-sitio-imagen');
+      imagen.src = f.externa ? f.image_url : f.imagen_url;
+      imagen.alt = f.externa && f.image_title ? f.image_title : 'Foto del sitio ' + p.nombre;
+      imagen.addEventListener('error', function () {
+        document.getElementById('foto-sitio').hidden = true;
+      }, { once: true });
+      const credito = document.getElementById('foto-sitio-credito');
+      if (f.externa) {
+        const autor = document.createElement('span');
+        autor.textContent = f.image_author + (f.image_title ? ' · «' + f.image_title + '»' : '');
+        const fuente = document.createElement('a');
+        fuente.href = f.image_source_url;
+        fuente.textContent = 'Fuente';
+        fuente.target = '_blank'; fuente.rel = 'noopener noreferrer';
+        const licencia = document.createElement('a');
+        licencia.href = f.image_license_url;
+        licencia.textContent = f.image_license;
+        licencia.target = '_blank'; licencia.rel = 'noopener noreferrer';
+        credito.append(autor, document.createTextNode(' · '), fuente, document.createTextNode(' · '), licencia);
+      } else {
+        credito.textContent = 'Foto aportada a SeviTime';
+      }
+      document.getElementById('foto-sitio').hidden = false;
+    });
+  }
+
   function tarjetaResena(r) {
     const li = document.createElement('li');
     li.className = 'resena';
@@ -607,6 +682,7 @@
   function pintar(p) {
     const nombre = document.getElementById('nombre');
     nombre.textContent = p.nombre;
+    pintarFotoSitio(p);
     nombre.classList.remove('cargando');
     document.title = p.nombre + ' — SeviTime';
     paraBuscadores(p);
