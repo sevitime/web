@@ -76,6 +76,17 @@
     border: 1px solid var(--borde);
   }
 
+  .donde-estoy {
+    margin: 12px 0 0; font-size: 13px; color: var(--apagado);
+  }
+  /* El punto de quien mira, en azul: el del sitio es el verde de marca, y
+     dos marcadores del mismo color en el mismo mapa no se distinguen. */
+  .yo-punto {
+    width: 16px; height: 16px; border-radius: 50%;
+    background: #1E88E5; border: 2px solid #fff;
+    box-shadow: 0 0 0 4px rgba(30, 136, 229, 0.25);
+  }
+
   .nota-caduca {
     margin-top: 22px; font-size: 13px; color: var(--tenue);
     line-height: 1.5;
@@ -140,7 +151,12 @@
       <a class="cta-sec" id="como-llegar" href="#" target="_blank" rel="noopener">
         Cómo llegar
       </a>
+      <button class="cta-sec" id="verme" type="button">
+        Verme en el mapa
+      </button>
     </div>
+
+    <p class="donde-estoy oculto" id="donde-estoy"></p>
 
     <p class="nota-caduca">
       Este enlace lo ha creado quien te espera y <strong>deja de valer
@@ -265,6 +281,8 @@
     });
   }
 
+  var mapa = null;
+
   function pintarMapa(p) {
     if (!window.maplibregl || !window.sevitimeEstiloMapa) return;
     var oscuro = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -280,10 +298,112 @@
       'top-right');
     new maplibregl.Marker({ color: oscuro ? '#26A69A' : '#00897B' })
       .setLngLat([p.lon, p.lat]).addTo(map);
+    mapa = map;
+    prepararVerme(p);
     // Si el mapa base no carga -el bloqueo de IPs de Cloudflare durante los
     // partidos lo tumba a ratos-, que lo diga en vez de dejar un rectángulo
     // vacío con un pin flotando. Lo mismo que hacen /mapa/ y /rutas/.
     if (window.vigilarTeselas) vigilarTeselas(map);
+  }
+
+  // «Verme en el mapa»: el punto azul de quien abre el enlace, para saber si
+  // tira a la izquierda o a la derecha.
+  //
+  // Esta ubicación **no sale del navegador**: no se manda a ningún servidor,
+  // no se guarda y no la ve quien te espera. Por eso no hace falta ni
+  // permiso nuevo en la app ni casilla nueva en Seguridad de datos: esto es
+  // el navegador pintando un punto, igual que «Usar mi ubicación» de /mapa/.
+  //
+  // Y no se pide al abrir la página: pedir el permiso de ubicación nada más
+  // entrar asusta y casi siempre se deniega. Se pide cuando se toca el
+  // botón, que es cuando se entiende para qué.
+  function prepararVerme(p) {
+    var boton = document.getElementById('verme');
+    var aviso = document.getElementById('donde-estoy');
+    if (!boton || !navigator.geolocation) {
+      if (boton) boton.classList.add('oculto');
+      return;
+    }
+
+    var marcador = null;
+    var vigilancia = null;
+
+    function decir(texto) {
+      aviso.textContent = texto;
+      aviso.classList.remove('oculto');
+    }
+
+    // En metros, por la fórmula del haversine: el navegador da coordenadas,
+    // no distancias.
+    function metrosHasta(lat, lon) {
+      var R = 6371000;
+      var dLat = (lat - p.lat) * Math.PI / 180;
+      var dLon = (lon - p.lon) * Math.PI / 180;
+      var a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(p.lat * Math.PI / 180) * Math.cos(lat * Math.PI / 180) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+      return Math.round(2 * R * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
+    }
+
+    function distancia(m) {
+      if (m < 1000) return m + ' m';
+      return (m / 1000).toFixed(1).replace('.', ',') + ' km';
+    }
+
+    boton.addEventListener('click', function () {
+      if (vigilancia !== null) {
+        // Segundo toque: se deja de seguir. Que el navegador siga leyendo la
+        // posición cuando ya no hace falta no tiene ningún sentido.
+        navigator.geolocation.clearWatch(vigilancia);
+        vigilancia = null;
+        if (marcador) { marcador.remove(); marcador = null; }
+        aviso.classList.add('oculto');
+        boton.textContent = 'Verme en el mapa';
+        return;
+      }
+
+      decir('Buscando dónde estás…');
+      boton.disabled = true;
+
+      vigilancia = navigator.geolocation.watchPosition(
+        function (pos) {
+          boton.disabled = false;
+          boton.textContent = 'Dejar de verme';
+          var lat = pos.coords.latitude;
+          var lon = pos.coords.longitude;
+
+          if (!marcador && mapa) {
+            var punto = document.createElement('div');
+            punto.className = 'yo-punto';
+            marcador = new maplibregl.Marker({ element: punto });
+            marcador.setLngLat([lon, lat]).addTo(mapa);
+            // Se encuadran los dos: el sitio y tú. Si no, al centrarte
+            // pierdes de vista adónde vas.
+            mapa.fitBounds(
+              [[Math.min(lon, p.lon), Math.min(lat, p.lat)],
+               [Math.max(lon, p.lon), Math.max(lat, p.lat)]],
+              { padding: 60, maxZoom: 16, duration: 600 });
+          } else if (marcador) {
+            marcador.setLngLat([lon, lat]);
+          }
+
+          decir('Estás a ' + distancia(metrosHasta(lat, lon)) +
+            ' de ' + p.nombre + '. Tu ubicación no sale de este navegador: ' +
+            'no se manda a ningún sitio y quien te espera no la ve.');
+        },
+        function () {
+          boton.disabled = false;
+          vigilancia = null;
+          decir('No se ha podido leer tu ubicación. Puedes usar «Cómo llegar».');
+        },
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 15000 }
+      );
+    });
+
+    // Al cerrar o dejar la página, se deja de leer la posición.
+    window.addEventListener('pagehide', function () {
+      if (vigilancia !== null) navigator.geolocation.clearWatch(vigilancia);
+    });
   }
 
   fetch(RPC, {
