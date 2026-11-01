@@ -169,10 +169,10 @@ Detalles que hay que respetar al tocarlo:
   comprobación: si se quita, con sesión iniciada las visitas esperan el tiempo
   de espera entero. Para un navegador o un móvil donde no se vaya a iniciar
   sesión: entrar una vez en `sevitime.com/?nocontar=1`.
-- `explorar/` **ya sí se cuenta** (1-nov-2026): dejó de ser una redirección a
-  `/mapa/` y es la pantalla principal de la web. Hace falta aplicar
-  `docs/sql/web_visitas_explorar.sql` en el repo de la app; hasta que se
-  aplique, sus visitas caen en «otra».
+- `explorar/` y `guardados/` **ya sí se cuentan** (1-nov-2026, aplicado):
+  la primera dejó de ser una redirección a `/mapa/` y es la pantalla principal
+  de la web; la segunda es la lista personal de guardados. Está en
+  `docs/sql/web_visitas_rutas_nuevas.sql`, en el repo de la app.
 - Lo ve el administrador en `/admin/` → «Uso de la app» → «Visitas de la web».
 
 ## `/explorar/`: los sitios que tienes cerca
@@ -360,6 +360,14 @@ revés. Dos cosas que no se pueden tocar a la ligera:
   en las tres y en todas las filas. El `place_json` es una foto del `Place`
   de la app; `Place.fromJson` tiene valor por defecto para todo, así que basta
   con lo que la ficha sabe de verdad y **no se inventa lo que no sabe**.
+
+La **lista** de guardados vive en `/guardados/` (`guardados/guardados.js`),
+con las tres pestañas de la app y sus mismos textos de «aún no tienes nada».
+Lee `place_json`, la foto que se guardó, y **no vuelve a pedir la foto
+diaria**: son 360 KB para una lista de diez sitios, y el nombre guardado es el
+que la persona reconoce. Se llega desde el enlace «Guardados» que `auth.js`
+pone junto a la sesión —como el de «Panel» para los administradores— y desde
+«Ver tus guardados» en la ficha de un sitio ya guardado.
 
 **«Quedar aquí» (desde el 1-nov-2026, `lugar/quedar.js`):** la web sabía
 **abrir** un punto de encuentro (`/encuentro/?p=…`) pero no crearlo, así que

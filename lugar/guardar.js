@@ -165,7 +165,14 @@
       puesto[accion.id] = estaba;
       pintarBoton(accion, boton);
       aviso.textContent = 'No se ha podido guardar. Inténtalo más tarde.';
+      return;
     }
+    // El enlace a la lista sale en cuanto hay algo guardado y se va cuando no
+    // queda nada, así que la sección se repinta entera al terminar.
+    const texto = aviso.textContent;
+    pintar();
+    const nuevoAviso = seccion.querySelector('.guardar-aviso');
+    if (nuevoAviso) nuevoAviso.textContent = texto;
   }
 
   // --- Pintado -------------------------------------------------------------
@@ -210,6 +217,17 @@
       fila.appendChild(b);
     });
     cuerpo.appendChild(fila);
+
+    // Dónde ha ido lo que acabas de guardar. La app tiene este mismo enlace
+    // y por el mismo motivo: sin él, nada dice que haya una lista.
+    const algo = ACCIONES.find(function (a) { return puesto[a.id]; });
+    if (algo) {
+      const ver = el('a', 'guardar-ver', 'Ver tus guardados');
+      ver.href = '/guardados/?t=' + (algo.id === 'favorito' ? 'favoritos'
+        : algo.id === 'pendiente' ? 'pendientes' : 'visitas');
+      cuerpo.appendChild(ver);
+    }
+
     cuerpo.appendChild(aviso);
   }
 

@@ -97,6 +97,16 @@
       xp.title = 'Tus puntos en SeviTime';
       info.appendChild(xp);
 
+      // «Guardados», solo con sesión: es la lista personal, y en la app vive
+      // detrás del avatar por el mismo motivo. Sin esto, a `/guardados/` solo
+      // se llegaba desde la ficha de un sitio ya guardado.
+      var guardados = document.createElement('a');
+      guardados.className = 'auth-panel';
+      guardados.href = '/guardados/';
+      guardados.textContent = 'Guardados';
+      guardados.title = 'Los sitios que has guardado';
+      info.appendChild(guardados);
+
       var salir = document.createElement('button');
       salir.className = 'auth-salir';
       salir.type = 'button';
