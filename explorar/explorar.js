@@ -165,6 +165,61 @@
     catch (_) { return false; }
   }
 
+  // --- Añadir un lugar que falta --------------------------------------------
+
+  // Lo mismo que el botón «Añadir lugar» de la app (`sugerirSitio`), con su
+  // misma regla: **sin posición real no se abre el formulario**, porque el
+  // sitio se clavaría en el centro de Sevilla y acabaría ahí en el mapa de
+  // todo el mundo. Si hace falta, se pide la ubicación en ese momento.
+  //
+  // El formulario es el de `/mapa/`, no una copia: allí está la comprobación
+  // de duplicados, los tipos, el aviso de tapas y la sesión. Dos formularios
+  // escribiendo en `sugerencias` acabarían comportándose distinto.
+  function anadirLugar() {
+    if (estado.ubicacionReal) { irAlFormulario(); return; }
+
+    if (!navigator.geolocation) {
+      avisar('Para añadir un sitio necesitamos saber dónde estás, y tu ' +
+        'navegador no sabe decírnoslo. Puedes añadirlo marcándolo en el mapa.');
+      return;
+    }
+    const boton = $('btn-aportar');
+    boton.disabled = true;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        boton.disabled = false;
+        const punto = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        if (L.metros(punto, L.SEVILLA) > LEJOS) {
+          avisar('Estás a ' + L.formatDist(L.metros(punto, L.SEVILLA)) +
+            ' de Sevilla y SeviTime solo cubre Sevilla y su provincia, así que ' +
+            'no podemos dar por buena tu posición para un sitio nuevo. Puedes ' +
+            'marcarlo en el mapa.');
+          return;
+        }
+        estado.origen = punto;
+        estado.ubicacionReal = true;
+        guardarPermiso();
+        $('ubicacion-caja').hidden = true;
+        avisoUbicacion.hidden = true;
+        pintar();
+        irAlFormulario();
+      },
+      () => {
+        boton.disabled = false;
+        avisar('Para añadir un sitio tenemos que saber dónde estás: si no, se ' +
+          'quedaría clavado en el centro de Sevilla. Dale permiso de ubicación ' +
+          'o márcalo tú en el mapa.');
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
+    );
+  }
+
+  function irAlFormulario() {
+    location.href = '/mapa/?modo=sugerir' +
+      '&lat=' + encodeURIComponent(estado.origen.lat.toFixed(6)) +
+      '&lon=' + encodeURIComponent(estado.origen.lon.toFixed(6));
+  }
+
   // --- Filtrado y orden -----------------------------------------------------
 
   function tiposDelFiltro(id) {
@@ -376,6 +431,7 @@
     });
 
     $('btn-ubicacion').addEventListener('click', pedirUbicacion);
+    $('btn-aportar').addEventListener('click', anadirLugar);
     $('btn-mas').addEventListener('click', () => {
       estado.visibles += POR_TANDA;
       pintar();

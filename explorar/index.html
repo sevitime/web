@@ -29,7 +29,7 @@
 <script defer src="/nav.js?v=0ed4e779"></script>
 <script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/auth.js?v=f53cca1e"></script>
-<script defer src="/explorar/explorar.js?v=11b11251"></script>
+<script defer src="/explorar/explorar.js?v=63be83ef"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -186,6 +186,31 @@
      negativos («-16», «-36»…). Igual que en `lugar/index.html`. */
   [hidden] { display: none !important; }
 
+  /* Botón flotante «Añadir lugar»: el mismo sitio, el mismo amarillo y las
+     mismas palabras que en la app (`BotonFlotanteAportar`), donde está en
+     Explorar, Eventos y Rutas. En la app hubo además un chip «Añadir sitio»
+     en la lista y se quitó: era lo mismo dos veces y el flotante lo tapaba.
+     Aquí no se repite el error. */
+  .aportar {
+    position: fixed;
+    right: 20px;
+    bottom: calc(20px + env(safe-area-inset-bottom, 0px));
+    z-index: 20;
+    display: inline-flex; align-items: center; gap: 8px;
+    min-height: 56px; padding: 0 22px;
+    border: none; border-radius: var(--r-pill);
+    background: var(--dorado); color: #1A2E2B;
+    font: inherit; font-weight: 800; cursor: pointer;
+    box-shadow: var(--sombra-2);
+  }
+  .aportar:hover { filter: brightness(1.05); }
+  .aportar:active { transform: translateY(1px); }
+  .aportar:focus-visible { outline: 3px solid var(--texto); outline-offset: 3px; }
+  .aportar svg { flex: 0 0 auto; }
+  /* El botón flota sobre la lista: sin este hueco tapaba la última tarjeta.
+     Es lo que en la app se llama `espacioAlFinal` (alto + margen + margen). */
+  .pie-explorar { padding-bottom: 96px; }
+
   @media (min-width: 720px) {
     .explorar { padding-left: 24px; padding-right: 24px; }
     .barra { margin-left: -24px; margin-right: -24px; padding-left: 24px; padding-right: 24px; }
@@ -281,6 +306,11 @@
     <a href="/mapa/?modo=colaborar">Añádelo o corrígelo</a>.
   </p>
 </main>
+
+<button class="aportar" id="btn-aportar" type="button">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2a7 7 0 0 0-7 7c0 5.25 7 13 7 13s7-7.75 7-13a7 7 0 0 0-7-7zm1 10h-2V9.99H9V8h2V6h2v2h2v1.99h-2V12z"/></svg>
+  <span>Añadir lugar</span>
+</button>
 
 <footer>
   <a href="/sitios/">Sitios</a>

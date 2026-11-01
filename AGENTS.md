@@ -168,6 +168,17 @@ Es la gemela de `HomeScreen` en la app, con el mismo criterio:
   Alcázar esté a 300 m o a 3 km. Se busca por nombre y por calle
   (`direccion`, que `aLugar` saca de `addr:street` como la app).
 
+**«Añadir lugar»** es el botón flotante amarillo de abajo a la derecha, con
+el mismo sitio, color y palabras que en la app (`BotonFlotanteAportar`). Hace
+lo que `sugerirSitio` allí, incluida su regla: **sin posición real no abre el
+formulario**, porque el sitio se clavaría en el centro de Sevilla; si no hay
+permiso todavía, se pide ahí mismo. Lo que abre es
+`/mapa/?modo=sugerir&lat=…&lon=…`, o sea **el formulario que ya existe**, no
+una copia: un segundo formulario escribiendo en `sugerencias` acabaría
+comportándose distinto (duplicados, tipos, tapas, sesión). En la app hubo un
+chip «Añadir sitio» en la lista y se quitó porque duplicaba el flotante y lo
+tapaba; aquí no se repite.
+
 **No pinta mapa a propósito.** Está en `/mapa/`, y traerlo aquí son ~600 KB de
 librería y teselas en datos móviles cuando lo que se mira en un móvil es la
 lista. Tampoco tiene «¿está abierto?», guardados ni modo explorador, y en la
@@ -290,7 +301,12 @@ hay que respetar:
   `sessionStorage`.
 
 La ficha enlaza a `/mapa/?modo=corregir&k=<place_key>` para abrir la corrección
-con ese sitio ya seleccionado. El mapa conserva esos parámetros durante el
+con ese sitio ya seleccionado, y `/explorar/` a
+`/mapa/?modo=sugerir&lat=…&lon=…` para añadir uno en tu posición. Los dos modos
+pasan por `procesarModoDirecto()`, que espera a tener sesión resuelta y la
+lista de sitios cargada, y cada uno se marca como hecho para no repetirse. El
+pin de `modo=sugerir` se deja arrastrable, igual que el que sale al tocar el
+mapa. El mapa conserva esos parámetros durante el
 acceso con Google; no debe obligar a buscar de nuevo el lugar compartido.
 
 ## `/perfil/`: perfiles dentro del dominio principal

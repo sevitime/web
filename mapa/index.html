@@ -650,13 +650,13 @@ window.addEventListener('DOMContentLoaded', function () {
   sb.auth.onAuthStateChange((_event, session) => {
     actualizarUIAuth(session ? session.user : null);
     authLista = true;
-    procesarCorreccionDirecta();
+    procesarModoDirecto();
   });
 
   sb.auth.getSession().then(({ data: { session } }) => {
     actualizarUIAuth(session ? session.user : null);
     authLista = true;
-    procesarCorreccionDirecta();
+    procesarModoDirecto();
     if (window.location.hash.includes('access_token=') || window.location.search.includes('code=')) {
       const limpia = new URL(window.location.href);
       limpia.hash = '';
@@ -1051,7 +1051,7 @@ window.addEventListener('DOMContentLoaded', function () {
       lugaresCargados = await cargar();
       btnSitios.textContent = 'Ocultar sitios';
       montarCapaSitios();
-      procesarCorreccionDirecta();
+      procesarModoDirecto();
     } catch (err) {
       sitiosVisibles = false;
       btnSitios.setAttribute('aria-pressed', 'false');
@@ -1103,6 +1103,7 @@ window.addEventListener('DOMContentLoaded', function () {
   const listaBuscar = document.getElementById('buscar-resultados');
   let temporizadorBuscar = null;
   let correccionDirectaProcesada = false;
+  let sugerenciaDirectaProcesada = false;
 
   function normalizar(t) {
     return (t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '');
@@ -1129,6 +1130,59 @@ window.addEventListener('DOMContentLoaded', function () {
     abrirPanelReportar(p.nombre, p.lat, p.lon, {
       tipoLugar: p.label, osmType: p.osmType, osmId: p.osmId,
     });
+  }
+
+  // Los modos que llegan en la dirección. Se intentan cada vez que cambia
+  // algo de lo que dependen (la sesión y la lista de sitios), y cada uno se
+  // marca como hecho para no repetirse.
+  function procesarModoDirecto() {
+    procesarCorreccionDirecta();
+    procesarSugerenciaDirecta();
+  }
+
+  // `/mapa/?modo=sugerir&lat=…&lon=…`: lo que abre el botón «Añadir lugar»
+  // de `/explorar/`, con el punto ya puesto donde está quien lo pulsa. Es el
+  // mismo gesto que en la app —desde la pantalla principal, en tu posición—
+  // y acaba en este formulario y no en una copia suya: un segundo formulario
+  // que escribe en `sugerencias` acabaría comportándose distinto.
+  //
+  // El pin se deja **arrastrable**, como el que sale al tocar el mapa: la
+  // lectura del navegador es un único tirón de 10-50 m y este punto acaba en
+  // el mapa de todo el mundo. Por eso `punto_origen` sigue siendo `'web'` y
+  // no `'gps'`: no podemos afirmar que el punto enviado sea la lectura.
+  function procesarSugerenciaDirecta() {
+    if (sugerenciaDirectaProcesada || !authLista || !lugaresCargados) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get('modo') !== 'sugerir') return;
+    const lat = parseFloat(params.get('lat'));
+    const lon = parseFloat(params.get('lon'));
+    sugerenciaDirectaProcesada = true;
+    if (!isFinite(lat) || !isFinite(lon)) {
+      abrirPanelColaborar();
+      return;
+    }
+    if (!usuarioActual) {
+      abrirPanelLogin();
+      return;
+    }
+    if (marker) marker.remove();
+    marker = new maplibregl.Marker({
+      color: prefiereOscuro.matches ? '#26A69A' : '#00897B',
+      draggable: true,
+    }).setLngLat([lon, lat]).addTo(map);
+    marker.on('dragend', () => {
+      const p = marker.getLngLat();
+      panelSugerir.dataset.lat = p.lat;
+      panelSugerir.dataset.lng = p.lng;
+    });
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      map.jumpTo({ center: [lon, lat], zoom: 18 });
+    } else {
+      map.flyTo({ center: [lon, lat], zoom: 18 });
+    }
+    abrirPanelSugerir({ lat: lat, lng: lon });
+    document.getElementById('s-ubicacion-ayuda').textContent =
+      'Punto puesto donde estás. Arrástralo si el sitio no cae justo en la puerta.';
   }
 
   function procesarCorreccionDirecta() {
