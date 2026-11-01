@@ -49,7 +49,8 @@ Las librerías y las fuentes del mapa están **autohospedadas** en `libs/`, no
 vienen de un CDN de terceros: `maplibre-gl` 4.7.1, `pmtiles` 3.2.1 y
 `@supabase/supabase-js` 2.116.0, más las tipografías de las etiquetas del mapa
 en `libs/fonts/OpenSansRegular/` (rangos PBF de Open Sans Regular, de
-OpenMapTiles). Los tiles también son propios (Worker de Cloudflare). Al
+OpenMapTiles). Los tiles también son propios (Worker de Cloudflare, servido
+en `tiles.sevitime.com`: por `workers.dev` no valen, ver abajo). Al
 actualizar una, descarga la versión fijada, guárdala en `libs/` y actualiza esta
 nota. Motivo: un tercero que recibe la IP del visitante obliga a declararlo en
 la política de privacidad.
@@ -86,6 +87,34 @@ poder verificar la marca de la app, así que se publica aquí también. Si cambi
 el texto en `sevitime/privacidad`, hay que copiarlo aquí en el mismo commit (y
 al revés). El pie de `index.html`, `404.html` y `ranking/index.html` enlaza a
 `/privacidad/`.
+
+## Las teselas van por `tiles.sevitime.com`, no por `workers.dev`
+
+El `.pmtiles` de la provincia (30 MB, en R2) lo sirve el Worker
+`sevitime-tiles`, y la dirección que usa `mapa/estilo-mapa.js` es
+**`https://tiles.sevitime.com/sevilla-provincia.pmtiles`** desde el 1 de
+noviembre de 2026.
+
+Antes iba por `sevitime-tiles.sevitime-app.workers.dev` y **el mapa dejó de
+cargar**: los operadores españoles interceptan `workers.dev` con un
+certificado suplantado por los bloqueos de Cloudflare. Comprobado en un móvil
+con 4G (`ERR_CERT_AUTHORITY_INVALID`) y en esta máquina; con HSTS el navegador
+ni ofrece continuar. No había nada roto en el Worker, en el fichero ni aquí:
+lo señalado era el nombre.
+
+- El dominio propio es un **Custom Domain del Worker** en la zona
+  `sevitime.com`. Solo crea el subdominio `tiles`, proxied; el apex y su `www`
+  siguen sin proxy apuntando a GitHub Pages, así que **los App Links y el
+  certificado de la web no se tocan**. No lo cambies sin tener esto presente.
+- La dirección `workers.dev` sigue activa a propósito: la llevan dentro las
+  versiones ya publicadas de la app. No la apagues hasta que esas versiones no
+  cuenten.
+- Si algún día `tiles.sevitime.com` también cayera, la salida medida es mudar
+  el `.pmtiles` a Supabase Storage, que sirve peticiones por rango (`206`).
+- **La web no tiene respaldo de mapa**, a diferencia de la app (`MapaBase` cae
+  al raster de MapTiler). Por eso esto se vio aquí y no allí. Ponerle respaldo
+  significa un tercero recibiendo la IP del visitante, y eso hay que
+  declararlo en la política de privacidad: es una decisión, no un arreglo.
 
 ## Contador de visitas (`visitas.js`)
 

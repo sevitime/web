@@ -5,8 +5,15 @@
 // Da por hecho que maplibre-gl y pmtiles ya están cargados en la página, y que
 // quien lo use registra antes el protocolo `pmtiles`.
 
+// Dominio propio y NO `sevitime-tiles.sevitime-app.workers.dev` (1-nov-2026):
+// los operadores españoles interceptan `workers.dev` con un certificado
+// suplantado por los bloqueos de Cloudflare, el navegador corta la conexión
+// —y con HSTS ni deja continuar— y el mapa no cargaba. El Worker, el fichero
+// y el código estaban bien: lo que estaba señalado era el nombre. Apunta al
+// mismo Worker; la dirección vieja sigue viva porque la app publicada la
+// lleva escrita dentro hasta el próximo AAB.
 const SEVITIME_TILES_URL =
-  'https://sevitime-tiles.sevitime-app.workers.dev/sevilla-provincia.pmtiles';
+  'https://tiles.sevitime.com/sevilla-provincia.pmtiles';
 
 // El mapa deja un margen de unos 7–8 km alrededor del recorte de la provincia:
 // permite seleccionar aportaciones limítrofes sin que, al alejarse, se termine
