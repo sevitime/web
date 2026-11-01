@@ -117,10 +117,20 @@ GitHub Pages responden `206`.
 - **El Worker y `tiles.sevitime.com` se quedan vivos**: los llevan dentro las
   versiones ya publicadas de la app. No los apagues hasta que esas versiones no
   cuenten.
-- **La web no tiene respaldo de mapa**, a diferencia de la app (`MapaBase` cae
-  al raster de MapTiler). Por eso esto se vio aquí y no allí. Ponerle respaldo
-  significa un tercero recibiendo la IP del visitante, y eso hay que declararlo
-  en la política de privacidad: es una decisión, no un arreglo.
+- **La web no tiene respaldo de mapa, y se decidió que no lo tenga**
+  (1-nov-2026). La app sí (`MapaBase` cae al raster de MapTiler), y por eso
+  esto se vio aquí y no allí. Un respaldo gana su precio cuando cubre a un
+  tercero que puede caerse con la web viva, que era el caso con Cloudflare;
+  ahora las teselas salen del mismo sitio que la página, así que si no llegan
+  es que tampoco ha llegado la web y no hay nada que pintar. A cambio costaría
+  un tercero recibiendo la IP de cada visitante, declararlo en la política
+  —que hoy promete que la web no habla con terceros, y por eso no hay banner
+  de cookies— y, si fuera con teselas de OpenStreetMap, usar un servicio
+  comunitario para tráfico público. Si algún día las teselas vuelven a
+  depender de un tercero, esta decisión se vuelve a abrir.
+- **El aviso de «el mapa no ha cargado» no nombra ninguna causa.** Echaba la
+  culpa al bloqueo de Cloudflare durante los partidos, y desde que las teselas
+  viajan con la web eso ya no puede ser: mandaba a mirar donde no era.
 
 ## Contador de visitas (`visitas.js`)
 

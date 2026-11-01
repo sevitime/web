@@ -121,10 +121,15 @@ function vigilarTeselas(map) {
   aviso.hidden = true;
 
   const texto = document.createElement('p');
+  // Qué decir cuando el mapa no carga. Decía que era «el bloqueo temporal de
+  // IPs de Cloudflare durante los partidos de LaLiga», y desde el 1-nov-2026
+  // eso ya no puede ser: las teselas se sirven con la propia web. Echarle la
+  // culpa a una causa que ya no existe manda a quien lo lea a mirar donde no
+  // es, así que ahora se dice lo único que se sabe de verdad.
   texto.textContent =
-    'El mapa base no ha cargado. Puede ser el bloqueo temporal de IPs de ' +
-    'Cloudflare durante los partidos de LaLiga. Los sitios y las rutas siguen ' +
-    'funcionando.';
+    'El mapa no ha cargado. Puede ser tu conexión, o un problema pasajero ' +
+    'nuestro. Los sitios, las rutas y la búsqueda siguen funcionando; vuelve ' +
+    'a intentarlo en un rato.';
 
   const cerrar = document.createElement('button');
   cerrar.type = 'button';
