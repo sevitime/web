@@ -15,8 +15,12 @@
 //   * Los sitios salen de la **foto diaria** (`lugares.js`, la misma que lee
 //     la app) con las altas manuales, los ocultos y las fusiones ya
 //     aplicadas. No se habla con Overpass.
-//   * «Todo» no enseña cajeros ni farmacias (`TIPOS_DE_TODO`), y los filtros
-//     son los que se generan desde la app.
+//   * «Todos» no enseña cajeros ni farmacias (`TIPOS_DE_TODO`): tienen su
+//     propio chip, igual que en la app.
+//   * Los chips son `FILTROS_EXPLORAR`, espejo de los de Explorar de la app
+//     (`categorias_chips.dart`), NO los de la lupa (`FILTROS`). Por eso
+//     bares, restaurantes y cafés van juntos en «Hostelería»: aquí se ojea
+//     «dónde comer o tomar algo»; en la lupa ya sabes qué buscas.
 //
 // Lo que esta página NO hace: mapa (está en `/mapa/`, y cargarlo aquí son
 // 600 KB más en datos móviles), «¿está abierto?», guardar ni modo
@@ -44,7 +48,7 @@
   const estado = {
     origen: { lat: L.SEVILLA.lat, lon: L.SEVILLA.lon },
     ubicacionReal: false,
-    filtro: 'todo',
+    filtro: 'todos',
     orden: 'valoracion',
     radio: RADIO_POR_DEFECTO,
     texto: '',
@@ -164,8 +168,7 @@
   // --- Filtrado y orden -----------------------------------------------------
 
   function tiposDelFiltro(id) {
-    if (id === 'todo') return null;
-    const f = (L.FILTROS || []).find((x) => x.id === id);
+    const f = (L.FILTROS_EXPLORAR || []).find((x) => x.id === id);
     return f && f.tipos ? f.tipos : null;
   }
 
@@ -300,16 +303,22 @@
       lista.appendChild(vacio);
     }
 
+    // El tope no pasa de lo que hay. Sin esto, cada clic de más seguía
+    // sumando 20 a `visibles` y el botón restaba: «Ver más sitios (-36)».
+    // Que esté acotado aquí vale aunque alguien vuelva a romper el CSS que
+    // oculta el botón.
+    estado.visibles = Math.min(estado.visibles, Math.max(POR_TANDA, todas.length));
+    const quedan = Math.max(0, todas.length - estado.visibles);
     const mas = $('btn-mas');
-    mas.hidden = todas.length <= estado.visibles;
-    mas.textContent = 'Ver más sitios (' + (todas.length - estado.visibles) + ')';
+    mas.hidden = quedan === 0;
+    mas.textContent = 'Ver más sitios (' + quedan + ')';
   }
 
   // --- Controles ------------------------------------------------------------
 
   function pintarChips() {
     const caja = $('chips');
-    (L.FILTROS || []).forEach((f) => {
+    (L.FILTROS_EXPLORAR || []).forEach((f) => {
       const b = el('button', 'chip' + (f.id === estado.filtro ? ' seleccionado' : ''));
       b.type = 'button';
       b.setAttribute('aria-pressed', f.id === estado.filtro ? 'true' : 'false');

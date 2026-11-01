@@ -456,6 +456,34 @@ const CATEGORIAS_LUGARES = {
     'marketplace',
   ];
 
+  // Los chips de **Explorar**, que no son los mismos que los de la lupa
+  // (`FILTROS`). En la app, Explorar agrupa por familia —un solo chip
+  // «Hostelería» con bares, restaurantes y cafés— mientras que la lupa los
+  // separa, y el mismo criterio vale aquí: en Explorar se ojea «dónde comer
+  // o tomar algo», y en la lupa ya sabes qué buscas.
+  //
+  // Espejo de `lib/screens/home/widgets/categorias_chips.dart` (el orden y
+  // las etiquetas) y de `_tiposParaFiltro` en `home_provider.dart` (qué tipos
+  // entran en cada uno). Los tipos salen del bloque generado siempre que
+  // forman una categoría entera, para que no puedan separarse solos; los tres
+  // chips de servicios son un trozo de `servicios` y van escritos, igual que
+  // en la app.
+  //
+  // El emoji sí va escrito: la app usa iconos de Material, así que no hay
+  // ningún sitio del que copiarlo.
+  const FILTROS_EXPLORAR = [
+    { id: 'todos', etiqueta: 'Todos', emoji: '📍', tipos: null },
+    { id: 'hosteleria', etiqueta: 'Hostelería', emoji: '🍻', tipos: tiposDeCategoria('hosteleria') },
+    { id: 'parking', etiqueta: 'Parking', emoji: '🅿️', tipos: ['parking'] },
+    { id: 'farmacia', etiqueta: 'Farmacia', emoji: '💊', tipos: ['pharmacy'] },
+    { id: 'atm', etiqueta: 'Cajeros', emoji: '🏧', tipos: ['atm', 'bank'] },
+    { id: 'parques', etiqueta: 'Parques', emoji: '🌳', tipos: tiposDeCategoria('parques') },
+    { id: 'aseos', etiqueta: 'Aseos', emoji: '🚻', tipos: tiposDeCategoria('aseos') },
+    { id: 'cultura', etiqueta: 'Cultura', emoji: '🖼️', tipos: tiposDeCategoria('cultura') },
+    { id: 'historia', etiqueta: 'Historia', emoji: '🏛️', tipos: tiposDeCategoria('historia') },
+    { id: 'iglesias', etiqueta: 'Iglesias', emoji: '⛪', tipos: tiposDeCategoria('iglesias') },
+  ];
+
   function infoDe(tipo) {
     return CATEGORIAS_LUGARES.tipos[tipo] || CATEGORIAS_LUGARES.otros;
   }
@@ -1216,7 +1244,7 @@ const CATEGORIAS_LUGARES = {
 
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
-    TIPOS_DE_TODO,
+    FILTROS_EXPLORAR, TIPOS_DE_TODO,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones,

@@ -148,9 +148,18 @@ Es la gemela de `HomeScreen` en la app, con el mismo criterio:
   (`CercaDeTiHeader`). Llamarlo «cerca» sería mentir.
 - **Más allá de 60 km se avisa y se usa el centro**: a 390 km de Sevilla la
   posición es correcta y aun así no sirve de nada.
-- **«Todo» no enseña servicios** (cajero, banco, farmacia, parking) ni el
+- **Los chips son `FILTROS_EXPLORAR`, no `FILTROS`.** `FILTROS` es la lista de
+  la **lupa**, donde bares, restaurantes y cafés van separados.
+  `FILTROS_EXPLORAR` es la de **Explorar**, donde los tres van juntos en
+  «Hostelería», y es el espejo de `categorias_chips.dart` (orden y etiquetas)
+  y de `_tiposParaFiltro` en `home_provider.dart` (qué tipos entran). Los
+  tipos salen del bloque generado cuando forman una categoría entera, para
+  que no se separen solos. Hasta el 1-nov-2026 esta página usaba los de la
+  lupa por error y enseñaba «Bares» y «Restaurantes» aparte.
+- **«Todos» no enseña servicios** (cajero, banco, farmacia, parking) ni el
   estadio: `TIPOS_DE_TODO` en `lugares.js` es el espejo de
-  `_computePlacesFiltrados` en la app. Si cambia allí, cambia aquí.
+  `_computePlacesFiltrados` en la app. No es que se escondan: tienen su propio
+  chip, igual que en la app. Si cambia allí, cambia aquí.
 - **«Valoración» ordena por `place_ratings.score`**, la media bayesiana que
   calcula el servidor (prior de 5 votos a 3,6). Nunca se enseña como número;
   lo que se ve es `average_rating`. Las 97 filas se piden de una vez, sin

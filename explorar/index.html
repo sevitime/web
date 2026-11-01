@@ -27,9 +27,9 @@
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css?v=772908e3">
 <script defer src="/nav.js?v=0ed4e779"></script>
-<script defer src="/lugares.js?v=02fd92ac"></script>
+<script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/auth.js?v=f53cca1e"></script>
-<script defer src="/explorar/explorar.js?v=7fb6af81"></script>
+<script defer src="/explorar/explorar.js?v=11b11251"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -177,6 +177,14 @@
     font-size: var(--t-cuerpo); color: var(--apagado);
   }
   .pie-explorar a { color: var(--verde-claro); }
+
+  /* Obligatorio, no decorativo: `.btn-mas` y `.ubicacion-caja` traen su
+     propio `display`, y una regla de autor gana al `[hidden] { display: none }`
+     del navegador. Sin esto, poner el atributo `hidden` no ocultaba nada: el
+     botón «Ver más sitios» se quedaba a la vista con la lista ya completa y
+     cada clic le sumaba 20 a un total que no crecía, así que enseñaba números
+     negativos («-16», «-36»…). Igual que en `lugar/index.html`. */
+  [hidden] { display: none !important; }
 
   @media (min-width: 720px) {
     .explorar { padding-left: 24px; padding-right: 24px; }
