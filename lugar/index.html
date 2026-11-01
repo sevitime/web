@@ -47,6 +47,7 @@
      clave pública por `fetch`. -->
 <script defer src="/auth.js?v=f53cca1e"></script>
 <script defer src="/lugar/resena.js?v=87716e58"></script>
+<script defer src="/lugar/guardar.js?v=236a2d25"></script>
 <script defer src="/lugar/quedar.js?v=f4cc71d3"></script>
 <style>
   .sitio { max-width: 680px; margin: 0 auto; padding: 32px 24px 60px; }
@@ -210,6 +211,41 @@
   .resena-btn:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
   .resena-apodo .resena-campo { margin-top: 10px; }
 
+  /* ---- Guardar este sitio ---- */
+  .guardar { margin: 0 0 28px; }
+  .guardar h2 { font-size: var(--t-seccion); font-weight: 700; color: var(--texto); margin: 0 0 10px; }
+  .guardar-nota { margin: 0 0 12px; font-size: var(--t-cuerpo); color: var(--apagado); text-wrap: pretty; }
+  .guardar-aviso { margin: 10px 0 0; font-size: var(--t-cuerpo); color: var(--error); }
+  .guardar-opciones { display: grid; gap: 8px; }
+  .guardar-opcion {
+    display: flex; align-items: center; gap: 12px; width: 100%;
+    padding: 12px 14px; text-align: left;
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); color: var(--texto);
+    font: inherit; cursor: pointer;
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .guardar-opcion:hover { border-color: var(--verde-claro); }
+  }
+  .guardar-opcion:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .guardar-opcion.puesto { border-color: var(--verde-claro); background: var(--gris-bg); }
+  .guardar-icono {
+    flex: 0 0 auto; width: 36px; height: 36px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 17px;
+    background: var(--gris-bg); color: var(--tenue);
+  }
+  .guardar-opcion.puesto .guardar-icono { background: var(--verde-solido); color: #fff; }
+  .guardar-texto { min-width: 0; }
+  .guardar-titulo { display: block; font-size: var(--t-item); font-weight: 700; }
+  .guardar-detalle { display: block; font-size: var(--t-etiqueta); color: var(--tenue); margin-top: 1px; }
+  .guardar-entrar {
+    min-height: 46px; padding: 0 20px; border-radius: var(--r-pill);
+    border: 1px solid var(--borde); background: transparent; color: var(--verde-claro);
+    font: inherit; font-weight: 700; cursor: pointer;
+  }
+  .guardar-entrar:hover { border-color: var(--verde-claro); }
+  .guardar-entrar:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
   /* ---- Quedar aquí ---- */
   .quedar {
     margin: 0 0 28px; padding: 18px;
@@ -315,6 +351,9 @@
     </div>
 
     <ul class="sitio-datos" id="datos"></ul>
+
+    <!-- `lugar/guardar.js`: favorito, quiero ir y ya he ido. -->
+    <div id="hueco-guardar"></div>
 
     <section class="foto-sitio" id="foto-sitio" aria-labelledby="foto-sitio-titulo" hidden>
       <h2 id="foto-sitio-titulo">Foto del sitio</h2>
@@ -992,6 +1031,23 @@
         osmType: p.osmType,
         osmId: p.osmId,
       }, document.getElementById('hueco-tu-resena'));
+    }
+
+    // Guardar: las mismas tres cosas que la app, y en las mismas tablas.
+    if (window.SeviGuardar) {
+      window.SeviGuardar.iniciar({
+        clave: clave,
+        nombre: p.nombre,
+        lat: p.lat,
+        lon: p.lon,
+        tipo: p.tipo,
+        telefono: p.telefono,
+        web: p.web,
+        horario: p.horario,
+        direccion: p.direccion,
+        osmType: p.osmType,
+        osmId: p.osmId,
+      }, document.getElementById('hueco-guardar'));
     }
 
     // «Quedar aquí»: manda un enlace con ESTE sitio, no con tu ubicación.

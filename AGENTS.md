@@ -345,6 +345,22 @@ hay que respetar:
   permitidas de Supabase rechazara una con `?k=`, la clave queda guardada en
   `sessionStorage`.
 
+**Guardar un sitio (desde el 1-nov-2026, `lugar/guardar.js`):** «Favorito»,
+«Quiero ir» y «Ya he ido», las mismas tres de la app y **en las mismas tres
+tablas**, así que lo que se guarde aquí sale en la app de esa persona y al
+revés. Dos cosas que no se pueden tocar a la ligera:
+
+- **Pide cuenta, y en la app no.** Las tablas van por `device_id`, que es
+  `auth.uid()` con sesión y el UUID del móvil sin ella. Un guardado anónimo en
+  un navegador se queda atado a ese navegador y nadie lo vuelve a ver.
+- **`place_name` no guarda lo mismo en las tres:** nombre real en
+  `user_favorites` y `user_visitas`, y el **`placeKey`** en
+  `user_pendientes`, pese al nombre de la columna. Es histórico y la app
+  publicada depende de ello. Se lee y se borra por `place_key`, que sí está
+  en las tres y en todas las filas. El `place_json` es una foto del `Place`
+  de la app; `Place.fromJson` tiene valor por defecto para todo, así que basta
+  con lo que la ficha sabe de verdad y **no se inventa lo que no sabe**.
+
 **«Quedar aquí» (desde el 1-nov-2026, `lugar/quedar.js`):** la web sabía
 **abrir** un punto de encuentro (`/encuentro/?p=…`) pero no crearlo, así que
 con un iPhone podías ir adonde te citaran y no citar a nadie. Es el gemelo de
