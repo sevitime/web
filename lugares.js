@@ -436,6 +436,26 @@ const CATEGORIAS_LUGARES = {
   const PARQUES = tiposDeCategoria('parques');
   const IGLESIAS = tiposDeCategoria('iglesias');
 
+  // Lo que entra en «Todo» de Explorar. Es la misma lista que
+  // `_computePlacesFiltrados` en la app (lib/providers/home_provider.dart):
+  // hostelería, cultura, historia, parques e iglesias, más atracción,
+  // mirador y mercado de abastos.
+  //
+  // Fuera quedan a propósito los **servicios** (parking, farmacia, cajero,
+  // banco) y los aseos: no se ojean, se buscan cuando hacen falta, y
+  // meterlos aquí llena la lista de cajeros. También el estadio, que en la
+  // app tampoco entra. Si cambia allí, cambia aquí.
+  const TIPOS_DE_TODO = [
+    ...tiposDeCategoria('hosteleria'),
+    ...tiposDeCategoria('cultura'),
+    ...tiposDeCategoria('historia'),
+    ...tiposDeCategoria('parques'),
+    ...tiposDeCategoria('iglesias'),
+    'attraction',
+    'viewpoint',
+    'marketplace',
+  ];
+
   function infoDe(tipo) {
     return CATEGORIAS_LUGARES.tipos[tipo] || CATEGORIAS_LUGARES.otros;
   }
@@ -507,6 +527,15 @@ const CATEGORIAS_LUGARES = {
     return lat.toFixed(5) + '_' + lon.toFixed(5);
   }
 
+  // `addr:street` (+ número) tal cual lo hace la app. Sin calle, cadena
+  // vacía: una dirección a medias («, 14») es peor que ninguna.
+  function direccionDe(t) {
+    const calle = (t['addr:street'] || '').trim();
+    if (!calle) return '';
+    const numero = (t['addr:housenumber'] || '').trim();
+    return numero ? calle + ', ' + numero : calle;
+  }
+
   // Un elemento del snapshot -> lugar listo para pintar o reportar. Se guardan
   // también `osmType`/`osmId` (no solo la URL) porque el editor los manda a
   // `reportes_lugares` para que la nota enlace el elemento exacto en OSM.
@@ -526,6 +555,11 @@ const CATEGORIAS_LUGARES = {
       telefono: t.phone || t['contact:phone'] || '',
       web: t.website || t['contact:website'] || '',
       horario: t.opening_hours || '',
+      // Calle y número como en la app (`PlacesService._direccion`): es lo
+      // que las tarjetas de Explorar enseñan en la última línea y por lo que
+      // también se puede buscar. El pueblo NO entra: en la app sale de otro
+      // snapshot (los núcleos de población) y aquí no se descarga.
+      direccion: direccionDe(t),
       osm: (e.type && e.id) ? 'https://www.openstreetmap.org/' + e.type + '/' + e.id : '',
       osmType: e.type || null,
       osmId: e.id != null ? e.id : null,
@@ -1115,6 +1149,8 @@ const CATEGORIAS_LUGARES = {
       nombre, lat: m.lat, lon: m.lon, tipo,
       color: colorFor(tipo), emoji: emojiFor(tipo), label: labelFor(tipo),
       telefono: m.telefono || '', web: m.web || '', horario: m.horario || '',
+      // Las altas manuales no piden la calle, así que aquí no hay ninguna.
+      direccion: '',
       osm: '', osmType: null, osmId: null,
     };
   }
@@ -1180,6 +1216,7 @@ const CATEGORIAS_LUGARES = {
 
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
+    TIPOS_DE_TODO,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones,

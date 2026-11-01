@@ -27,7 +27,10 @@
   var sb = null;
   var cola = null;
 
-  window.SEVI = { sb: null, onAuth: [] };
+  // `conSupabase` lo usan las páginas que necesitan el cliente para una
+  // acción concreta (reseñar en la ficha de un sitio) sin arrastrar los
+  // 216 KB de la librería a quien solo viene a leer. Se define más abajo.
+  window.SEVI = { sb: null, onAuth: [], conSupabase: null };
 
   function nombreDe(user) {
     return user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)
@@ -186,6 +189,19 @@
     return false;
   }
 
+  // La misma dirección sin lo que ha dejado el login, pero CONSERVANDO lo
+  // demás. Antes se dejaba solo `pathname`, y eso se llevaba por delante el
+  // `?k=` de la ficha de un sitio: tras entrar con Google, la dirección de
+  // la barra ya no era la de ese sitio y recargar o compartirla fallaba.
+  function sinRastroDelLogin() {
+    var params = new URLSearchParams(window.location.search);
+    ['code', 'state', 'error', 'error_description', 'error_code'].forEach(function (p) {
+      params.delete(p);
+    });
+    var resto = params.toString();
+    return window.location.pathname + (resto ? '?' + resto : '');
+  }
+
   // Volvemos del login: Supabase tiene que procesar la URL (código o tokens).
   function vieneDelLogin() {
     return window.location.hash.indexOf('access_token=') !== -1 ||
@@ -205,7 +221,7 @@
       var session = res.data && res.data.session;
       avisar(session ? session.user : null);
       if (vieneDelLogin()) {
-        window.history.replaceState(null, '', window.location.pathname);
+        window.history.replaceState(null, '', sinRastroDelLogin());
       }
     });
   }
@@ -230,6 +246,8 @@
     };
     document.head.appendChild(script);
   }
+
+  window.SEVI.conSupabase = conSupabase;
 
   if (window.supabase) {
     // La página ya trae la librería: no hay nada que diferir.

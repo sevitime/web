@@ -15,6 +15,10 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SeviTime">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta property="og:type" content="website" />
 <meta property="og:locale" content="es_ES" />
 <meta property="og:site_name" content="SeviTime" />
@@ -40,7 +44,7 @@
 <script defer src="/libs/pmtiles.js"></script>
 <script defer src="/libs/supabase.min.js"></script>
 <script defer src="/mapa/estilo-mapa.js?v=63b64d86"></script>
-<script defer src="/lugares.js?v=5325297a"></script>
+<script defer src="/lugares.js?v=02fd92ac"></script>
 <script defer src="/nav.js?v=0ed4e779"></script>
 <style>
   /* La paleta y la tipografía vienen de /estilo.css, el mismo que usan la
@@ -402,6 +406,7 @@
       <div class="nav-enlaces" id="nav-enlaces">
         <button id="btn-sitios" class="nav-herramienta" aria-pressed="false" disabled>Cargando sitios…</button>
         <button id="btn-mis-aportaciones" class="nav-herramienta">Mis aportaciones</button>
+        <a href="/explorar/" class="nav-link">Explorar</a>
         <a href="/rutas/" class="nav-link">Rutas</a>
         <a href="/eventos/" class="nav-link">Eventos</a>
         <a href="/ranking/" class="nav-link">Cuadro de honor</a>

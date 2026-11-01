@@ -3,36 +3,293 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Explorar — SeviTime</title>
-<meta name="description" content="Explora los sitios de Sevilla y aporta cambios al mapa colaborativo de SeviTime.">
-<link rel="canonical" href="https://sevitime.com/mapa/">
-<meta http-equiv="refresh" content="0; url=/mapa/">
-<meta name="robots" content="noindex">
-<!-- Ejecutar la redirección antes de pintar el cuerpo evita el destello blanco
-     que se veía al entrar desde la navegación. El meta refresh queda como
-     respaldo si JavaScript está desactivado. -->
-<script>window.location.replace('/mapa/');</script>
+<title>Sitios cerca de ti en Sevilla — SeviTime</title>
+<meta name="description" content="Los bares, restaurantes, monumentos, museos y parques que tienes cerca en Sevilla y su provincia, con su distancia y lo que dice la gente. Desde el navegador, sin instalar nada.">
+<link rel="canonical" href="https://sevitime.com/explorar/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://sevitime.com/explorar/">
+<meta property="og:site_name" content="SeviTime">
+<meta property="og:locale" content="es_ES">
+<meta property="og:title" content="Sitios cerca de ti en Sevilla — SeviTime">
+<meta property="og:description" content="Lo que tienes cerca en Sevilla, ordenado por distancia. Funciona en cualquier móvil.">
+<meta property="og:image" content="https://sevitime.com/social.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SeviTime">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css?v=772908e3">
+<script defer src="/nav.js?v=0ed4e779"></script>
+<script defer src="/lugares.js?v=02fd92ac"></script>
+<script defer src="/auth.js?v=f53cca1e"></script>
+<script defer src="/explorar/explorar.js?v=7fb6af81"></script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "CollectionPage",
+  "name": "Sitios cerca de ti en Sevilla — SeviTime",
+  "url": "https://sevitime.com/explorar/",
+  "inLanguage": "es-ES",
+  "description": "Los sitios de Sevilla y su provincia ordenados por lo que tienes cerca."
+}
+</script>
 <style>
-  html, body {
-    margin: 0;
-    min-height: 100%;
-    background: #0F1C1A;
-    color: #F2F7F6;
-    color-scheme: dark;
+  .explorar { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+  .explorar h1 {
+    font-size: var(--t-titulo); font-weight: 800; color: var(--texto);
+    letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 6px;
   }
-  @media (prefers-color-scheme: light) {
-    html, body {
-      background: #F2F7F6;
-      color: #172522;
-      color-scheme: light;
-    }
+  .explorar .intro { font-size: var(--t-cuerpo); color: var(--apagado); margin: 0; text-wrap: pretty; }
+  .explorar .intro a { color: var(--verde-claro); }
+
+  /* La ubicación se pide con un botón, nunca sola: el navegador pregunta y la
+     gente merece saber por qué antes de que salga el diálogo. */
+  .ubicacion-caja {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+    margin: 18px 0 0; padding: 14px;
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie);
+  }
+  .ubicacion-caja p { margin: 0; flex: 1 1 220px; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .btn-ubicacion {
+    flex: 0 0 auto; min-height: 44px; padding: 0 18px;
+    border: none; border-radius: var(--r-pill);
+    background: var(--verde-solido); color: #fff;
+    font: inherit; font-weight: 700; cursor: pointer;
+  }
+  .btn-ubicacion:hover { filter: brightness(1.08); }
+  .btn-ubicacion:disabled { opacity: .6; cursor: default; filter: none; }
+  .btn-ubicacion:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .aviso-ubicacion {
+    margin: 10px 0 0; padding: 10px 12px;
+    border: 1px solid var(--borde); border-radius: var(--r-sm);
+    background: var(--gris-bg); color: var(--texto); font-size: var(--t-cuerpo);
+  }
+
+  /* Buscador y chips, pegados arriba al desplazarse: en la app los filtros se
+     clavan en la cabecera y el resultado de tocar uno siempre se ve. */
+  .barra {
+    position: sticky; top: 0; z-index: 4;
+    margin: 18px -16px 0; padding: 12px 16px 8px;
+    background: var(--fondo);
+    border-bottom: 1px solid var(--borde);
+  }
+  .buscador { position: relative; display: block; }
+  .buscador input {
+    width: 100%; min-height: 46px; box-sizing: border-box;
+    padding: 0 14px 0 40px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: var(--superficie); color: var(--texto);
+    font: inherit; font-size: var(--t-item);
+  }
+  .buscador input::placeholder { color: var(--tenue); }
+  .buscador input:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 1px; }
+  .buscador .lupa {
+    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+    color: var(--tenue); pointer-events: none;
+  }
+  .chips { display: flex; flex-wrap: nowrap; gap: 6px; margin-top: 10px; overflow-x: auto; padding-bottom: 2px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips { scrollbar-width: none; }
+  .chip { flex: 0 0 auto; }
+
+  .ajustes { display: flex; flex-wrap: wrap; gap: 8px 14px; margin-top: 10px; }
+  .ajuste { display: inline-flex; align-items: center; gap: 6px; font-size: var(--t-etiqueta); color: var(--tenue); }
+  .ajuste select {
+    min-height: 36px; padding: 0 8px;
+    border: 1px solid var(--borde); border-radius: var(--r-sm);
+    background: var(--superficie); color: var(--texto); font: inherit; font-size: var(--t-etiqueta);
+  }
+  .ajuste select:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 1px; }
+
+  .cabecera-lista { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin: 20px 0 8px; }
+  .cabecera-lista h2 { font-size: var(--t-seccion); font-weight: 700; color: var(--texto); margin: 0; }
+  .resumen { font-size: var(--t-etiqueta); color: var(--tenue); margin: 0; }
+
+  .lista { list-style: none; margin: 0; padding: 0; --hueso-alto: 74px; --hueso-margen: 0 0 10px; }
+  /* Borde y no sombra, como las tarjetas de la app (decidido el 19-sep-2026). */
+  .sitio {
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); margin-bottom: 10px; overflow: hidden;
+  }
+  .sitio-enlace {
+    display: flex; gap: 12px; align-items: center;
+    padding: 12px; text-decoration: none; color: var(--texto);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .sitio-enlace:hover { background: var(--superficie-alta); }
+  }
+  .sitio-enlace:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: -3px; }
+  .sitio-ico {
+    flex: 0 0 auto; width: 44px; height: 44px; border-radius: var(--r-sm);
+    display: grid; place-items: center; font-size: 22px;
+  }
+  .sitio-txt { min-width: 0; flex: 1; }
+  .sitio-nombre {
+    display: block; font-size: var(--t-item); font-weight: 700; color: var(--texto);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sitio-meta {
+    display: flex; gap: 6px; margin-top: 2px;
+    font-size: var(--t-cuerpo); color: var(--apagado);
+  }
+  .sitio-meta .punto { color: var(--tenue); }
+  .sitio-dir {
+    display: block; margin-top: 2px; font-size: var(--t-etiqueta); color: var(--tenue);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .sitio-nota { flex: 0 0 auto; text-align: right; line-height: 1.25; }
+  .sitio-nota b { display: block; font-size: var(--t-item); color: var(--texto); font-variant-numeric: tabular-nums; }
+  .sitio-nota .estrellas { display: block; color: var(--dorado-texto); font-size: var(--t-etiqueta); white-space: nowrap; }
+  .sitio-nota small { display: block; font-size: var(--t-etiqueta); color: var(--tenue); }
+
+  .vacio {
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); padding: 22px; text-align: center;
+  }
+  .vacio p { margin: 0 0 12px; color: var(--apagado); font-size: var(--t-cuerpo); }
+  .vacio-enlace {
+    display: inline-block; min-height: 44px; line-height: 44px; padding: 0 18px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: transparent; color: var(--verde-claro);
+    font: inherit; font-weight: 600; text-decoration: none; cursor: pointer;
+  }
+  .vacio-enlace:hover { border-color: var(--verde-claro); }
+
+  .btn-mas {
+    display: block; width: 100%; min-height: 48px; margin-top: 4px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: var(--superficie); color: var(--texto);
+    font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn-mas:hover { border-color: var(--verde-claro); }
+  .btn-mas:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
+  .pie-explorar {
+    margin: 26px 0 0; padding-top: 18px; border-top: 1px solid var(--borde);
+    font-size: var(--t-cuerpo); color: var(--apagado);
+  }
+  .pie-explorar a { color: var(--verde-claro); }
+
+  @media (min-width: 720px) {
+    .explorar { padding-left: 24px; padding-right: 24px; }
+    .barra { margin-left: -24px; margin-right: -24px; padding-left: 24px; padding-right: 24px; }
+    .chips { flex-wrap: wrap; overflow: visible; }
   }
 </style>
-<link rel="icon" href="/favicon.ico" sizes="32x32">
 </head>
 <body>
-<p>Abriendo el mapa de SeviTime…</p>
-<p><a href="/mapa/">Continuar al mapa y explorar</a></p>
-<script>window.location.replace('/mapa/');</script>
+
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<noscript>
+  <p class="noscript-aviso">Esta página necesita JavaScript para medir las distancias y pintar la lista. Puedes ver <a href="/sitios/">los sitios por tipo</a> o <a href="/">descargar la app</a>.</p>
+</noscript>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="/explorar/" class="nav-link" aria-current="page">Explorar</a>
+      <a href="/rutas/" class="nav-link">Rutas</a>
+      <a href="/eventos/" class="nav-link">Eventos</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Añadir o corregir sitios</span>
+      </a>
+      </div>
+      <div id="auth-seccion"></div>
+    </div>
+  </div>
+</nav>
+
+<main class="explorar" id="contenido" tabindex="-1">
+  <h1>Explorar Sevilla</h1>
+  <p class="intro">Bares, restaurantes, monumentos, museos y parques de Sevilla y su provincia. También están todos en <a href="/mapa/">el mapa</a>.</p>
+
+  <div class="ubicacion-caja" id="ubicacion-caja">
+    <p>Dinos dónde estás y ordenamos la lista por lo que tienes más cerca. Tu ubicación no sale de este móvil.</p>
+    <button class="btn-ubicacion" id="btn-ubicacion" type="button">Ver lo que tengo cerca</button>
+  </div>
+  <p class="aviso-ubicacion" id="aviso-ubicacion" role="status" hidden></p>
+
+  <div class="barra">
+    <label class="buscador">
+      <span class="solo-lectores">Buscar un sitio por su nombre o su calle</span>
+      <svg class="lupa" width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M15.5 14h-.79l-.28-.27a6.5 6.5 0 1 0-.7.7l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0A4.5 4.5 0 1 1 14 9.5 4.5 4.5 0 0 1 9.5 14z"/></svg>
+      <input id="buscar" type="search" enterkeyhint="search" autocomplete="off"
+             placeholder="Buscar un bar, un monumento, una calle…">
+    </label>
+    <div class="chips" id="chips" role="group" aria-label="Filtrar por tipo de sitio"></div>
+    <div class="ajustes">
+      <label class="ajuste" for="orden">Ordenar
+        <select id="orden">
+          <option value="distancia">Más cercano</option>
+          <option value="nombre">Nombre</option>
+          <option value="valoracion">Valoración</option>
+        </select>
+      </label>
+      <label class="ajuste" for="radio">Hasta
+        <select id="radio"></select>
+      </label>
+    </div>
+  </div>
+
+  <div class="cabecera-lista">
+    <h2 id="titulo-lista">En el centro de Sevilla</h2>
+    <p class="resumen" id="resumen" aria-live="polite">Cargando los sitios…</p>
+  </div>
+
+  <!-- Las siluetas ocupan el sitio de las tarjetas mientras llega la foto
+       diaria; explorar.js las borra al pintar la lista. -->
+  <ul class="lista" id="lista" aria-busy="true">
+    <li class="hueso" aria-hidden="true"></li>
+    <li class="hueso" aria-hidden="true"></li>
+    <li class="hueso" aria-hidden="true"></li>
+    <li class="hueso" aria-hidden="true"></li>
+    <li class="hueso" aria-hidden="true"></li>
+    <li class="hueso" aria-hidden="true"></li>
+  </ul>
+  <div id="centinela" aria-hidden="true"></div>
+  <button class="btn-mas" id="btn-mas" type="button" hidden>Ver más sitios</button>
+
+  <p class="pie-explorar">
+    Los sitios son de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>
+    y de lo que aporta la gente. ¿Falta uno o hay un dato mal?
+    <a href="/mapa/?modo=colaborar">Añádelo o corrígelo</a>.
+  </p>
+</main>
+
+<footer>
+  <a href="/sitios/">Sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/rutas/">Rutas</a>
+  <span aria-hidden="true">·</span>
+  <a href="/ranking/">Cuadro de honor</a>
+  <span aria-hidden="true">·</span>
+  <a href="/mapa/?modo=colaborar">Añadir o corregir sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/derechos/">Imágenes y derechos</a>
+  <span aria-hidden="true">·</span>
+  <a href="/privacidad/">Privacidad</a>
+  <span aria-hidden="true">·</span>
+  <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
+</footer>
+
+<script defer src="/visitas.js?v=2c5ad387"></script>
 </body>
 </html>

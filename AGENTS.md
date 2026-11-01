@@ -124,9 +124,70 @@ Detalles que hay que respetar al tocarlo:
   comprobación: si se quita, con sesión iniciada las visitas esperan el tiempo
   de espera entero. Para un navegador o un móvil donde no se vaya a iniciar
   sesión: entrar una vez en `sevitime.com/?nocontar=1`.
-- `explorar/` queda fuera a propósito: es solo un `window.location.replace`
-  a `/mapa/`, y contarla sería contar dos veces la misma visita.
+- `explorar/` **ya sí se cuenta** (1-nov-2026): dejó de ser una redirección a
+  `/mapa/` y es la pantalla principal de la web. Hace falta aplicar
+  `docs/sql/web_visitas_explorar.sql` en el repo de la app; hasta que se
+  aplique, sus visitas caen en «otra».
 - Lo ve el administrador en `/admin/` → «Uso de la app» → «Visitas de la web».
+
+## `/explorar/`: los sitios que tienes cerca
+
+Desde el **1 de noviembre de 2026** es la pantalla principal de la web y lo que
+abre «Explorar» en la navegación de todas las páginas. Antes era un
+`window.location.replace` a `/mapa/`, que es un editor del mapa, no una lista:
+quien entraba desde un iPhone —donde no hay app— no tenía la pantalla principal
+de SeviTime en ninguna parte.
+
+Es la gemela de `HomeScreen` en la app, con el mismo criterio:
+
+- **La ubicación la da el navegador y solo al pulsar** «Ver lo que tengo cerca».
+  No se envía a ningún servidor. Que ya se dio el permiso se recuerda en
+  `localStorage` (`sevi-ubicacion-ok`) para no volver a preguntar.
+- **Sin ubicación no se dice «cerca de ti»**: se dice «En el centro de Sevilla»
+  y se ordena por valoración, igual que hace la app en escritorio
+  (`CercaDeTiHeader`). Llamarlo «cerca» sería mentir.
+- **Más allá de 60 km se avisa y se usa el centro**: a 390 km de Sevilla la
+  posición es correcta y aun así no sirve de nada.
+- **«Todo» no enseña servicios** (cajero, banco, farmacia, parking) ni el
+  estadio: `TIPOS_DE_TODO` en `lugares.js` es el espejo de
+  `_computePlacesFiltrados` en la app. Si cambia allí, cambia aquí.
+- **«Valoración» ordena por `place_ratings.score`**, la media bayesiana que
+  calcula el servidor (prior de 5 votos a 3,6). Nunca se enseña como número;
+  lo que se ve es `average_rating`. Las 97 filas se piden de una vez, sin
+  trocear por clave como hace la app.
+- **Buscando por texto el radio no manda**: quien escribe «alcázar» quiere el
+  Alcázar esté a 300 m o a 3 km. Se busca por nombre y por calle
+  (`direccion`, que `aLugar` saca de `addr:street` como la app).
+
+**No pinta mapa a propósito.** Está en `/mapa/`, y traerlo aquí son ~600 KB de
+librería y teselas en datos móviles cuando lo que se mira en un móvil es la
+lista. Tampoco tiene «¿está abierto?», guardados ni modo explorador, y en la
+tarjeta no sale el pueblo: en la app viene de otra foto (la de los núcleos de
+población) que aquí no se descarga.
+
+## Aplicación instalable (`manifest.webmanifest`)
+
+Desde el **1 de noviembre de 2026** todas las páginas declaran un manifest, y
+con él «Añadir a pantalla de inicio» deja la web a pantalla completa con su
+icono. Es lo que más se acerca a tener la app en un iPhone, que es de donde
+vino la petición.
+
+- Los iconos son `favicon-192.png`, `favicon-512.png` y
+  `icono-maskable-512.png` (este con el verde de marca de fondo y el logo al
+  72%: lo que Android recorta se come fondo, no logo). Salen de
+  `assets/icon.png` del repo de la app, reducidos; **no** del PNG de 691×691 a
+  pelo, que es lo que dejó el favicon gris en Google.
+- `start_url` es `/explorar/`, no la portada: quien se la instala quiere lo que
+  tiene cerca, no el argumentario de descarga.
+- **No hay service worker, y es una decisión.** Sin él Chrome en Android no
+  ofrece el banner de instalación, pero iOS no lo necesita para «Añadir a
+  pantalla de inicio», y un service worker sirviendo ficheros cacheados choca
+  con el versionado por dirección (`?v=`) que es lo que hoy garantiza que tras
+  publicar no se pinte con el CSS viejo.
+- El `<head>` lleva además `apple-mobile-web-app-*`: en Safari son esas metas
+  las que dan la pantalla completa y el nombre del icono. Si se añade una
+  página nueva, hay que copiarle esas cinco líneas (y el generador de
+  `/sitios/` ya las pone).
 
 ## `/lugar/`: la página de un sitio
 
@@ -182,12 +243,42 @@ compartir sigue siendo la genérica.
 
 **Nota y reseñas (desde el 11-oct-2026):** la ficha enseña la media de
 `place_ratings` y las reseñas aprobadas de `fn_resenas_publicas`, de cinco en
-cinco, con sus fotos, igual que la app y también sin sesión. **Solo se leen**:
-valorar, reseñar y marcar una reseña como útil piden cuenta en la app y aquí
-no se ofrecen; la ficha manda a la app. Lo que viene de una reseña es texto de
-un usuario y se pinta con `textContent`. Quien no tiene apodo llega como
-«Usuario de SeviTime» y no se enlaza a ningún perfil. Si las reseñas no se
-pueden leer, la sección no sale: no se dice «no tiene reseñas» sin saberlo.
+cinco, con sus fotos, igual que la app y también sin sesión. Lo que viene de
+una reseña es texto de un usuario y se pinta con `textContent`. Quien no tiene
+apodo llega como «Usuario de SeviTime» y no se enlaza a ningún perfil. Si las
+reseñas no se pueden leer, la sección no sale: no se dice «no tiene reseñas»
+sin saberlo.
+
+**Valorar y reseñar desde la web (desde el 1-nov-2026, `lugar/resena.js`):**
+hasta entonces la ficha solo leía y el pie decía «ábrelo en SeviTime». En
+Android eso es un empujón a la app; en un iPhone es un callejón sin salida,
+porque la app no existe. Ahora desde aquí se valora, se reseña (texto y hasta
+3 fotos), se cambia, se borra y se marcan útiles las de los demás. Detalles que
+hay que respetar:
+
+- **El servidor manda.** Hace falta apodo para firmar
+  (`fn_guardar_nombre_publico`), todo pasa por moderación y qué necesita
+  revisión al editar lo decide `fn_editar_resena`, no esta página. La anon key
+  está a la vista en el HTML: una regla que viviera solo aquí se saltaría
+  llamando a la API.
+- **El voto de estrellas se escribe al enviar la reseña**, nunca al tocar una
+  estrella, igual que la app desde la 0.0.57. Si ese `upsert` falla no se avisa:
+  el trigger `trg_sync_voto_resena_aprobada` lo pone al aprobar.
+- **`supabase-js` NO se carga en esta página.** `auth.js` la trae sola si ya
+  había sesión en este navegador, o al pulsar «Entrar» (`window.SEVI.conSupabase`).
+  Quien llega de un enlace compartido y solo lee no se descarga 216 KB.
+- **Las fotos se reducen a 1600 px aquí antes de subir** al bucket
+  `sugerencias-fotos`, con la misma ruta que la app (`uid/marca_indice.jpg`).
+  Una foto de un móvil actual son 4 MB.
+- **La lista pública se vuelve a pedir con el token del usuario** cuando entra:
+  solo entonces `fn_resenas_publicas` dice qué reseñas son suyas y a cuáles ya
+  dio «útil». Ese repintado tiene un contador de generación
+  (`generacionOpiniones`): sin él, la carga inicial y la de la sesión se
+  pisaban y salían la nota dos veces y ocho reseñas donde había cinco.
+- **Al volver del login se conserva el `?k=`**: `auth.js` limpia solo los
+  parámetros del login (`sinRastroDelLogin`) y, por si la lista de direcciones
+  permitidas de Supabase rechazara una con `?k=`, la clave queda guardada en
+  `sessionStorage`.
 
 La ficha enlaza a `/mapa/?modo=corregir&k=<place_key>` para abrir la corrección
 con ese sitio ya seleccionado. El mapa conserva esos parámetros durante el

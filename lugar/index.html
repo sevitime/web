@@ -28,6 +28,10 @@
 <link rel="icon" href="/favicon.svg" type="image/svg+xml">
 <link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SeviTime">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css?v=772908e3">
 <link rel="stylesheet" href="/libs/maplibre-gl.css">
@@ -35,7 +39,14 @@
 <script defer src="/libs/maplibre-gl.js"></script>
 <script defer src="/libs/pmtiles.js"></script>
 <script defer src="/mapa/estilo-mapa.js?v=63b64d86"></script>
-<script defer src="/lugares.js?v=5325297a"></script>
+<script defer src="/lugares.js?v=02fd92ac"></script>
+<!-- Para valorar y reseñar hace falta sesión. La librería de Supabase NO se
+     carga aquí a propósito: `auth.js` la trae sola si ya había sesión en este
+     navegador, o al pulsar «Entrar». Quien llega de un enlace compartido y
+     solo lee no se descarga 216 KB. La nota y las reseñas se leen con la
+     clave pública por `fetch`. -->
+<script defer src="/auth.js?v=f53cca1e"></script>
+<script defer src="/lugar/resena.js?v=87716e58"></script>
 <style>
   .sitio { max-width: 680px; margin: 0 auto; padding: 32px 24px 60px; }
 
@@ -97,7 +108,9 @@
   .opiniones h2 { font-size: var(--t-seccion); font-weight: 700; color: var(--texto); margin-bottom: 8px; }
   .opiniones-nota { display: flex; align-items: baseline; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
   .opiniones-media { font-size: var(--t-display); font-weight: 800; color: var(--texto); line-height: 1; font-variant-numeric: tabular-nums; }
-  .estrellas { color: var(--dorado, #F9A825); letter-spacing: 1px; white-space: nowrap; }
+  /* `--dorado-texto` y no `--dorado`: en tema claro el #FCC440 sobre blanco
+     se queda muy por debajo del 4,5:1, y estas estrellas son texto. */
+  .estrellas { color: var(--dorado-texto); letter-spacing: 1px; white-space: nowrap; }
   .opiniones-cuantas { color: var(--apagado); font-size: var(--t-cuerpo); }
   .opiniones-vacio { color: var(--apagado); font-size: var(--t-cuerpo); }
   .resenas { list-style: none; padding: 0; margin: 10px 0 0; }
@@ -119,6 +132,83 @@
   }
   .resenas-mas:hover { border-color: var(--verde-claro); }
   .opiniones-pie { margin-top: 12px; font-size: var(--t-etiqueta); color: var(--tenue); }
+
+  /* «Útil» en la reseña de otra persona. Solo sale con sesión y nunca en la
+     propia: la RLS la rechazaría. */
+  .resena-util-btn {
+    margin-top: 8px; min-height: 36px; padding: 0 14px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: transparent; color: var(--texto);
+    font: inherit; font-size: var(--t-etiqueta); font-weight: 600; cursor: pointer;
+  }
+  .resena-util-btn:hover { border-color: var(--verde-claro); }
+  .resena-util-btn.marcado { border-color: var(--verde-claro); color: var(--verde-claro); }
+  .resena-util-btn:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
+  /* ---- Tu reseña (escribir, cambiar, borrar) ---- */
+  .tu-resena {
+    margin: 0 0 28px; padding: 18px;
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie);
+  }
+  .tu-resena h2 { font-size: var(--t-seccion); font-weight: 700; color: var(--texto); margin: 0 0 10px; }
+  .resena-nota { margin: 10px 0 0; font-size: var(--t-etiqueta); color: var(--tenue); text-wrap: pretty; }
+  .resena-aviso { margin: 10px 0 0; font-size: var(--t-cuerpo); color: var(--texto); }
+  .resena-estado { margin: 0 0 12px; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .resena-estado.bueno { color: var(--ok-fg); }
+  .resena-estado.malo { color: var(--error); }
+
+  .resena-estrellas { display: flex; gap: 2px; margin-bottom: 10px; }
+  .resena-estrella {
+    border: none; background: none; cursor: pointer;
+    min-width: 44px; min-height: 44px; padding: 0;
+    font-size: 30px; line-height: 1; color: var(--tenue);
+  }
+  .resena-estrella.puesta { color: var(--dorado-texto); }
+  .resena-estrella:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
+  .resena-campo {
+    display: block; width: 100%; box-sizing: border-box; padding: 10px 12px;
+    border: 1px solid var(--borde); border-radius: var(--r-sm);
+    background: var(--fondo); color: var(--texto); font: inherit; font-size: var(--t-cuerpo);
+    resize: vertical;
+  }
+  .resena-campo:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 1px; }
+
+  .resena-fotos-elegidas { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .resena-foto-marco { position: relative; width: 84px; height: 84px; }
+  .resena-foto-marco img {
+    width: 100%; height: 100%; object-fit: cover;
+    border-radius: var(--r-sm); border: 1px solid var(--borde);
+  }
+  .resena-foto-quitar {
+    position: absolute; top: -6px; right: -6px; width: 24px; height: 24px;
+    border-radius: 50%; border: 1px solid var(--borde);
+    background: var(--superficie-alta); color: var(--texto);
+    font: inherit; font-size: 15px; line-height: 1; cursor: pointer;
+  }
+  .resena-foto-anadir {
+    width: 84px; height: 84px; display: grid; place-items: center; cursor: pointer;
+    border: 1px dashed var(--borde); border-radius: var(--r-sm);
+    color: var(--apagado); font-size: var(--t-etiqueta); font-weight: 600;
+  }
+  .resena-foto-anadir:hover { border-color: var(--verde-claro); color: var(--verde-claro); }
+  .resena-foto-anadir input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+  .resena-foto-anadir:focus-within { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
+  .resena-acciones { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 14px; }
+  .resena-btn {
+    min-height: 46px; padding: 0 20px; border-radius: var(--r-pill);
+    border: 1px solid var(--borde); background: transparent; color: var(--texto);
+    font: inherit; font-weight: 700; cursor: pointer;
+  }
+  .resena-btn.primario { background: var(--verde-solido); border-color: var(--verde-solido); color: #fff; }
+  .resena-btn.primario:hover { filter: brightness(1.08); }
+  .resena-btn.peligro { color: var(--error); }
+  .resena-btn:disabled { opacity: .6; cursor: default; filter: none; }
+  .resena-btn:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .resena-apodo .resena-campo { margin-top: 10px; }
+  .resena-apodo .resena-btn { margin-top: 10px; }
 
   .sitio-acciones { display: grid; gap: 10px; }
   .sitio-cta, .sitio-corregir {
@@ -153,7 +243,7 @@
       <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
       <div class="nav-enlaces" id="nav-enlaces">
       <a href="/" class="nav-link">Inicio</a>
-      <a href="/mapa/" class="nav-link">Explorar</a>
+      <a href="/explorar/" class="nav-link">Explorar</a>
       <a href="/rutas/" class="nav-link">Rutas</a>
       <a href="/eventos/" class="nav-link">Eventos</a>
       <a href="/ranking/" class="nav-link">Cuadro de honor</a>
@@ -162,6 +252,7 @@
         <span>Añadir o corregir sitios</span>
       </a>
       </div>
+      <div id="auth-seccion"></div>
     </div>
   </div>
 </nav>
@@ -211,8 +302,11 @@
       <p class="opiniones-vacio" id="opiniones-vacio" hidden>Todavía no tiene reseñas.</p>
       <ul class="resenas" id="resenas"></ul>
       <button class="resenas-mas" id="resenas-mas" type="button" hidden>Ver más reseñas</button>
-      <p class="opiniones-pie">Para valorar este sitio o dejar tu reseña, ábrelo en SeviTime e inicia sesión.</p>
     </section>
+
+    <!-- Aquí monta `lugar/resena.js` el bloque de valorar y reseñar, cuando
+         la ficha ya sabe de qué sitio se trata. -->
+    <div id="hueco-tu-resena"></div>
 
     <div class="sitio-acciones">
       <a class="sitio-cta" id="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
@@ -223,7 +317,7 @@
       </a>
     </div>
     <p class="sitio-cta-pie" id="cta-pie">
-      Con la app ves si está abierto ahora, dejas tu reseña y sabes cómo llegar.
+      Con la app ves si está abierto ahora, lo guardas y sabes cómo llegar.
     </p>
   </div>
 
@@ -259,7 +353,23 @@
 // enseñe el sitio y ofrezca la app, que es lo que no pasaba.
 (function () {
   const PLAY = 'https://play.google.com/store/apps/details?id=com.selu.sevitime';
-  const clave = new URLSearchParams(location.search).get('k');
+  // La clave del sitio. Si falta, se mira la que guardó `lugar/resena.js`
+  // antes de mandar a alguien al login: así, aunque Supabase devuelva a
+  // `/lugar/` sin el `?k=`, se vuelve a la ficha que se estaba mirando y no
+  // a un «no encontramos ese sitio».
+  const clave = new URLSearchParams(location.search).get('k') || claveGuardada();
+
+  function claveGuardada() {
+    try {
+      const k = sessionStorage.getItem('sevi-lugar-abierto');
+      // Se usa una vez y se borra: si no, entrar en `/lugar/` sin clave
+      // llevaría semanas después al último sitio que alguien miró.
+      sessionStorage.removeItem('sevi-lugar-abierto');
+      if (k) history.replaceState(null, '', '/lugar/?k=' + encodeURIComponent(k));
+      return k;
+    } catch (_) { return null; }
+  }
+
   const ficha = document.getElementById('ficha');
   const aviso = document.getElementById('no-encontrado');
 
@@ -343,6 +453,26 @@
   const POR_TANDA = 5;
   let datosEstructurados = null;
   let resenasPintadas = 0;
+  // Qué repintado de las opiniones es el válido. Si entra una sesión
+  // mientras la primera carga está en vuelo, las dos vaciaban la lista y
+  // luego las dos añadían sus filas: salía la nota dos veces y ocho reseñas
+  // donde había cinco. Gana el último que empezó.
+  let generacionOpiniones = 0;
+
+  // El token de la sesión, si la hay. Importa para `fn_resenas_publicas`:
+  // con la clave pública a secas el servidor no puede decir cuáles reseñas
+  // son tuyas ni a cuáles ya diste «útil», y el botón saldría mal puesto.
+  let tokenActual = null;
+
+  function leerToken() {
+    const sb = window.SEVI && window.SEVI.sb;
+    if (!sb) return Promise.resolve(null);
+    return sb.auth.getSession()
+      .then(function (r) {
+        return (r && r.data && r.data.session) ? r.data.session.access_token : null;
+      })
+      .catch(function () { return null; });
+  }
 
   function pedir(ruta, opciones) {
     const o = opciones || {};
@@ -350,7 +480,7 @@
       method: o.cuerpo ? 'POST' : 'GET',
       headers: {
         apikey: SUPABASE_KEY,
-        Authorization: 'Bearer ' + SUPABASE_KEY,
+        Authorization: 'Bearer ' + (tokenActual || SUPABASE_KEY),
         'Content-Type': 'application/json',
       },
       body: o.cuerpo ? JSON.stringify(o.cuerpo) : undefined,
@@ -610,7 +740,11 @@
       fecha.textContent = cuando.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
       cab.appendChild(fecha);
     }
-    if (r.utiles_count > 0) {
+    // Con sesión, el recuento se convierte en el botón de «Útil» (lo pone
+    // `lugar/resena.js`, que es quien puede escribirlo). Sin sesión, o en la
+    // reseña propia, se queda en el texto de siempre.
+    const boton = window.SeviResena ? window.SeviResena.botonUtil(r) : null;
+    if (!boton && r.utiles_count > 0) {
       const util = document.createElement('span');
       util.className = 'resena-util';
       util.textContent = r.utiles_count === 1 ? 'Útil para 1 persona' : 'Útil para ' + r.utiles_count + ' personas';
@@ -659,16 +793,20 @@
       });
       li.appendChild(tira);
     }
+    // El botón va al final, debajo del texto y de las fotos: primero se lee
+    // la reseña y después se dice si ha servido.
+    if (boton) li.appendChild(boton);
     return li;
   }
 
-  function cargarResenas() {
+  function cargarResenas(generacion) {
     const boton = document.getElementById('resenas-mas');
     boton.disabled = true;
     // Se pide una de más para saber si quedan, sin una segunda llamada.
     return pedir('rpc/fn_resenas_publicas', {
       cuerpo: { p_place_key: clave, p_limit: POR_TANDA + 1, p_offset: resenasPintadas },
     }).then(function (filas) {
+      if (generacion !== undefined && generacion !== generacionOpiniones) return;
       const lista = document.getElementById('resenas');
       (filas || []).slice(0, POR_TANDA).forEach(function (r) {
         lista.appendChild(tarjetaResena(r));
@@ -681,13 +819,28 @@
 
   function pintarOpiniones() {
     const seccion = document.getElementById('opiniones');
-    Promise.all([
+    const caja = document.getElementById('opiniones-nota');
+    // Al recargar (alguien entra, deja su reseña o la borra) se parte de
+    // cero: si no, la nota se pintaría dos veces y las reseñas saldrían
+    // duplicadas debajo de las anteriores.
+    caja.textContent = '';
+    caja.hidden = true;
+    document.getElementById('resenas').textContent = '';
+    document.getElementById('resenas-mas').hidden = true;
+    resenasPintadas = 0;
+    const generacion = ++generacionOpiniones;
+
+    return Promise.all([
       pedir('place_ratings?select=average_rating,vote_count&place_key=eq.' + encodeURIComponent(clave))
-        .then(function (filas) { pintarNota(filas && filas[0]); })
+        .then(function (filas) {
+          if (generacion !== generacionOpiniones) return;
+          pintarNota(filas && filas[0]);
+        })
         .catch(function () {}),
-      cargarResenas().then(function () { return true; }, function () { return false; }),
+      cargarResenas(generacion).then(function () { return true; }, function () { return false; }),
     ]).then(function (resultado) {
-      const hayNota = !document.getElementById('opiniones-nota').hidden;
+      if (generacion !== generacionOpiniones) return;
+      const hayNota = !caja.hidden;
       const seLeyeron = resultado[1];
       // Si las reseñas no se han podido leer y tampoco hay nota, la sección
       // no se enseña: «todavía no tiene reseñas» sería afirmar algo que no
@@ -696,11 +849,6 @@
       document.getElementById('opiniones-vacio').hidden =
         !seLeyeron || hayNota || resenasPintadas > 0;
       seccion.hidden = false;
-    });
-    document.getElementById('resenas-mas').addEventListener('click', function () {
-      cargarResenas().catch(function () {
-        document.getElementById('resenas-mas').disabled = false;
-      });
     });
   }
 
@@ -764,8 +912,44 @@
     nombre.classList.remove('cargando');
     document.title = p.nombre + ' — SeviTime';
     paraBuscadores(p);
+
+    // «Ver más reseñas» se conecta una sola vez, no en cada recarga de la
+    // sección: si no, un clic pediría tres tandas a la vez.
+    document.getElementById('resenas-mas').addEventListener('click', function () {
+      cargarResenas().catch(function () {
+        document.getElementById('resenas-mas').disabled = false;
+      });
+    });
+
+    // La sección se puede repintar entera: la usa `lugar/resena.js` cuando
+    // alguien entra, deja su reseña o la borra, y hace falta volver a
+    // preguntar con su token para saber qué es suyo.
+    window.SeviFicha = {
+      recargarOpiniones: function () {
+        return leerToken().then(function (t) {
+          tokenActual = t;
+          return pintarOpiniones();
+        });
+      },
+    };
+
     pintarOpiniones();
     pintarExtras(p);
+
+    // Valorar y reseñar. Va justo debajo de lo que dice la gente y encima de
+    // los botones del final: primero se lee y después se opina.
+    if (window.SeviResena) {
+      window.SeviResena.iniciar({
+        clave: clave,
+        nombre: p.nombre,
+        lat: p.lat,
+        lon: p.lon,
+        tipo: p.tipo,
+        label: p.label,
+        osmType: p.osmType,
+        osmId: p.osmId,
+      }, document.getElementById('hueco-tu-resena'));
+    }
     document.getElementById('emoji').textContent = p.emoji || '📍';
     document.getElementById('tipo').textContent = p.label || '';
 
