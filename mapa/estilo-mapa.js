@@ -5,15 +5,24 @@
 // Da por hecho que maplibre-gl y pmtiles ya están cargados en la página, y que
 // quien lo use registra antes el protocolo `pmtiles`.
 
-// Dominio propio y NO `sevitime-tiles.sevitime-app.workers.dev` (1-nov-2026):
-// los operadores españoles interceptan `workers.dev` con un certificado
-// suplantado por los bloqueos de Cloudflare, el navegador corta la conexión
-// —y con HSTS ni deja continuar— y el mapa no cargaba. El Worker, el fichero
-// y el código estaban bien: lo que estaba señalado era el nombre. Apunta al
-// mismo Worker; la dirección vieja sigue viva porque la app publicada la
-// lleva escrita dentro hasta el próximo AAB.
+// El `.pmtiles` se sirve desde **el propio sitio** (GitHub Pages), y no desde
+// Cloudflare (1-nov-2026).
+//
+// Estuvo en un Worker de Cloudflare, primero por `workers.dev` y luego por
+// `tiles.sevitime.com`, y **las dos fallan**: los operadores españoles
+// interceptan Cloudflare con un certificado suplantado por los bloqueos de
+// LaLiga, y el navegador corta («ERR_CERT_AUTHORITY_INVALID»). Probado en un
+// móvil con 4G y en el navegador. Cambiar de nombre no sirvió de nada: el
+// bloqueo sigue a las IPs, no al dominio.
+//
+// Aquí el fichero viaja con la web: mismo origen, sin CORS y exactamente las
+// mismas dependencias que tiene la página que lo pinta. GitHub Pages sirve
+// peticiones por rango (`206`), que es lo que PMTiles necesita.
+//
+// El Worker y `tiles.sevitime.com` se quedan vivos: los llevan dentro las
+// versiones ya publicadas de la app.
 const SEVITIME_TILES_URL =
-  'https://tiles.sevitime.com/sevilla-provincia.pmtiles';
+  'https://sevitime.com/tiles/sevilla-provincia.pmtiles';
 
 // El mapa deja un margen de unos 7–8 km alrededor del recorte de la provincia:
 // permite seleccionar aportaciones limítrofes sin que, al alejarse, se termine
