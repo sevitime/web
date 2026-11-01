@@ -345,6 +345,23 @@ hay que respetar:
   permitidas de Supabase rechazara una con `?k=`, la clave queda guardada en
   `sessionStorage`.
 
+**«Quedar aquí» (desde el 1-nov-2026, `lugar/quedar.js`):** la web sabía
+**abrir** un punto de encuentro (`/encuentro/?p=…`) pero no crearlo, así que
+con un iPhone podías ir adonde te citaran y no citar a nadie. Es el gemelo de
+`quedar_aqui_sheet.dart`: mismos plazos (30/60/120), misma pista de 80
+caracteres y el mismo mensaje al compartir. Lo que hay que respetar:
+
+- **No se comparte la ubicación de nadie.** Viaja *el sitio* que se tiene
+  abierto, con las coordenadas públicas de su ficha. Esta página no pide
+  permiso de ubicación, y no debe empezar a pedirlo.
+- **El plazo, el caducar y el «uno por persona» los decide el servidor**
+  (`fn_crear_punto_encuentro`, de 15 a 180 minutos). Aquí solo se ofrecen tres
+  plazos y se avisa **antes** de que uno nuevo sustituye al anterior.
+- **Se puede terminar el que haya** (`fn_cancelar_punto_encuentro`): la
+  política de privacidad lo promete, así que tiene que poderse desde donde se
+  crea.
+- Compartir: `navigator.share` donde exista, y copiar el enlace donde no.
+
 La ficha enlaza a `/mapa/?modo=corregir&k=<place_key>` para abrir la corrección
 con ese sitio ya seleccionado, y `/explorar/` a
 `/mapa/?modo=sugerir&lat=…&lon=…` para añadir uno en tu posición. Los dos modos

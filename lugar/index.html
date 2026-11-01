@@ -47,6 +47,7 @@
      clave pública por `fetch`. -->
 <script defer src="/auth.js?v=f53cca1e"></script>
 <script defer src="/lugar/resena.js?v=87716e58"></script>
+<script defer src="/lugar/quedar.js?v=f4cc71d3"></script>
 <style>
   .sitio { max-width: 680px; margin: 0 auto; padding: 32px 24px 60px; }
 
@@ -208,6 +209,46 @@
   .resena-btn:disabled { opacity: .6; cursor: default; filter: none; }
   .resena-btn:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
   .resena-apodo .resena-campo { margin-top: 10px; }
+
+  /* ---- Quedar aquí ---- */
+  .quedar {
+    margin: 0 0 28px; padding: 18px;
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie);
+  }
+  .quedar h2 { font-size: var(--t-seccion); font-weight: 700; color: var(--texto); margin: 0 0 10px; }
+  .quedar-nota { margin: 0 0 12px; font-size: var(--t-cuerpo); color: var(--apagado); text-wrap: pretty; }
+  .quedar-etiqueta {
+    margin: 0 0 8px; font-size: var(--t-etiqueta); font-weight: 700;
+    color: var(--tenue); text-transform: none;
+  }
+  .quedar-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+  .quedar-campo {
+    display: block; width: 100%; box-sizing: border-box; padding: 10px 12px;
+    border: 1px solid var(--borde); border-radius: var(--r-sm);
+    background: var(--fondo); color: var(--texto); font: inherit; font-size: var(--t-cuerpo);
+  }
+  .quedar-campo:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 1px; }
+  .quedar-btn {
+    min-height: 46px; margin-top: 12px; padding: 0 20px; border-radius: var(--r-pill);
+    border: 1px solid var(--borde); background: transparent; color: var(--texto);
+    font: inherit; font-weight: 700; cursor: pointer;
+  }
+  .quedar-btn.primario { background: var(--verde-solido); border-color: var(--verde-solido); color: #fff; }
+  .quedar-btn.primario:hover { filter: brightness(1.08); }
+  .quedar-btn.peligro { color: var(--error); }
+  .quedar-btn:disabled { opacity: .6; cursor: default; filter: none; }
+  .quedar-btn:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  /* El punto que ya está en pie: se enseña antes del formulario porque uno
+     nuevo lo sustituye, y eso no puede ser una sorpresa. */
+  .quedar-en-pie {
+    margin: 0 0 16px; padding: 12px 14px;
+    border: 1px solid var(--verde-claro); border-radius: var(--r-sm);
+    background: var(--gris-bg);
+  }
+  .quedar-en-pie-texto { margin: 0; font-size: var(--t-cuerpo); color: var(--texto); }
+  .quedar-acciones { display: flex; flex-wrap: wrap; gap: 10px; }
+  .quedar-aviso { margin: 12px 0 0; font-size: var(--t-cuerpo); color: var(--texto); overflow-wrap: anywhere; }
   .resena-apodo .resena-btn { margin-top: 10px; }
 
   .sitio-acciones { display: grid; gap: 10px; }
@@ -305,8 +346,10 @@
     </section>
 
     <!-- Aquí monta `lugar/resena.js` el bloque de valorar y reseñar, cuando
-         la ficha ya sabe de qué sitio se trata. -->
+         la ficha ya sabe de qué sitio se trata. Debajo, `lugar/quedar.js`
+         pone el de «Quedar aquí». -->
     <div id="hueco-tu-resena"></div>
+    <div id="hueco-quedar"></div>
 
     <div class="sitio-acciones">
       <a class="sitio-cta" id="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
@@ -949,6 +992,16 @@
         osmType: p.osmType,
         osmId: p.osmId,
       }, document.getElementById('hueco-tu-resena'));
+    }
+
+    // «Quedar aquí»: manda un enlace con ESTE sitio, no con tu ubicación.
+    if (window.SeviQuedar) {
+      window.SeviQuedar.iniciar({
+        clave: clave,
+        nombre: p.nombre,
+        lat: p.lat,
+        lon: p.lon,
+      }, document.getElementById('hueco-quedar'));
     }
     document.getElementById('emoji').textContent = p.emoji || '📍';
     document.getElementById('tipo').textContent = p.label || '';
