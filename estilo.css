@@ -706,6 +706,59 @@ footer span { margin: 0 8px; }
 }
 .aviso-teselas-cerrar:hover { color: var(--texto); }
 
+/* ---------- «añádela a tu pantalla de inicio» (solo iPhone y iPad) ----------
+
+   En Android el navegador ofrece instalar la web él solo; en iOS no lo ofrece
+   ninguno, así que ese paso hay que contarlo (ver `nav.js`). Mismo formato que
+   el aviso del mapa: barra abajo, cerrable y sin tapar el contenido. */
+.instalar-ios {
+  position: fixed;
+  left: 50%;
+  bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  z-index: 60;
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  width: max-content;
+  max-width: min(92vw, 460px);
+  padding: 12px 12px 12px 16px;
+  background: var(--superficie);
+  color: var(--texto);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-sm);
+  box-shadow: var(--sombra-2);
+  font-size: var(--t-cuerpo);
+  line-height: 1.4;
+}
+.instalar-ios p { margin: 0; }
+.instalar-ios strong { color: var(--verde-claro); font-weight: 600; }
+.instalar-ios-cerrar {
+  flex: 0 0 auto;
+  /* 44 px de lado: es el mínimo de Apple para algo que se toca con el dedo, y
+     este botón convive con el borde de la pantalla. */
+  min-width: 44px;
+  min-height: 44px;
+  margin: -12px -8px -12px 0;
+  border: none;
+  background: none;
+  color: var(--apagado);
+  font-size: 20px;
+  line-height: 1;
+  cursor: pointer;
+}
+.instalar-ios-cerrar:hover { color: var(--texto); }
+
+@media (prefers-reduced-motion: no-preference) {
+  @keyframes asomar-instalar {
+    from { opacity: 0; transform: translate(-50%, 12px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+  .instalar-ios {
+    animation: asomar-instalar 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  }
+}
+
 /* ---------- movimiento de la portada ---------- */
 
 /* Tres cosas, y ninguna más: el encabezado entra en cascada, las capturas

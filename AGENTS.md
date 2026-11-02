@@ -254,11 +254,31 @@ vino la petición.
   pelo, que es lo que dejó el favicon gris en Google.
 - `start_url` es `/explorar/`, no la portada: quien se la instala quiere lo que
   tiene cerca, no el argumentario de descarga.
-- **No hay service worker, y es una decisión.** Sin él Chrome en Android no
-  ofrece el banner de instalación, pero iOS no lo necesita para «Añadir a
-  pantalla de inicio», y un service worker sirviendo ficheros cacheados choca
-  con el versionado por dirección (`?v=`) que es lo que hoy garantiza que tras
-  publicar no se pinte con el CSS viejo.
+- **Hay service worker desde el 2-nov-2026** (`sw.js`), y está solo para que
+  la web instalada abra sin conexión en vez de dar la página de error del
+  navegador: muestra `sin-conexion.html`. **No es una app offline**, y no
+  pretende serlo: los sitios, los eventos y las rutas vienen de Supabase.
+  Hasta esa fecha no había ninguno, por miedo a que chocara con el versionado
+  por dirección (`?v=`); la regla que lo evita es que **el HTML nunca se sirve
+  de la caché habiendo red** (se pide siempre, y la copia guardada entra solo
+  si la red falla), y que de la caché solo sale directo lo que es inmutable:
+  lo que lleva `?v=`, más `/fuentes/` y `/libs/`, que no cambian. Si algún día
+  cambian sin cambiar de nombre, hay que subir `VERSION` en `sw.js`.
+- **Lo que el service worker no toca, y no se debe tocar:** `/tiles/` (30 MB
+  pedidos por rangos de bytes: un service worker en medio de una petición con
+  `Range` rompe el mapa), `/admin/` (es Flutter y tiene el suyo) y cualquier
+  dominio que no sea este. `sin-conexion.html` lleva los estilos dentro a
+  propósito: es la página que se ve cuando no ha llegado nada.
+- **El aviso de instalación en iPhone** lo pone `nav.js` (`.instalar-ios` en
+  `estilo.css`), porque en iOS **ningún** navegador ofrece instalar la web:
+  hay que entrar en Compartir → «Añadir a pantalla de inicio». Sale solo en
+  iPhone/iPad, solo en Safari y Chrome (en Firefox y Edge de iOS esa opción no
+  existe), **no en la primera página que se mira** —mucho tráfico llega de
+  TikTok y se va en segundos— y si se cierra no vuelve. En Android no sale:
+  ahí el navegador ya lo ofrece él solo.
+- La barra de estado va en `default` y no en `black-translucent`: con
+  `black-translucent` el contenido se mete debajo del reloj y, en tema claro,
+  la hora y la batería se pintan en blanco sobre fondo claro.
 - El `<head>` lleva además `apple-mobile-web-app-*`: en Safari son esas metas
   las que dan la pantalla completa y el nombre del icono. Si se añade una
   página nueva, hay que copiarle esas cinco líneas (y el generador de
