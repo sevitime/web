@@ -537,10 +537,10 @@ función del repo de la app, cada dos horas, y las deja en la tabla `noticias`,
 que ya era de lectura pública con `activa = true`. Esta página solo lee esa
 tabla, así que la web y la app enseñan lo mismo.
 
-- **Pendiente de desplegar la función y programar el cron** (ver
-  `docs/sql/noticias_recolector.sql` en el repo de la app). Hasta entonces la
-  página solo enseña las noticias escritas a mano, y si no hay ninguna lo dice
-  sin dejar la página en blanco.
+- **En marcha desde el 2-nov-2026**: la función está desplegada y el cron
+  (`sync-noticias-2h`) la llama a y cuarto de cada dos horas. Si la página
+  apareciera vacía, mirar ahí antes que aquí:
+  `select status_code, left(content,300) from net._http_response order by id desc limit 3;`
 - Titular, extracto corto y enlace al medio. **El cuerpo de la noticia no se
   copia ni se aloja**: es el modelo de agregador defendible (art. 15 DSM /
   RD-ley 24/2021). Todo se pinta con `textContent`.
