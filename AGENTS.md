@@ -306,6 +306,41 @@ La pone `nav.js` y se estiliza en `estilo.css`, dentro del bloque de 719 px.
 - Los iconos son los de la app donde hay equivalente: Rutas lleva el mapa
   plegado, igual que `Icons.map_rounded` en `main_scaffold.dart`.
 
+## Avisos push en la web (`avisos.js`)
+
+La web instalada en la pantalla de inicio puede recibir avisos. En iOS **solo**
+así: desde iOS 16.4 los avisos web existen si la web está añadida a la pantalla
+de inicio, y fuera de ahí Safari no deja ni pedir el permiso. La tarjeta vive
+en `/guardados/`, que es el área de la persona.
+
+**Reutiliza entero el envío de la app.** El token que da el navegador se guarda
+en la **misma tabla** con la **misma función** (`fn_registrar_push_token`, con
+`p_plataforma = 'web'` y `p_device_id` = el id de la cuenta), así que todo lo
+que ya manda avisos —moderación, respuestas a lo tuyo, el aviso semanal de
+`fn_avisos_planes`— llega también a la web **sin tocar `enviar-aviso` ni el
+registro de envíos**. No hay tabla nueva, ni SQL nuevo, ni función nueva.
+
+**Falta un paso que solo se puede dar en la consola de Firebase**, y hasta que
+se dé la tarjeta no se pinta (`avisos-config.json` vacío → no existe):
+
+1. Consola de Firebase, proyecto `sevitime-495417` → Configuración del
+   proyecto → Tus apps → **Añadir app → Web**. No hace falta hosting.
+2. Copiar `apiKey` y `appId` a `avisos-config.json`.
+3. Pestaña **Cloud Messaging → Certificados push web → Generar par de
+   claves**, y copiar la clave **pública** a `vapidKey` (es pública a
+   propósito; la privada se queda en Google).
+4. `node tool/versionar.mjs`, commit y publicar.
+
+Lo demás ya está: `firebase-messaging-sw.js` (tiene que llamarse así y vivir en
+la raíz, lo busca FCM), el permiso, el alta, la baja y el interruptor del aviso
+semanal. Los dos scripts de Firebase se descargan de `gstatic.com` **solo al
+activar los avisos**, y eso está escrito en la política de privacidad (repo
+`sevitime/privacidad`, apartado de terceros).
+
+Al tocar un aviso, `notificationclick` reutiliza la ventana abierta si la hay
+—abrir una segunda pestaña de la misma web es lo que hace parecer que el aviso
+no ha hecho nada— y va a `data.destino`, el mismo campo que usa la app.
+
 ## `/lugar/`: la página de un sitio
 
 Existe para que **compartir un bar desde la app lleve a SeviTime y no a Google

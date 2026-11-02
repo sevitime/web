@@ -1,0 +1,9 @@
+{
+  "_nota": "Datos públicos de la app web de Firebase, los mismos que la consola da al registrar una app de tipo Web en el proyecto sevitime-495417. Hasta que estén rellenos, la web no ofrece avisos: el interruptor no aparece. Ver AGENTS.md, «Avisos push en la web».",
+  "_como": "Consola de Firebase → Configuración del proyecto → Tus apps → Añadir app → Web. El 'vapidKey' sale de la pestaña Cloud Messaging → Certificados push web → Generar par de claves (la clave PÚBLICA, que es pública a propósito).",
+  "apiKey": "",
+  "projectId": "sevitime-495417",
+  "messagingSenderId": "348514916837",
+  "appId": "",
+  "vapidKey": ""
+}
