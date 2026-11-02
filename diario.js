@@ -227,15 +227,36 @@
 
   // --- Pintado --------------------------------------------------------------
 
+  /// El vídeo, cuando lo hay, como un botón que se ve.
+  ///
+  /// Antes era una línea de texto en verde y parecía un pie de foto: nadie
+  /// entendía que había un vídeo detrás ni que se podía pulsar. Rojo porque
+  /// es el color que la gente asocia a «dale al play», y el nuestro
+  /// (#C62828, el mismo que la app usa para lo fuerte), **no el de
+  /// YouTube**: su botón es marca suya, como la brújula de Safari.
   function enlaceVideo(v, porDefecto) {
     if (typeof v.youtube_id !== 'string' || !/^[\w-]{11}$/.test(v.youtube_id)) {
       return null;
     }
-    var a = el('a', 'diario-video',
-      (v.titulo || porDefecto) + (v.es_short ? ' · Short' : ''));
+    var a = el('a', 'diario-video');
     a.href = 'https://www.youtube.com/watch?v=' + encodeURIComponent(v.youtube_id);
     a.target = '_blank';
     a.rel = 'noopener noreferrer';
+
+    var svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    svg.setAttribute('viewBox', '0 0 24 24');
+    svg.setAttribute('width', '18');
+    svg.setAttribute('height', '18');
+    svg.setAttribute('aria-hidden', 'true');
+    var tri = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    tri.setAttribute('d', 'M8 5.6v12.8L19 12z');
+    tri.setAttribute('fill', 'currentColor');
+    svg.appendChild(tri);
+
+    a.appendChild(svg);
+    a.appendChild(el('span', null, v.titulo || porDefecto));
+    a.setAttribute('aria-label',
+      'Ver el vídeo' + (v.titulo ? ': ' + v.titulo : '') + ' (se abre en otra pestaña)');
     return a;
   }
 
@@ -280,7 +301,7 @@
       art.appendChild(el('p', 'diario-credito', d.foto_credito));
     }
     videos.forEach(function (v) {
-      var a = enlaceVideo(v, d.nombre);
+      var a = enlaceVideo(v, 'Ver el vídeo');
       if (a) art.appendChild(a);
     });
     // Sin enlace a propósito: `lugar_destacado` guarda nombre y coordenadas,

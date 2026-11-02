@@ -1174,8 +1174,13 @@ footer span { margin: 0 8px; }
    flotando con un marco de tres lados. */
 .diario-tarjeta .diario-foto {
   display: block;
-  width: calc(100% + 44px);
-  margin: -20px -22px 16px;
+  /* El `img { max-width: 100% }` de arriba la recortaba al ancho del texto,
+     así que salía desplazada y dejaba un hueco blanco a la derecha. */
+  max-width: none;
+  /* 44 px de relleno + 2 px del borde de la tarjeta: con 44 se quedaba a un
+     píxel por cada lado y se veía la línea blanca. */
+  width: calc(100% + 46px);
+  margin: -21px -23px 16px;
   height: 180px;
   object-fit: cover;
   background: var(--fondo);
@@ -1206,13 +1211,26 @@ footer span { margin: 0 8px; }
   font-size: 0.74rem;
   opacity: 0.8;
 }
+/* El vídeo, cuando lo hay, es un botón y se ve. Antes era una línea de
+   texto en verde que parecía un pie de foto. Rojo #C62828, el mismo que la
+   app usa para lo fuerte; NO el de YouTube, que es marca suya. */
 .diario-video {
-  display: inline-block;
-  margin-top: 12px;
-  color: var(--verde-claro);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  margin-top: 14px;
+  padding: 11px 18px;
+  border-radius: 999px;
+  background: #C62828;
+  color: #fff;
   font-size: var(--t-cuerpo);
-  font-weight: 600;
+  font-weight: 700;
+  text-decoration: none;
+  line-height: 1.2;
 }
+.diario-video:hover,
+.diario-video:focus-visible { background: #A81F1F; text-decoration: none; }
+.diario-video svg { flex: none; }
 /* La frase-plan del día, la misma que la app enseña en su portada. */
 .diario-plan {
   max-width: 44rem;
