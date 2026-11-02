@@ -800,3 +800,25 @@ app y es la única forma de tenerla.
 
 El `id` tiene que ser el `applicationId` real del `build.gradle.kts` de la
 app (`com.selu.sevitime`): si no coincide, Chrome no lo relaciona con nada.
+
+## La cabecera de las pantallas (`.cabecera-app`)
+
+Explorar, Rutas, Eventos, Guardados, Noticias y Transporte abren con una
+**franja verde agua con el título y el subtítulo**, como `screen_header` en
+Flutter. Es lo que más hacía que la web se leyera como una web y no como la
+app: arriba había logo, hamburguesa y un botón enorme de entrar, y en la app
+hay una banda con el nombre de la pantalla.
+
+- Va **fuera de `<main>`**, justo detrás de `</nav>`, para ocupar el ancho de
+  la pantalla sin trucos de `100vw` (que en escritorio se comen la barra de
+  desplazamiento).
+- En Rutas y Eventos lleva además `rutas-ancho`, porque su contenido es más
+  ancho que los 760 px del resto.
+- Los botones de acción (**Crear una ruta**, **Proponer un evento**) van
+  **debajo** de la banda, no dentro: primero la cabecera y luego las
+  acciones, como en la app.
+
+También de ese día: la caja de la ubicación de Explorar dejó de ser una
+tarjeta con párrafo y pasó a ser solo el botón —la web se explicaba y la app
+enseña—, y el aviso de instalar añade `con-aviso-instalar` al `<body>` para
+que la página le reserve sitio abajo en vez de tapar la fila de filtros.

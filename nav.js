@@ -258,11 +258,15 @@ window.SeviIOS = (function () {
     cerrar.textContent = '×';
     cerrar.addEventListener('click', function () {
       aviso.remove();
+      document.body.classList.remove('con-aviso-instalar');
       recordar(CLAVE_CERRADO, '1');
     });
 
     aviso.append(texto, cerrar);
     document.body.appendChild(aviso);
+    // El aviso flota sobre el contenido; sin esto tapaba la fila de filtros
+    // de Explorar y no había forma de llegar a ella sin cerrarlo.
+    document.body.classList.add('con-aviso-instalar');
   }
 
   // Un par de segundos después de que la página esté hecha: lo primero que se

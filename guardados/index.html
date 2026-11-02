@@ -19,8 +19,8 @@
 <meta name="apple-mobile-web-app-title" content="SeviTime">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=7cfe8cf8">
-<script defer src="/nav.js?v=6ecf227d"></script>
+<link rel="stylesheet" href="/estilo.css?v=6652ffbd">
+<script defer src="/nav.js?v=0c9f6a36"></script>
 <script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/auth.js?v=c7d7806f"></script>
 <script defer src="/guardados/guardados.js?v=5c0ecd01"></script>
@@ -128,8 +128,17 @@
   </div>
 </nav>
 
+<!-- La cabecera de la app, traída a la web: franja verde agua con el título
+     y el subtítulo, como `screen_header` en Flutter. Va FUERA de <main> para
+     que ocupe el ancho de la pantalla sin trucos de anchura. -->
+<header class="cabecera-app">
+  <div>
+    <h1>Tus guardados</h1>
+    <p>Favoritos, lo que quieres ver y donde ya has estado</p>
+  </div>
+</header>
+
 <main class="guardados" id="contenido" tabindex="-1">
-  <h1>Tus guardados</h1>
   <p class="resumen" id="resumen" aria-live="polite"></p>
 
   <div class="pestanas" id="pestanas" role="group" aria-label="Qué guardados ver"></div>

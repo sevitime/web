@@ -25,8 +25,8 @@
 <meta name="apple-mobile-web-app-title" content="SeviTime">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=7cfe8cf8">
-<script defer src="/nav.js?v=6ecf227d"></script>
+<link rel="stylesheet" href="/estilo.css?v=6652ffbd">
+<script defer src="/nav.js?v=0c9f6a36"></script>
 <script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/auth.js?v=c7d7806f"></script>
 <script defer src="/explorar/explorar.js?v=63be83ef"></script>
@@ -300,10 +300,17 @@
   </div>
 </nav>
 
-<main class="explorar" id="contenido" tabindex="-1">
-  <h1>Explorar Sevilla</h1>
-  <p class="intro">Bares, restaurantes, monumentos, museos y parques de Sevilla y su provincia. También están todos en <a href="/mapa/">el mapa</a>.</p>
+<!-- La cabecera de la app, traída a la web: franja verde agua con el título
+     y el subtítulo, como `screen_header` en Flutter. Va FUERA de <main> para
+     que ocupe el ancho de la pantalla sin trucos de anchura. -->
+<header class="cabecera-app">
+  <div>
+    <h1>Explorar</h1>
+    <p>Sevilla y su provincia</p>
+  </div>
+</header>
 
+<main class="explorar" id="contenido" tabindex="-1">
   <!-- El tiempo y el aire, lo mismo que la app en su portada
        (`explorar/tiempo.js`). Va arriba porque es lo primero que se mira
        antes de decidir si se sale a la calle. -->

@@ -1223,3 +1223,60 @@ footer span { margin: 0 8px; }
   line-height: 1.45;
   text-wrap: balance;
 }
+
+/* ---------- La cabecera de la app, en la web ---------- */
+/*
+ * La franja verde agua con el título, como la de las pantallas de la app
+ * (`screen_header` en Flutter). Es lo que más hacía que la web se leyera
+ * como una web: arriba había logo, hamburguesa y un botón enorme de entrar,
+ * y en la app hay una banda con el nombre de la pantalla.
+ *
+ * Va fuera de <main>, pegada al nav, para ocupar el ancho entero sin trucos
+ * de 100vw (que en escritorio se comen la barra de desplazamiento).
+ */
+.cabecera-app {
+  background: linear-gradient(180deg, #00796D 0%, #00584F 100%);
+  padding: 20px 0 22px;
+}
+.cabecera-app > div {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+.cabecera-app h1 {
+  margin: 0 0 4px;
+  color: #fff;
+  font-size: var(--t-titulo);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+}
+.cabecera-app p {
+  margin: 0;
+  color: #CDE7E4;
+  font-size: var(--t-cuerpo);
+  text-wrap: pretty;
+}
+/* Rutas y Eventos tienen su propio ancho de contenido. */
+.rutas-ancho > div { max-width: 1180px; }
+
+/* La caja de la ubicación deja de ser una tarjeta con párrafo y pasa a ser
+ * un botón, como en la app: la web se explicaba y la app enseña. El texto
+ * largo sobra, y la media pantalla que ocupaba vale más llena de sitios. */
+.ubicacion-caja {
+  background: none;
+  border: 0;
+  padding: 0;
+  margin: 14px 0 4px;
+}
+.ubicacion-caja p { display: none; }
+.btn-ubicacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: auto;
+}
+
+/* El aviso de instalar no tapa el contenido: mientras está, la página le
+ * reserva sitio abajo. Antes flotaba encima y escondía la fila de filtros. */
+body.con-aviso-instalar main { padding-bottom: 150px; }

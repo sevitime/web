@@ -17,8 +17,8 @@
 <meta name="apple-mobile-web-app-title" content="SeviTime">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=7cfe8cf8">
-<script defer src="/nav.js?v=6ecf227d"></script>
+<link rel="stylesheet" href="/estilo.css?v=6652ffbd">
+<script defer src="/nav.js?v=0c9f6a36"></script>
 <script defer src="/auth.js?v=c7d7806f"></script>
 <script defer src="/noticias/noticias.js?v=868a85bf"></script>
 <style>
@@ -84,9 +84,17 @@
   </div>
 </nav>
 
+<!-- La cabecera de la app, traída a la web: franja verde agua con el título
+     y el subtítulo, como `screen_header` en Flutter. Va FUERA de <main> para
+     que ocupe el ancho de la pantalla sin trucos de anchura. -->
+<header class="cabecera-app">
+  <div>
+    <h1>Noticias</h1>
+    <p>Lo que publican hoy los medios</p>
+  </div>
+</header>
+
 <main class="noticias" id="contenido" tabindex="-1">
-  <h1>Sevilla al día</h1>
-  <p class="intro">Lo que publican hoy los medios de Sevilla. El titular y un extracto; la noticia completa está en su web.</p>
 
   <p class="n-estado" id="estado" role="status">Cargando las noticias…</p>
 

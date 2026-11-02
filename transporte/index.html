@@ -17,8 +17,8 @@
 <meta name="apple-mobile-web-app-title" content="SeviTime">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=7cfe8cf8">
-<script defer src="/nav.js?v=6ecf227d"></script>
+<link rel="stylesheet" href="/estilo.css?v=6652ffbd">
+<script defer src="/nav.js?v=0c9f6a36"></script>
 <script defer src="/auth.js?v=c7d7806f"></script>
 <script defer src="/transporte/transporte.js?v=0b53324f"></script>
 <style>
@@ -86,9 +86,17 @@
   </div>
 </nav>
 
+<!-- La cabecera de la app, traída a la web: franja verde agua con el título
+     y el subtítulo, como `screen_header` en Flutter. Va FUERA de <main> para
+     que ocupe el ancho de la pantalla sin trucos de anchura. -->
+<header class="cabecera-app">
+  <div>
+    <h1>Transporte</h1>
+    <p>Tu parada, tu metro y tus bicis más cerca</p>
+  </div>
+</header>
+
 <main class="transporte" id="contenido" tabindex="-1">
-  <h1>Transporte</h1>
-  <p class="intro">La parada de Tussam, la estación de metro y la de Sevici que tienes más cerca. Los datos salen del portal de datos abiertos del Ayuntamiento y de CityBikes, en directo.</p>
 
   <div class="ubicacion-caja" id="ubicacion-caja">
     <p>Para esto hace falta saber dónde estás: todo lo que enseña esta página es «lo que tengo cerca».</p>
