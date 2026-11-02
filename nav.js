@@ -167,10 +167,13 @@ window.SeviIOS = (function () {
   var badges = document.querySelectorAll('.badge');
   var textoAndroid = document.querySelector('.cierre-android');
 
+  // El bloque de iPhone ya se ve de serie para todo el mundo. Lo que cambia
+  // en un iPhone es el resto: ahí lo de Google Play no sirve de nada.
   for (var i = 0; i < badges.length; i++) badges[i].hidden = true;
   if (textoAndroid) textoAndroid.hidden = true;
   if (enlaceHero) enlaceHero.hidden = false;
-  bloque.hidden = false;
+  var titulo = bloque.querySelector('.cierre-iphone-titulo');
+  if (titulo) titulo.textContent = 'En tu iPhone, sin App Store';
 
   // Ya instalada: no se le explica cómo instalar algo que ya tiene.
   if (window.SeviIOS.instalada) {
@@ -181,8 +184,11 @@ window.SeviIOS = (function () {
   if (window.SeviIOS.chrome) {
     var navegador = bloque.querySelector('.paso-navegador');
     var menu = bloque.querySelector('.paso-menu');
+    var glifo = bloque.querySelector('.glifo-compartir');
     if (navegador) navegador.textContent = 'Chrome';
     if (menu) menu.textContent = 'el men\u00fa \u22ef';
+    // El glifo es el de Compartir de Safari: en Chrome no se pulsa eso.
+    if (glifo) glifo.remove();
   }
 }());
 

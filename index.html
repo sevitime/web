@@ -32,7 +32,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" as="image" href="/capturas/explorar.webp" type="image/webp">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=39061808">
+<link rel="stylesheet" href="/estilo.css?v=aa6aeec5">
 <!-- El movimiento de la portada. Va aquí dentro, y no en un fichero aparte,
      por dos motivos: la clase `anim` tiene que estar puesta antes del primer
      pintado (si no, las tarjetas se verían un instante y luego se
@@ -65,7 +65,7 @@
   });
 })();
 </script>
-<script defer src="/nav.js?v=075ea81c"></script>
+<script defer src="/nav.js?v=fa768c39"></script>
 <!-- Supabase (216 KB) no se carga aquí a propósito: auth.js lo pide solo si
      hay sesión, se vuelve del login o se pulsa «Entrar con Google». -->
 <script type="application/ld+json">
@@ -270,13 +270,22 @@
   </a>
   <!-- Y en iPhone, sin tienda. Va escrito en el HTML y no armado por el
        script: así lo lee un buscador y lo ve quien llegue sin JavaScript.
-       `nav.js` lo enseña en iOS, esconde lo de Google Play y cambia
-       «Compartir» por «el menú ⋯» si es Chrome. -->
-  <div class="cierre-iphone" hidden>
-    <p>En iPhone no hace falta tienda: se añade desde el propio navegador y queda con su icono, a pantalla completa y sin barra de direcciones.</p>
+       **Se ve siempre**, también en Android y en escritorio: hasta el
+       2-nov-2026 solo salía dentro de un iPhone, así que nadie más se
+       enteraba de que existía esa vía, ni para contarlo ni para que lo
+       indexara Google. `nav.js` esconde lo de Google Play cuando sí es un
+       iPhone y cambia «Compartir» por «el menú ⋯» si es Chrome.
+
+       Sin el logo de Safari ni la manzana: son marcas de Apple y sus normas
+       no permiten usarlas para anunciar compatibilidad. El icono de
+       Compartir, en cambio, es un símbolo de interfaz y además es el botón
+       que hay que pulsar. -->
+  <div class="cierre-iphone">
+    <p class="cierre-iphone-titulo">También en iPhone, sin App Store</p>
+    <p>Se añade desde el propio navegador y queda con su icono, a pantalla completa y sin barra de direcciones.</p>
     <ol class="pasos-iphone">
       <li>Abre <strong>sevitime.com</strong> en <span class="paso-navegador">Safari</span>.</li>
-      <li>Toca <strong class="paso-menu">Compartir</strong>.</li>
+      <li>Toca <strong class="paso-menu">Compartir</strong><svg class="glifo-compartir" viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" focusable="false"><path d="M12 3.5v11" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><path d="M8.2 7.1 12 3.3l3.8 3.8" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.4 10.2H5.8v9.3h12.4v-9.3h-1.6" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"/></svg>.</li>
       <li>Elige <strong>Añadir a pantalla de inicio</strong>.</li>
     </ol>
     <p class="cierre-iphone-nota">Es la misma SeviTime: los sitios, las rutas, los eventos y tus reseñas, con la misma cuenta.</p>

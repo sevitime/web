@@ -207,8 +207,25 @@ img { max-width: 100%; display: block; }
 
 .cierre-iphone {
   max-width: 34rem;
-  margin: 0 auto;
+  margin: 26px auto 0;
   text-align: left;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+}
+.cierre-iphone-titulo {
+  font-size: var(--t-item);
+  font-weight: 700;
+  color: var(--texto);
+  margin-bottom: 6px;
+}
+/* El icono de Compartir de iOS, dibujado. Va pegado a la palabra, como una
+   pieza más de la frase, no como una ilustración. */
+.glifo-compartir {
+  vertical-align: -3px;
+  margin-left: 5px;
+  color: var(--verde-claro);
 }
 .pasos-iphone {
   margin: 16px 0 0;
