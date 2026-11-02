@@ -641,6 +641,54 @@ footer span { margin: 0 8px; }
   .auth-info { padding-right: 7px; }
 
   .hero { padding: 26px 24px 44px; }
+
+  /* ---------- la barra de abajo, como en la app ----------
+
+     La pone `nav.js` (y no en `/mapa/`, que es el mapa a pantalla completa).
+     En escritorio no existe: ahí manda la navegación de arriba. */
+  html.con-barra { --alto-barra: 58px; }
+  html.con-barra body {
+    padding-bottom: calc(var(--alto-barra) + env(safe-area-inset-bottom, 0px));
+  }
+  .barra-abajo {
+    display: grid;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    grid-auto-flow: column;
+    grid-auto-columns: 1fr;
+    /* El relleno de abajo es el del gesto de inicio del iPhone: sin esto, la
+       fila de etiquetas queda debajo de la barrita negra. */
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+    background: var(--superficie);
+    border-top: 1px solid var(--borde);
+  }
+  .barra-abajo-item {
+    min-height: var(--alto-barra);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    padding: 6px 2px;
+    color: var(--apagado);
+    font-size: 11px;
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .barra-abajo-item.activo { color: var(--verde-claro); }
+  .barra-abajo-item:focus-visible {
+    outline: 3px solid var(--verde-claro);
+    outline-offset: -3px;
+  }
+  /* El aviso de instalación y el del mapa viven en esa misma esquina. */
+  html.con-barra .instalar-ios {
+    bottom: calc(var(--alto-barra) + 12px + env(safe-area-inset-bottom, 0px));
+  }
 }
 
 @media (min-width: 720px) {
@@ -752,6 +800,15 @@ footer span { margin: 0 8px; }
   padding: 0 2px;
 }
 .aviso-teselas-cerrar:hover { color: var(--texto); }
+
+/* La barra de abajo solo existe en pantalla estrecha. Va en un `@media` de
+   mínimo y no en una regla suelta a propósito: suelta, al estar más abajo en
+   el fichero que el bloque de 719 px, le ganaba también en el móvil y la
+   barra no se veía en ninguna parte. Sin ella, en escritorio quedaba una
+   lista de enlaces al final de la página. */
+@media (min-width: 720px) {
+  .barra-abajo { display: none; }
+}
 
 /* ---------- «añádela a tu pantalla de inicio» (solo iPhone y iPad) ----------
 

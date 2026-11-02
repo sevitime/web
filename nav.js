@@ -41,6 +41,61 @@ window.SeviLlegada = function (contenedor) {
   setTimeout(function () { contenedor.classList.remove('llega'); }, 1500);
 };
 
+// ── La barra de abajo, como en la app ─────────────────────────────────────
+//
+// En el móvil la web navegaba con una barra arriba y un menú de hamburguesa:
+// aspecto de web. La app lleva pestañas abajo, y es lo que más diferencia
+// «parece una web» de «parece una app», sobre todo instalada en la pantalla
+// de inicio, donde no hay barra de direcciones que lo recuerde.
+//
+// Decisiones:
+//
+// - **Cinco destinos, los que la web tiene de verdad**: Explorar, Mapa,
+//   Rutas, Eventos y Guardados. Los iconos son los de la app donde existe el
+//   equivalente (Rutas lleva el mapa plegado, como `Icons.map_rounded`).
+// - **No sale en `/mapa/`**: esa página es el mapa a pantalla completa, con su
+//   propia hoja abajo y los controles de MapLibre en esa esquina. En la app el
+//   mapa también se come la pantalla.
+// - **La barra la pone el script, pero no se depende de ella**: los mismos
+//   enlaces están en el HTML de la barra de arriba, que no se toca.
+// - Solo se ve en pantalla estrecha (`estilo.css`, 719 px); en escritorio la
+//   navegación de arriba es la buena.
+(function () {
+  if (location.pathname.indexOf('/mapa/') === 0) return;
+  if (location.pathname.indexOf('/admin/') === 0) return;
+
+  var destinos = [
+    ['/explorar/', 'Explorar', 'M12 10.9c-.61 0-1.1.49-1.1 1.1s.49 1.1 1.1 1.1c.61 0 1.1-.49 1.1-1.1s-.49-1.1-1.1-1.1zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm2.19 12.19L6 18l3.81-8.19L18 6l-3.81 8.19z'],
+    ['/mapa/', 'Mapa', 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'],
+    ['/rutas/', 'Rutas', 'M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z'],
+    ['/eventos/', 'Eventos', 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7z'],
+    ['/guardados/', 'Guardados', 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z']
+  ];
+
+  var barra = document.createElement('nav');
+  barra.className = 'barra-abajo';
+  barra.setAttribute('aria-label', 'Secciones de SeviTime');
+
+  for (var i = 0; i < destinos.length; i++) {
+    var d = destinos[i];
+    var enlace = document.createElement('a');
+    enlace.className = 'barra-abajo-item';
+    enlace.href = d[0];
+    // Activa la sección en la que estás, y la portada no activa ninguna.
+    if (location.pathname.indexOf(d[0]) === 0) {
+      enlace.classList.add('activo');
+      enlace.setAttribute('aria-current', 'page');
+    }
+    enlace.innerHTML =
+      '<svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">' +
+      '<path d="' + d[2] + '"/></svg><span>' + d[1] + '</span>';
+    barra.appendChild(enlace);
+  }
+
+  document.body.appendChild(barra);
+  document.documentElement.classList.add('con-barra');
+}());
+
 // El service worker, que está solo para que la web añadida a la pantalla de
 // inicio abra sin conexión en vez de dar el error del navegador. Lo que
 // guarda y lo que no, en `sw.js`. Se registra tras `load` para no competir

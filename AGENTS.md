@@ -284,6 +284,28 @@ vino la petición.
   página nueva, hay que copiarle esas cinco líneas (y el generador de
   `/sitios/` ya las pone).
 
+## La barra de abajo en móvil (`.barra-abajo`)
+
+Desde el **2 de noviembre de 2026**, en pantalla estrecha la web navega con
+pestañas abajo, como la app: **Explorar, Mapa, Rutas, Eventos y Guardados**.
+La pone `nav.js` y se estiliza en `estilo.css`, dentro del bloque de 719 px.
+
+- **No sale en `/mapa/`**: esa página es el mapa a pantalla completa, con su
+  propia hoja abajo y los controles de MapLibre en esa esquina. En la app el
+  mapa también ocupa todo.
+- **La barra de arriba no se toca.** Los mismos destinos siguen en el HTML, así
+  que quien entre sin JavaScript navega igual; la barra de abajo es aspecto,
+  no la única salida.
+- El `display: none` de escritorio va en un `@media (min-width: 720px)` y no en
+  una regla suelta: suelta, al estar más abajo en el fichero, le ganaba también
+  al bloque del móvil y la barra no se veía en ninguna parte.
+- `html.con-barra` da el `padding-bottom` al body y sube el aviso de
+  instalación de iOS, que vive en esa misma esquina. `--alto-barra` es la
+  medida; el relleno de abajo es `env(safe-area-inset-bottom)`, el hueco del
+  gesto de inicio del iPhone.
+- Los iconos son los de la app donde hay equivalente: Rutas lleva el mapa
+  plegado, igual que `Icons.map_rounded` en `main_scaffold.dart`.
+
 ## `/lugar/`: la página de un sitio
 
 Existe para que **compartir un bar desde la app lleve a SeviTime y no a Google
