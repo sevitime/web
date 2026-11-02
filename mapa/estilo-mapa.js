@@ -16,13 +16,32 @@
 // bloqueo sigue a las IPs, no al dominio.
 //
 // Aquí el fichero viaja con la web: mismo origen, sin CORS y exactamente las
-// mismas dependencias que tiene la página que lo pinta. GitHub Pages sirve
-// peticiones por rango (`206`), que es lo que PMTiles necesita.
+// mismas dependencias que tiene la página que lo pinta.
+//
+// ⚠️ Y TERMINA EN `.png` A PROPÓSITO. No es una imagen: es el `.pmtiles` de
+// siempre. GitHub Pages **comprime** lo que sirve como `application/octet-
+// stream` —que es lo que le toca a un `.pmtiles`— y aplica los rangos al
+// tamaño COMPRIMIDO:
+//
+//     sin gzip:  content-range: bytes 0-99/30354319   ← el tamaño real
+//     con gzip:  content-range: bytes 0-99/30264787   ← otro tamaño
+//
+// Todo lo que esté más allá de ese byte deja de existir para el servidor y
+// devuelve **416**, y los metadatos del PMTiles viven justo ahí (30.335.496).
+// Dart pide gzip siempre, así que la app 1.0.33 se quedó sin mapa vectorial
+// y se cayó a su raster de repuesto; el navegador se libraba por azar.
+//
+// Las imágenes y las fuentes NO se comprimen (comprobado con `favicon-512.png`
+// y `inter-var.woff2`: mismo tamaño pidiendo gzip o sin pedirlo), así que con
+// la extensión `.png` los rangos vuelven a ser honestos. Al cliente le da
+// igual el tipo declarado: lee bytes por rango.
+//
+// Si algún día se regeneran las teselas, hay que **volver a renombrar**.
 //
 // El Worker y `tiles.sevitime.com` se quedan vivos: los llevan dentro las
 // versiones ya publicadas de la app.
 const SEVITIME_TILES_URL =
-  'https://sevitime.com/tiles/sevilla-provincia.pmtiles';
+  'https://sevitime.com/tiles/sevilla-provincia.pmtiles.png';
 
 // El mapa deja un margen de unos 7–8 km alrededor del recorte de la provincia:
 // permite seleccionar aportaciones limítrofes sin que, al alejarse, se termine

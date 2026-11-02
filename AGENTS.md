@@ -103,9 +103,19 @@ bloqueo sigue a las IPs de Cloudflare, no al nombre. Medido en un navegador de
 verdad el mismo día: Cloudflare falla por los dos nombres, y Supabase Storage y
 GitHub Pages responden `206`.
 
+- **El fichero termina en `.png` y no es una imagen.** Es el truco que hace
+  que esto funcione, y hay que entenderlo antes de tocarlo: GitHub Pages
+  **comprime** lo que sirve como `application/octet-stream` (lo que le toca a
+  un `.pmtiles`) y **aplica los rangos al tamaño comprimido**, así que todo lo
+  que pase del byte 30.264.787 devuelve **416** — y ahí viven los metadatos
+  del PMTiles. Dart pide gzip siempre: la app 1.0.33 salió con el mapa
+  vectorial roto por esto y se cayó a su raster de repuesto. Las imágenes y
+  las fuentes **no** se comprimen (`favicon-512.png` e `inter-var.woff2` dan
+  el mismo tamaño pidiendo gzip o sin pedirlo), así que con `.png` los rangos
+  vuelven a ser honestos. Al cliente le da igual el tipo declarado: lee bytes.
+  **Al regenerar las teselas hay que volver a renombrarlas.**
 - **Mismo origen que la web**: sin CORS y con exactamente las mismas
-  dependencias que la página que pinta el mapa. GitHub Pages sirve rangos
-  (`206`), que es lo que PMTiles necesita.
+  dependencias que la página que pinta el mapa.
 - **Se descartó Supabase Storage** aun funcionando: su plan gratuito da 5 GB/mes
   de tráfico **compartidos con la API de la app**, así que un mes de mapa
   cargado no dejaría sin mapa, dejaría sin base de datos. GitHub Pages da
