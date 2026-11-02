@@ -1213,3 +1213,13 @@ footer span { margin: 0 8px; }
   font-size: var(--t-cuerpo);
   font-weight: 600;
 }
+/* La frase-plan del día, la misma que la app enseña en su portada. */
+.diario-plan {
+  max-width: 44rem;
+  margin: -8px auto 22px;
+  text-align: center;
+  color: var(--texto);
+  font-size: var(--t-item);
+  line-height: 1.45;
+  text-wrap: balance;
+}

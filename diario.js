@@ -1,4 +1,5 @@
-// Lo de hoy en la portada: la curiosidad del día y el lugar destacado.
+// Lo de hoy en la portada: el plan del día según el tiempo, la curiosidad
+// del día y el lugar destacado.
 //
 // POR QUÉ. Era de lo poco que la app tenía y la web no, y es justo lo que le
 // faltaba a la portada: un motivo para volver mañana. La portada se lleva 70
@@ -22,6 +23,14 @@
 // La de la efeméride **no se enseña**: `efemerides` no guarda autor ni
 // licencia de su imagen, así que publicarla sería incumplir lo que la web
 // promete. Texto y enlace, que es lo que se puede defender.
+//
+// EL PLAN DEL DÍA. La misma frase que la app enseña en su portada, elegida
+// igual: primero la condición del tiempo (`fraseDelDia` en
+// `weather_widgets.dart`) y dentro de ella la frase que toca por día del año
+// y franja horaria (`plan_del_dia.dart`). El tiempo es el del **centro de
+// Sevilla**, como el resto de la web: no se pide la ubicación por esto, que
+// un aviso del navegador para saber si llueve no se justifica, y la frase es
+// de ciudad de todas formas.
 //
 // VÍDEOS. Si la curiosidad o el sitio tienen vídeo, sale el enlace. **Nunca
 // incrustado**: un reproductor de YouTube es un tercero cargando en nuestra
@@ -169,6 +178,49 @@
     return donde + ', tal día como hoy en ' + formatAnio(e.year);
   }
 
+  // --- El plan del día, según el tiempo ------------------------------------
+  //
+  // Traducción de `fraseDelDia` y `planDelDia`. El orden de los casos importa
+  // y es el de la app: si se cambia allí, aquí también.
+
+  var SEVILLA = { lat: 37.3891, lon: -5.9845 };
+
+  function horaEnSevilla() {
+    var h = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Madrid', hour: '2-digit', hour12: false,
+    }).format(new Date());
+    return Number(h);
+  }
+
+  function condicionDelTiempo(actual, hora) {
+    var temp = Number(actual.temperature_2m);
+    var sensacion = Number(actual.apparent_temperature);
+    var lluvia = Number(actual.precipitation) || 0;
+    var code = Number(actual.weather_code);
+    // Mismos cortes que `familia()` de `explorar/tiempo.js`.
+    var nublado = code === 2 || code === 3 || code === 45 || code === 48;
+    var llueve = lluvia > 0 || (code >= 51 && code <= 67) ||
+      (code >= 80 && code <= 82) || code >= 95;
+
+    if (llueve) return lluvia >= 15 ? 'lluvia_fuerte' : 'lluvia';
+    if (temp >= 35 || sensacion >= 37) return 'calor';
+    if (temp <= 12 || sensacion <= 10) return 'frio';
+    if (hora >= 20 || hora <= 6) return 'noche';
+    if (temp >= 18 && temp <= 27 && !nublado) return 'buen_tiempo';
+    if (nublado) return 'nublado';
+    return 'default';
+  }
+
+  /// La frase que toca hoy de las de esa condición. Va por día del año y
+  /// franja de ocho horas, no al azar: así dos aparatos enseñan la misma y
+  /// la vuelta entera dura un año.
+  function planDelDia(opciones, h, hora) {
+    if (!opciones || !opciones.length) return '';
+    var franja = Math.floor(hora / 8);
+    var salto = Math.floor(opciones.length / 3) + 1;
+    return opciones[(diaDelAnio(h) + franja * salto) % opciones.length];
+  }
+
   // --- Pintado --------------------------------------------------------------
 
   function enlaceVideo(v, porDefecto) {
@@ -230,7 +282,29 @@
     if (!hueco) return;
     var h = hoyEnSevilla();
 
-    Promise.all([
+    // El plan del día va por su cuenta y nunca tumba al resto: si Open-Meteo
+    // no contesta, la curiosidad y el sitio salen igual, sin frase.
+    var plan = Promise.all([
+      pedir('planes_clima?select=condicion,texto&order=id.asc'),
+      fetch('https://api.open-meteo.com/v1/forecast?latitude=' + SEVILLA.lat +
+        '&longitude=' + SEVILLA.lon +
+        '&current=temperature_2m,apparent_temperature,weather_code,precipitation' +
+        '&timezone=Europe%2FMadrid')
+        .then(function (r) { return r.ok ? r.json() : null; })
+        .catch(function () { return null; }),
+    ]).then(function (res) {
+      var filas = Array.isArray(res[0]) ? res[0] : [];
+      var tiempo = res[1];
+      if (!filas.length || !tiempo || !tiempo.current) return '';
+      var porCondicion = {};
+      filas.forEach(function (f) {
+        (porCondicion[f.condicion] = porCondicion[f.condicion] || []).push(f.texto);
+      });
+      var hora = horaEnSevilla();
+      return planDelDia(porCondicion[condicionDelTiempo(tiempo.current, hora)], h, hora);
+    }).catch(function () { return ''; });
+
+    var contenido = Promise.all([
       pedir('efemerides?select=year,text,wiki_title&month_day=eq.' +
         encodeURIComponent(h.monthDay) + '&limit=1'),
       pedir('lugar_destacado?select=nombre,descripcion,imagen_url,foto_credito,' +
@@ -249,7 +323,6 @@
       if (!destacado && lista.length) {
         destacado = lista[diaDelAnio(h) % lista.length];
       }
-      if (!efemeride && !destacado) return;
 
       var ref = refDeEfemeride(efemeride);
       return Promise.all([
@@ -259,18 +332,30 @@
           '&place_name=eq.' + encodeURIComponent(destacado.nombre) +
           '&order=orden.asc&limit=3') : [],
       ]).then(function (vids) {
-        pintar(hueco, efemeride, destacado, vids[0] || [], vids[1] || []);
+        return {
+          efemeride: efemeride, destacado: destacado,
+          videosE: vids[0] || [], videosD: vids[1] || [],
+        };
       });
+    }).catch(function () { return null; });
+
+    // Se pinta una sola vez, con todo lo que haya llegado.
+    Promise.all([plan, contenido]).then(function (res) {
+      var frase = res[0] || '';
+      var c = res[1];
+      if (!frase && (!c || (!c.efemeride && !c.destacado))) return;
+      pintar(hueco, frase, c || {}, h);
     }).catch(function () {});
   }
 
-  function pintar(hueco, efemeride, destacado, videosE, videosD) {
+  function pintar(hueco, frase, c) {
     var sec = el('section', 'diario');
     sec.appendChild(el('h2', null, 'Hoy en Sevilla'));
+    if (frase) sec.appendChild(el('p', 'diario-plan', frase));
     var caja = el('div', 'diario-tarjetas');
-    if (efemeride) caja.appendChild(tarjetaEfemeride(efemeride, videosE));
-    if (destacado) caja.appendChild(tarjetaDestacado(destacado, videosD));
-    sec.appendChild(caja);
+    if (c.efemeride) caja.appendChild(tarjetaEfemeride(c.efemeride, c.videosE || []));
+    if (c.destacado) caja.appendChild(tarjetaDestacado(c.destacado, c.videosD || []));
+    if (caja.children.length) sec.appendChild(caja);
     hueco.appendChild(sec);
   }
 

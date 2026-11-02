@@ -747,7 +747,8 @@ evento y aquí van todos en una, así que puede entenderlos y no destacarlos.
 
 ## «Hoy en Sevilla» en la portada (`diario.js`)
 
-La curiosidad del día y el sitio del día, las mismas que la app. Se pintan en
+El plan del día según el tiempo, la curiosidad del día y el sitio del día,
+los mismos que la app. Se pintan en
 `<div id="hueco-diario">` de `index.html`; si la red falla o no hay nada para
 hoy, el hueco se queda vacío y la portada sigue igual.
 
@@ -760,10 +761,15 @@ pidió SQL ni permisos. Lo que hubo que traducir de la app:
 - El sitio: si alguno tiene `fecha_forzada` de hoy o una `fiesta_movil` que
   cae hoy, ese; si no, `lista[día del año % total]` con la lista ordenada por
   `id`. Es `LugarDestacadoService._resolver`.
-- **Dos copias que hay que mantener a la vez con el repo de la app**: el
+- El plan: la condición sale del tiempo (`fraseDelDia` de
+  `weather_widgets.dart`, y el orden de los casos importa) y la frase de
+  dentro, por día del año y franja de ocho horas (`plan_del_dia.dart`). El
+  tiempo es el del **centro de Sevilla**: no se pide la ubicación por esto.
+- **Tres copias que hay que mantener a la vez con el repo de la app**: el
   algoritmo de Pascua (`lib/utils/fiestas_moviles.dart`) y el slug de la
   efeméride (`lib/utils/efemeride_ref.dart`, que es de donde cuelgan los
-  vídeos). Están en la tabla de `docs/paridad_app_web.md`.
+  vídeos) y la elección de la frase-plan. Están en la tabla de
+  `docs/paridad_app_web.md`.
 
 **Fotos.** La del sitio solo se publica si tiene `foto_credito`; la de la
 efeméride **no se publica nunca**, porque `efemerides` no guarda autor ni
