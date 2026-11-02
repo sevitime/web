@@ -1,8 +1,12 @@
 // Contador de visitas de sevitime.com.
 //
-// Suma uno a (día, ruta) en la tabla `web_visitas` de Supabase y nada más.
-// NO guarda identificador de ninguna clase: ni cookie, ni localStorage, ni
-// IP, ni huella del navegador. Por eso no hay banner de consentimiento —en
+// Suma uno a (día, ruta, plataforma) en la tabla `web_visitas` de Supabase
+// y nada más. NO guarda identificador de ninguna clase: ni cookie, ni
+// localStorage, ni IP, ni huella del navegador. La «plataforma» es una
+// palabra de una lista cerrada de seis —ios, ios_app, android, android_app,
+// escritorio, desconocida—, no la cadena del navegador: con seis valores
+// posibles no se distingue a nadie, y es lo que permite saber si la vía de
+// iPhone (añadirla a la pantalla de inicio) le sirve a alguien. Por eso no hay banner de consentimiento —en
 // cuanto se guarda un identificador para contar, la ePrivacy pide permiso—,
 // y por eso el número son páginas vistas y no visitantes únicos. Si algún
 // día hace falta saber si la gente vuelve, eso pide identificador y banner,
@@ -76,17 +80,51 @@
     return p.replace(/\.html$/, '');
   }
 
+  // Qué clase de aparato, en una palabra. Se calcula aquí y no se lee de
+  // `window.SeviIOS` a propósito: este script también corre en `privacidad/`,
+  // que no carga la navegación compartida.
+  //
+  // `_app` quiere decir «abierta desde su icono», o sea añadida a la pantalla
+  // de inicio: es la medida que importa, porque es quien la usa como app.
+  function plataforma() {
+    try {
+      var ua = navigator.userAgent || '';
+      var instalada = (window.matchMedia &&
+        window.matchMedia('(display-mode: standalone)').matches) ||
+        window.navigator.standalone === true;
+      // iPadOS se presenta como Mac desde la 13; se le reconoce porque un
+      // Mac de verdad no tiene pantalla táctil.
+      var es_ios = /iPhone|iPod|iPad/.test(ua) ||
+        (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+      if (es_ios) return instalada ? 'ios_app' : 'ios';
+      if (/Android/.test(ua)) return instalada ? 'android_app' : 'android';
+      return 'escritorio';
+    } catch (e) {
+      return 'desconocida';
+    }
+  }
+
   var enviado = false;
+
+  function enviar(cuerpo) {
+    return fetch(URL_RPC, {
+      method: 'POST',
+      headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify(cuerpo),
+      keepalive: true,
+    });
+  }
 
   function contar() {
     if (enviado || marcado()) return;
     enviado = true;
     try {
-      fetch(URL_RPC, {
-        method: 'POST',
-        headers: { 'apikey': KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ p_ruta: ruta() }),
-        keepalive: true,
+      enviar({ p_ruta: ruta(), p_plataforma: plataforma() }).then(function (r) {
+        // Si el servidor todavía no tiene la versión de dos argumentos,
+        // PostgREST no encuentra la función y responde 404. Se reintenta
+        // como antes para no perder la visita: así da igual el orden en que
+        // se publiquen el SQL y esta página.
+        if (r && r.status === 404) enviar({ p_ruta: ruta() }).catch(function () {});
       }).catch(function () {});
     } catch (e) {}
   }
