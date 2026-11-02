@@ -30,7 +30,35 @@
   // `conSupabase` lo usan las páginas que necesitan el cliente para una
   // acción concreta (reseñar en la ficha de un sitio) sin arrastrar los
   // 216 KB de la librería a quien solo viene a leer. Se define más abajo.
-  window.SEVI = { sb: null, onAuth: [], conSupabase: null };
+  window.SEVI = { sb: null, onAuth: [], conSupabase: null, idDeAparato: idDeAparato };
+
+  // El id de ESTE navegador, no el de la cuenta.
+  //
+  // Varias funciones del servidor (`fn_registrar_push_token`,
+  // `fn_baja_push_token`, `fn_avisos_mios`) comprueban que el `p_device_id`
+  // que se les manda coincide con la cabecera `x-device-id`, y **rechazan a
+  // propósito un id que sea el de una cuenta** (`fn_device_id_de_cabecera`,
+  // del PR #228 de la app: así nadie puede escribir en nombre de otro
+  // diciendo ser su cuenta). Como se van en silencio devolviendo 200, mandar
+  // `usuario.id` ahí no daba error: simplemente no guardaba nada.
+  //
+  // Así que la web lleva su propio id, igual que el móvil: un UUID v4 que se
+  // queda en este navegador. Quien manda uno de esos RPC tiene que mandar
+  // además la cabecera `x-device-id` con este mismo valor.
+  function idDeAparato() {
+    var CLAVE = 'sevi-aparato';
+    try {
+      var guardado = localStorage.getItem(CLAVE);
+      if (guardado && /^[0-9a-f-]{36}$/.test(guardado)) return guardado;
+    } catch (_) {}
+    var id = (window.crypto && crypto.randomUUID) ? crypto.randomUUID()
+      : 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+        var r = (Math.random() * 16) | 0;
+        return (c === 'x' ? r : ((r & 0x3) | 0x8)).toString(16);
+      });
+    try { localStorage.setItem(CLAVE, id); } catch (_) {}
+    return id;
+  }
 
   function nombreDe(user) {
     return user.user_metadata && (user.user_metadata.full_name || user.user_metadata.name)

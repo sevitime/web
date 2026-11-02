@@ -17,9 +17,11 @@
 //
 // Decisiones:
 //
-//  * **Pide cuenta.** Un aviso sin cuenta iría a un navegador y a nadie.
-//    Además `push_tokens` se lleva por `device_id`, y aquí se manda el id de
-//    la cuenta: así el aviso es de la persona.
+//  * **Pide cuenta.** Un aviso sin cuenta iría a un navegador y a nadie. La
+//    fila se guarda con el `user_id` de la sesión (lo pone el servidor con
+//    `auth.uid()`), que es lo que usan los envíos para encontrar a la
+//    persona. El `device_id`, en cambio, es de ESTE navegador y nunca el de
+//    la cuenta: ver `idDeAparato` en `auth.js`.
 //  * **Nada de Firebase se descarga hasta que se pulsa.** Los dos scripts de
 //    gstatic.com son el único tercero que entra por esta vía, y solo para
 //    quien enciende los avisos.
@@ -84,6 +86,12 @@
       .catch(() => null);
   }
 
+  // El id de ESTE navegador, no el de la cuenta: ver `idDeAparato` en
+  // `auth.js` para el porqué, que no es evidente.
+  function aparato() {
+    return window.SEVI.idDeAparato();
+  }
+
   async function rpc(nombre, cuerpo) {
     const t = await token();
     const r = await fetch(SUPABASE_URL + '/rest/v1/rpc/' + nombre, {
@@ -92,6 +100,10 @@
         apikey: SUPABASE_KEY,
         Authorization: 'Bearer ' + (t || SUPABASE_KEY),
         'Content-Type': 'application/json',
+        // Obligatoria: sin ella estas funciones se van en silencio con un
+        // 200 y no guardan nada. Tiene que valer lo mismo que el
+        // `p_device_id` que se manda en el cuerpo.
+        'x-device-id': aparato(),
       },
       body: JSON.stringify(cuerpo),
     });
@@ -139,7 +151,7 @@
       const tk = await pedirToken();
       if (!tk) throw new Error('sin token');
       await rpc('fn_registrar_push_token', {
-        p_device_id: usuario.id,
+        p_device_id: aparato(),
         p_token: tk,
         p_plataforma: 'web',
         p_version: 'web',
@@ -158,7 +170,7 @@
     if (trabajando) return;
     trabajando = true;
     try {
-      await rpc('fn_baja_push_token', { p_device_id: usuario.id });
+      await rpc('fn_baja_push_token', { p_device_id: aparato() });
       activo = false;
       recordar(false);
       pintar('Avisos desactivados.');
@@ -173,7 +185,7 @@
   // `fn_avisos_planes`: en la base nace apagado a propósito.
   async function planes(valor, aviso) {
     try {
-      await rpc('fn_avisos_planes', { p_device_id: usuario.id, p_activo: valor });
+      await rpc('fn_avisos_planes', { p_device_id: aparato(), p_activo: valor });
       try { localStorage.setItem('sevi-avisos-planes', valor ? '1' : '0'); } catch (_) {}
       aviso.textContent = valor
         ? 'Te avisaremos los jueves de los planes del fin de semana.'

@@ -185,8 +185,10 @@
         p_place_key: lugar.clave,
         p_abierto: abierto,
         p_cerca: cerca,
-        // El id de la cuenta: en la web se cuenta a la persona, no al aparato.
-        p_device_id: usuario.id,
+        // El id de ESTE navegador (`idDeAparato` en `auth.js`), nunca el de
+        // la cuenta: el servidor rechaza a propósito un id de cuenta como
+        // device_id, y el freno de un minuto es por aparato, como en la app.
+        p_device_id: window.SEVI.idDeAparato(),
       }, token);
     } catch (_) {
       // Un fallo aquí no se le cuenta: puede ser el freno de un minuto del
