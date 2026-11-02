@@ -30,6 +30,7 @@
 <script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/auth.js?v=4773ca46"></script>
 <script defer src="/explorar/explorar.js?v=63be83ef"></script>
+<script defer src="/explorar/tiempo.js?v=2f1eee15"></script>
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
@@ -51,6 +52,73 @@
 
   /* La ubicación se pide con un botón, nunca sola: el navegador pregunta y la
      gente merece saber por qué antes de que salga el diálogo. */
+  /* ---------- el tiempo y el aire ---------- */
+  .tiempo { margin: 18px 0 0; }
+  .tiempo-resumen {
+    width: 100%; min-height: 56px; padding: 10px 14px; cursor: pointer;
+    display: flex; align-items: center; gap: 10px;
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); color: var(--texto); text-align: left;
+    font-size: var(--t-cuerpo);
+  }
+  .tiempo.abierto .tiempo-resumen { border-bottom-left-radius: 0; border-bottom-right-radius: 0; }
+  .tiempo-resumen:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .tiempo-temp { font-size: var(--t-seccion); font-weight: 700; }
+  .tiempo-desc { color: var(--apagado); flex: 1 1 auto; min-width: 0; }
+  .tiempo-chip {
+    flex: 0 0 auto; padding: 3px 9px; border-radius: 999px;
+    background: var(--gris-bg); font-size: var(--t-etiqueta); font-weight: 700;
+  }
+  .tiempo-flecha { color: var(--tenue); transition: transform 0.18s ease; }
+  .tiempo.abierto .tiempo-flecha { transform: rotate(180deg); }
+  .tiempo-panel {
+    padding: 14px; border: 1px solid var(--borde); border-top: none;
+    border-radius: 0 0 var(--r-lg) var(--r-lg); background: var(--superficie);
+  }
+  .tiempo-panel[hidden] { display: none; }
+  .tiempo-subtitulo {
+    margin: 0 0 8px; font-size: var(--t-etiqueta); font-weight: 700;
+    letter-spacing: 0.8px; text-transform: uppercase; color: var(--apagado);
+  }
+  .tiempo-subtitulo:not(:first-child) { margin-top: 18px; }
+  .tiempo-dias { display: grid; gap: 6px; }
+  .tiempo-dia {
+    display: grid; align-items: center; gap: 8px;
+    grid-template-columns: 2.6em 22px 1fr auto 2.2em 2.2em;
+    font-size: var(--t-cuerpo);
+  }
+  .tiempo-dia-nombre { font-weight: 700; }
+  .tiempo-dia-desc { color: var(--apagado); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .tiempo-dia-agua { color: var(--verde-claro); font-size: var(--t-etiqueta); font-weight: 600; }
+  .tiempo-dia-max { font-weight: 700; text-align: right; }
+  .tiempo-dia-min { color: var(--tenue); text-align: right; }
+  .tiempo-icono-sol { color: var(--dorado); }
+  .tiempo-icono-nube { color: #CFD8DC; }
+  .tiempo-icono-lluvia, .tiempo-icono-tormenta, .tiempo-icono-nieve { color: #64B5F6; }
+  .tiempo-aire-cab { display: flex; align-items: baseline; gap: 10px; }
+  .tiempo-aqi { font-size: 34px; font-weight: 300; line-height: 1; }
+  .tiempo-aire-nivel { font-weight: 700; }
+  .tiempo-contaminantes { display: grid; gap: 4px; margin-top: 10px; }
+  .tiempo-fila { display: flex; justify-content: space-between; gap: 12px; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .tiempo-valor { color: var(--texto); font-weight: 600; }
+  .tiempo-atribucion { margin: 14px 0 0; font-size: var(--t-etiqueta); color: var(--tenue); }
+  .tiempo-atribucion a { color: var(--tenue); }
+  /* La escala del aire, en tonos que se leen en los dos temas: los de
+     Material (#FFEB3B) dan 1,1:1 sobre blanco. Es la misma conclusión que
+     `_colorEscala` en la app. */
+  .aire-bueno { color: #8BE28F; }
+  .aire-moderado { color: #E8C97A; }
+  .aire-sensibles { color: #FFB074; }
+  .aire-malo, .aire-peligroso { color: var(--error); }
+  @media (prefers-color-scheme: light) {
+    .aire-bueno { color: #2E7D32; }
+    .aire-moderado { color: #8D6E00; }
+    .aire-sensibles { color: #E65100; }
+    .tiempo-icono-sol { color: var(--dorado-texto); }
+    .tiempo-icono-nube { color: #546E7A; }
+    .tiempo-icono-lluvia, .tiempo-icono-tormenta, .tiempo-icono-nieve { color: #1565C0; }
+  }
+
   .ubicacion-caja {
     display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
     margin: 18px 0 0; padding: 14px;
@@ -253,6 +321,11 @@
 <main class="explorar" id="contenido" tabindex="-1">
   <h1>Explorar Sevilla</h1>
   <p class="intro">Bares, restaurantes, monumentos, museos y parques de Sevilla y su provincia. También están todos en <a href="/mapa/">el mapa</a>.</p>
+
+  <!-- El tiempo y el aire, lo mismo que la app en su portada
+       (`explorar/tiempo.js`). Va arriba porque es lo primero que se mira
+       antes de decidir si se sale a la calle. -->
+  <div id="hueco-tiempo"></div>
 
   <div class="ubicacion-caja" id="ubicacion-caja">
     <p>Dinos dónde estás y ordenamos la lista por lo que tienes más cerca. Tu ubicación no sale de este móvil.</p>

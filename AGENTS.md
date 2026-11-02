@@ -447,6 +447,42 @@ pin de `modo=sugerir` se deja arrastrable, igual que el que sale al tocar el
 mapa. El mapa conserva esos parámetros durante el
 acceso con Google; no debe obligar a buscar de nuevo el lugar compartido.
 
+## «¿Está abierto?» (`lugar/abierto.js`)
+
+En la ficha, lo mismo que la app enseña en `fila_estado_lugar.dart`, y
+**escribiendo en la misma tabla**: `fn_confirmar_estado`, que se lee agregada
+con `fn_estado_lugares`. La tabla `estado_lugar` no la lee nadie —dice dónde
+ha estado una persona y cuándo—, así que todo pasa por esas dos funciones.
+
+- **Pide cuenta**, como guardar: el freno de un minuto y el contador van por
+  `device_id`, y en un navegador un id anónimo no se puede llevar a ninguna
+  parte. Se manda el id de la cuenta, así que la web cuenta a la persona.
+- **La ubicación no se pide al abrir la ficha.** Si ya está concedida se lee en
+  silencio; si no, se pide **al contestar**. Los mismos 150 m y la misma
+  ventana de 2 h que la app: contestar desde lejos no pinta el estado de nadie,
+  vale para deducir horarios, y se dice «Gracias» en vez de dejar la pregunta.
+- **No hay línea «Debería estar abierto».** La app la saca de `opening_hours`;
+  interpretar ese campo (rangos, festivos, `Mo-Fr 09:00-14:00,17:00-20:30`)
+  pide un analizador entero, y uno a medias diría que un bar abre el 25 de
+  diciembre. El horario crudo ya sale en los datos de la ficha.
+- `SIN_PUERTA` está copiada de `PlaceTypes.sinPuerta`: a un mirador o una
+  plaza no se le pregunta, se dice «Siempre accesible». Los parques **no**
+  están en esa lista, y es a propósito.
+
+## El tiempo y el aire (`explorar/tiempo.js`)
+
+Lo mismo que la app en su portada, con las mismas URL de Open-Meteo (sin clave
+y sin coste, por eso se llaman desde el navegador), las mismas descripciones
+WMO, los mismos niveles de aire y la misma atribución.
+
+- **La ubicación no se pide por esto**: si ya está concedida, el tiempo es el
+  de donde estás; si no, el del centro de Sevilla.
+- **Iconos dibujados con SVG, no emojis**, que es lo que hizo la app el
+  18-oct-2026. Los pinta `svgIcono` con círculos y líneas.
+- Los colores del aire tienen pareja clara y oscura: el amarillo de Material
+  (#FFEB3B) da 1,1:1 sobre blanco. Es la misma conclusión que `_colorEscala`
+  en la app.
+
 ## `/perfil/`: perfiles dentro del dominio principal
 
 El cuadro de honor enlaza a `/perfil/?n=<nombre>`, que lee únicamente los datos
