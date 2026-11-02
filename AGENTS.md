@@ -529,6 +529,29 @@ Los enlaces antiguos `sevitime.github.io/perfil/` y `sevitime.github.io/ruta/`
 siguen existiendo y no se redirigen: son App Links compartidos por versiones
 publicadas de la app y su dominio conserva `/.well-known/assetlinks.json`.
 
+## Seguir a alguien (`perfil/seguir.js`) y el buzón (`/buzon/`)
+
+Las dos cosas con **las mismas funciones que la app y sin SQL nuevo**:
+`fn_seguir`, `fn_dejar_de_seguir`, `fn_a_quien_sigo` y `fn_mi_perfil` para el
+botón; `fn_mis_mensajes`, `fn_marcar_mensajes_leidos` y `fn_borrar_mensaje`
+para el buzón. Las dos piden cuenta.
+
+- **Seguir** sirve para algo más que el contador: cuando alguien a quien sigues
+  publica una ruta el servidor manda un aviso, y desde los avisos en la web eso
+  también llega aquí. El servidor devuelve `false` —no un error— cuando no hay
+  a quién seguir (nombre que ya no existe, uno mismo, o alguien fuera del
+  cuadro de honor): eso se dice como «No se puede seguir a este perfil», no
+  como fallo de red. Tu propio perfil no lleva botón, y para saberlo hace falta
+  `fn_mi_perfil`: el nombre público **no** está en el usuario de Supabase.
+- **`/perfil/` ahora carga `auth.js`**, y `perfil.js` usa `window.SEVI.sb` en
+  vez de crear su propio cliente: dos clientes en la misma página se pelean por
+  el almacén de la sesión.
+- **El buzón** marca los mensajes como leídos al abrirlo, como la app. Con
+  sesión, `p_device_id` va en `null` y el servidor usa `auth.uid()`. No es
+  mensajería entre usuarios, y eso lo dice la propia página.
+- **El enlace del buzón lo pone `nav.js`** en el menú de todas las páginas: son
+  catorce ficheros y el enlace es siempre el mismo.
+
 ## `/rutas/?id=`: el enlace de una ruta
 
 Desde el 11-oct-2026 cada ruta tiene dirección propia dentro de la web:

@@ -801,6 +801,33 @@ footer span { margin: 0 8px; }
 }
 .aviso-teselas-cerrar:hover { color: var(--texto); }
 
+/* ---------- seguir a alguien (`perfil/seguir.js`) ---------- */
+#hueco-seguir:empty { display: none; }
+.perfil-seguir {
+  min-height: 44px;
+  margin-top: 10px;
+  padding: 0 20px;
+  cursor: pointer;
+  border: 1px solid var(--verde);
+  border-radius: 999px;
+  background: var(--verde-solido);
+  color: #fff;
+  font-size: var(--t-cuerpo);
+  font-weight: 700;
+}
+/* Ya sigues: el botón baja a secundario, para que lo que destaque sea
+   «Seguir» y no «dejar de seguir». */
+.perfil-seguir.siguiendo {
+  background: var(--superficie);
+  color: var(--verde-claro);
+}
+.perfil-seguir:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+.perfil-seguir-nota, .perfil-seguir-aviso {
+  margin: 8px 0 0;
+  font-size: var(--t-etiqueta);
+  color: var(--apagado);
+}
+
 /* ---------- avisos push (la tarjeta de `avisos.js`) ---------- */
 .avisos {
   margin: 28px 0 0;

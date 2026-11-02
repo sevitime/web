@@ -131,6 +131,15 @@
       abrir.href = intentPerfil(perfil.nombre_publico);
       abrir.hidden = false;
     }
+    // Seguir a esta persona. Va aquí y no antes porque hasta ahora no se
+    // sabía si el perfil existe ni cómo se llama exactamente.
+    if (window.SeviSeguir) {
+      window.SeviSeguir.iniciar(
+        { nombre: perfil.nombre_publico },
+        document.getElementById('hueco-seguir')
+      );
+    }
+
     estado.hidden = true;
     datos.hidden = false;
   }
@@ -140,7 +149,11 @@
     return;
   }
 
-  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  // El cliente es el de `auth.js` (`window.SEVI.sb`), no uno propio: dos
+  // clientes en la misma página comparten el almacén de la sesión y se pelean
+  // por él. Si por lo que sea no estuviera, se crea uno solo para leer.
+  const sb = (window.SEVI && window.SEVI.sb) ||
+    window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
   Promise.all([
     sb.rpc('fn_perfil_publico', { p_nombre: nombreSolicitado }),
     sb.rpc('fn_rutas_de_usuario', { p_nombre: nombreSolicitado }),
