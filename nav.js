@@ -108,7 +108,7 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
   });
 }
 
-// Transporte y Buzón, en el menú de todas las páginas.
+// Noticias, Transporte y Buzón, en el menú de todas las páginas.
 //
 // Los pone el script y no el HTML de cada página porque son quince ficheros y
 // los enlaces son siempre los mismos. Van delante del botón de «Añadir o
@@ -120,7 +120,8 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
   if (!menu) return;
   var boton = menu.querySelector('.nav-btn-mapa');
 
-  [['/transporte/', 'Transporte'], ['/buzon/', 'Buz\u00f3n']].forEach(function (d) {
+  [['/noticias/', 'Noticias'], ['/transporte/', 'Transporte'],
+   ['/buzon/', 'Buz\u00f3n']].forEach(function (d) {
     // En su propia página no se repite el enlace.
     if (location.pathname.indexOf(d[0]) === 0) return;
     if (menu.querySelector('a[href="' + d[0] + '"]')) return;

@@ -529,6 +529,24 @@ Los enlaces antiguos `sevitime.github.io/perfil/` y `sevitime.github.io/ruta/`
 siguen existiendo y no se redirigen: son App Links compartidos por versiones
 publicadas de la app y su dominio conserva `/.well-known/assetlinks.json`.
 
+## Noticias (`/noticias/`)
+
+La web **no** puede leer los canales RSS de los medios: ninguno de los tres
+permite CORS (comprobado el 2-nov-2026). Las recoge **`sync-noticias`**, una
+función del repo de la app, cada dos horas, y las deja en la tabla `noticias`,
+que ya era de lectura pública con `activa = true`. Esta página solo lee esa
+tabla, así que la web y la app enseñan lo mismo.
+
+- **Pendiente de desplegar la función y programar el cron** (ver
+  `docs/sql/noticias_recolector.sql` en el repo de la app). Hasta entonces la
+  página solo enseña las noticias escritas a mano, y si no hay ninguna lo dice
+  sin dejar la página en blanco.
+- Titular, extracto corto y enlace al medio. **El cuerpo de la noticia no se
+  copia ni se aloja**: es el modelo de agregador defendible (art. 15 DSM /
+  RD-ley 24/2021). Todo se pinta con `textContent`.
+- Las fotos son de los medios y van con `referrer-policy: no-referrer`; si una
+  no carga, se quita y la noticia se queda igual.
+
 ## Transporte (`/transporte/`)
 
 Las mismas tres fuentes que la app y **llamadas desde el propio navegador**,
