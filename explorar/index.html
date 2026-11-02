@@ -25,8 +25,8 @@
 <meta name="apple-mobile-web-app-title" content="SeviTime">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=96335141">
-<script defer src="/nav.js?v=7b2b3866"></script>
+<link rel="stylesheet" href="/estilo.css?v=39061808">
+<script defer src="/nav.js?v=d67e8ec2"></script>
 <script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/auth.js?v=4773ca46"></script>
 <script defer src="/explorar/explorar.js?v=63be83ef"></script>
@@ -119,27 +119,9 @@
     .tiempo-icono-lluvia, .tiempo-icono-tormenta, .tiempo-icono-nieve { color: #1565C0; }
   }
 
-  .ubicacion-caja {
-    display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
-    margin: 18px 0 0; padding: 14px;
-    border: 1px solid var(--borde); border-radius: var(--r-lg);
-    background: var(--superficie);
-  }
-  .ubicacion-caja p { margin: 0; flex: 1 1 220px; font-size: var(--t-cuerpo); color: var(--apagado); }
-  .btn-ubicacion {
-    flex: 0 0 auto; min-height: 44px; padding: 0 18px;
-    border: none; border-radius: var(--r-pill);
-    background: var(--verde-solido); color: #fff;
-    font: inherit; font-weight: 700; cursor: pointer;
-  }
-  .btn-ubicacion:hover { filter: brightness(1.08); }
-  .btn-ubicacion:disabled { opacity: .6; cursor: default; filter: none; }
-  .btn-ubicacion:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
-  .aviso-ubicacion {
-    margin: 10px 0 0; padding: 10px 12px;
-    border: 1px solid var(--borde); border-radius: var(--r-sm);
-    background: var(--gris-bg); color: var(--texto); font-size: var(--t-cuerpo);
-  }
+  /* `.ubicacion-caja`, `.btn-ubicacion` y `.aviso-ubicacion` viven ahora en
+     `estilo.css`: los comparte /transporte/, que pide la ubicación por el
+     mismo motivo. */
 
   /* Buscador y chips, pegados arriba al desplazarse: en la app los filtros se
      clavan en la cabecera y el resultado de tocar uno siempre se ve. */

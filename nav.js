@@ -108,25 +108,29 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
   });
 }
 
-// El buzón, en el menú de todas las páginas.
+// Transporte y Buzón, en el menú de todas las páginas.
 //
-// Lo pone el script y no el HTML de cada página porque son catorce ficheros y
-// el enlace es siempre el mismo. Va delante del botón de «Añadir o corregir
-// sitios», que es el que cierra el menú. Quien no haya entrado verá el buzón
-// pidiéndole cuenta, que es lo honesto: existe, y es suyo en cuanto entre.
+// Los pone el script y no el HTML de cada página porque son quince ficheros y
+// los enlaces son siempre los mismos. Van delante del botón de «Añadir o
+// corregir sitios», que es el que cierra el menú. Quien no haya entrado verá
+// el buzón pidiéndole cuenta, que es lo honesto: existe, y es suyo en cuanto
+// entre.
 (function () {
   var menu = document.querySelector('.nav-enlaces');
   if (!menu) return;
-  if (location.pathname.indexOf('/buzon/') === 0) return;
-  if (menu.querySelector('a[href="/buzon/"]')) return;
-
-  var enlace = document.createElement('a');
-  enlace.className = 'nav-link';
-  enlace.href = '/buzon/';
-  enlace.textContent = 'Buz\u00f3n';
   var boton = menu.querySelector('.nav-btn-mapa');
-  if (boton) menu.insertBefore(enlace, boton);
-  else menu.appendChild(enlace);
+
+  [['/transporte/', 'Transporte'], ['/buzon/', 'Buz\u00f3n']].forEach(function (d) {
+    // En su propia página no se repite el enlace.
+    if (location.pathname.indexOf(d[0]) === 0) return;
+    if (menu.querySelector('a[href="' + d[0] + '"]')) return;
+    var enlace = document.createElement('a');
+    enlace.className = 'nav-link';
+    enlace.href = d[0];
+    enlace.textContent = d[1];
+    if (boton) menu.insertBefore(enlace, boton);
+    else menu.appendChild(enlace);
+  });
 }());
 
 // Quién nos está mirando: lo usan el aviso de instalación y la portada.

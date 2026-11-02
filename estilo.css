@@ -801,6 +801,33 @@ footer span { margin: 0 8px; }
 }
 .aviso-teselas-cerrar:hover { color: var(--texto); }
 
+/* ---------- pedir la ubicación ----------
+
+   Lo comparten `/explorar/` y `/transporte/`: la misma caja, el mismo botón y
+   el mismo aviso. Estaba dentro del `<style>` de Explorar hasta que hubo dos
+   páginas que la necesitaban. */
+.ubicacion-caja {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px;
+  margin: 18px 0 0; padding: 14px;
+  border: 1px solid var(--borde); border-radius: var(--r-lg);
+  background: var(--superficie);
+}
+.ubicacion-caja p { margin: 0; flex: 1 1 220px; font-size: var(--t-cuerpo); color: var(--apagado); }
+.btn-ubicacion {
+  flex: 0 0 auto; min-height: 44px; padding: 0 18px;
+  border: none; border-radius: var(--r-pill);
+  background: var(--verde-solido); color: #fff;
+  font: inherit; font-weight: 700; cursor: pointer;
+}
+.btn-ubicacion:hover { filter: brightness(1.08); }
+.btn-ubicacion:disabled { opacity: .6; cursor: default; filter: none; }
+.btn-ubicacion:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+.aviso-ubicacion {
+  margin: 10px 0 0; padding: 10px 12px;
+  border: 1px solid var(--borde); border-radius: var(--r-sm);
+  background: var(--gris-bg); color: var(--texto); font-size: var(--t-cuerpo);
+}
+
 /* ---------- seguir a alguien (`perfil/seguir.js`) ---------- */
 #hueco-seguir:empty { display: none; }
 .perfil-seguir {

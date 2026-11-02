@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transporte en Sevilla — SeviTime</title>
+<meta name="description" content="La parada de Tussam, la estación de metro y la de Sevici que tienes más cerca, con las líneas y las bicis libres.">
+<link rel="canonical" href="https://sevitime.com/transporte/">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SeviTime">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css?v=39061808">
+<script defer src="/nav.js?v=d67e8ec2"></script>
+<script defer src="/auth.js?v=4773ca46"></script>
+<script defer src="/transporte/transporte.js?v=0b53324f"></script>
+<style>
+  .transporte { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+  .transporte h1 {
+    font-size: var(--t-titulo); font-weight: 800; color: var(--texto);
+    letter-spacing: -0.02em; margin: 0 0 4px;
+  }
+  .transporte .intro { margin: 0 0 18px; font-size: var(--t-cuerpo); color: var(--apagado); text-wrap: pretty; }
+  .t-estado { margin: 0 0 16px; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .t-seccion { margin: 0 0 24px; }
+  .t-titulo {
+    margin: 0 0 10px; padding-left: 10px;
+    border-left: 4px solid var(--verde);
+    font-size: var(--t-seccion); font-weight: 700; color: var(--texto);
+  }
+  .t-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+  .t-fila {
+    display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px;
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie);
+  }
+  .t-cuerpo { min-width: 0; flex: 1 1 auto; display: grid; gap: 6px; }
+  .t-nombre { font-size: var(--t-item); font-weight: 700; color: var(--texto); }
+  .t-detalle { font-size: var(--t-etiqueta); color: var(--apagado); }
+  .t-dist { flex: 0 0 auto; font-size: var(--t-cuerpo); font-weight: 700; color: var(--verde-claro); }
+  .t-lineas { display: flex; flex-wrap: wrap; gap: 5px; }
+  /* El número de línea va sobre su color oficial, y en blanco: son los
+     colores de Tussam y no se tocan. */
+  .t-linea {
+    min-width: 30px; padding: 2px 7px; border-radius: 6px;
+    color: #fff; font-size: var(--t-etiqueta); font-weight: 700; text-align: center;
+  }
+  .t-nada { margin: 0; font-size: var(--t-cuerpo); color: var(--tenue); }
+</style>
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<noscript>
+  <p class="noscript-aviso">Esta página necesita JavaScript para buscar las paradas que tienes cerca. También están en <a href="/">la app de SeviTime</a>.</p>
+</noscript>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="/explorar/" class="nav-link">Explorar</a>
+      <a href="/rutas/" class="nav-link">Rutas</a>
+      <a href="/eventos/" class="nav-link">Eventos</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Añadir o corregir sitios</span>
+      </a>
+      </div>
+      <div id="auth-seccion"></div>
+    </div>
+  </div>
+</nav>
+
+<main class="transporte" id="contenido" tabindex="-1">
+  <h1>Transporte</h1>
+  <p class="intro">La parada de Tussam, la estación de metro y la de Sevici que tienes más cerca. Los datos salen del portal de datos abiertos del Ayuntamiento y de CityBikes, en directo.</p>
+
+  <div class="ubicacion-caja" id="ubicacion-caja">
+    <p>Para esto hace falta saber dónde estás: todo lo que enseña esta página es «lo que tengo cerca».</p>
+    <button class="btn-ubicacion" id="btn-ubicacion" type="button">Ver lo que tengo cerca</button>
+  </div>
+
+  <p class="t-estado" id="estado" role="status" hidden></p>
+
+  <div id="secciones"></div>
+</main>
+
+<footer>
+  <a href="/sitios/">Sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/rutas/">Rutas</a>
+  <span aria-hidden="true">·</span>
+  <a href="/ranking/">Cuadro de honor</a>
+  <span aria-hidden="true">·</span>
+  <a href="/mapa/?modo=colaborar">Añadir o corregir sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/derechos/">Imágenes y derechos</a>
+  <span aria-hidden="true">·</span>
+  <a href="/privacidad/">Privacidad</a>
+  <span aria-hidden="true">·</span>
+  <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
+</footer>
+
+<script defer src="/visitas.js?v=2c5ad387"></script>
+</body>
+</html>

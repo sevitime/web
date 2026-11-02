@@ -529,6 +529,28 @@ Los enlaces antiguos `sevitime.github.io/perfil/` y `sevitime.github.io/ruta/`
 siguen existiendo y no se redirigen: son App Links compartidos por versiones
 publicadas de la app y su dominio conserva `/.well-known/assetlinks.json`.
 
+## Transporte (`/transporte/`)
+
+Las mismas tres fuentes que la app y **llamadas desde el propio navegador**,
+porque las tres permiten CORS (`access-control-allow-origin: *`): no hace falta
+ningún intermediario nuestro.
+
+- **Tussam y Metro**: capas públicas de ArcGIS del portal de datos abiertos del
+  Ayuntamiento. ArcGIS devuelve **una fila por línea y parada**, así que hay
+  que agrupar por `Nodo` o la misma parada sale cinco veces.
+- **Sevici**: CityBikes devuelve la red entera en una llamada, y la distancia
+  se calcula aquí. Los nombres vienen con un prefijo de id y guion bajo
+  (`123_PLAZA…`, `_PLAZA DE LA CONCORDIA`): se limpia igual que en la app.
+- **Los colores de las líneas son los oficiales de Tussam**, copiados de
+  `TussamService._coloresLineas`. Si cambian allí, hay que traerlos.
+- **Esta página sí pide la ubicación**, y es la única que lo hace al entrar
+  cuando ya está concedida: sin ella no hay nada que enseñar. Que esos
+  terceros reciban tu posición aproximada está dicho en la política.
+- **Falta el Consorcio (CTAN)**, los interurbanos. Su API también permite CORS,
+  así que es trabajo pendiente y no un imposible.
+- `.ubicacion-caja`, `.btn-ubicacion` y `.aviso-ubicacion` se mudaron del
+  `<style>` de Explorar a `estilo.css` al haber dos páginas que los usan.
+
 ## Seguir a alguien (`perfil/seguir.js`) y el buzón (`/buzon/`)
 
 Las dos cosas con **las mismas funciones que la app y sin SQL nuevo**:
