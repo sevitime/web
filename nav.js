@@ -186,7 +186,11 @@ window.SeviIOS = (function () {
     var menu = bloque.querySelector('.paso-menu');
     var glifo = bloque.querySelector('.glifo-compartir');
     if (navegador) navegador.textContent = 'Chrome';
-    if (menu) menu.textContent = 'el men\u00fa \u22ef';
+    // En Chrome de iOS la opción vive dentro de la hoja de compartir, no
+    // suelta en el menú: decir solo «el menú ⋯» deja a la persona mirando
+    // una lista donde no está lo que busca. Desde iOS 16.4 esto funciona
+    // igual que en Safari, y lo que se instala corre como app aparte.
+    if (menu) menu.textContent = 'el men\u00fa \u22ef y luego Compartir';
     // El glifo es el de Compartir de Safari: en Chrome no se pulsa eso.
     if (glifo) glifo.remove();
   }
