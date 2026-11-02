@@ -744,3 +744,27 @@ reglas que conviene no romper:
 la dirección se queda en «provincia de Sevilla, España» porque del sitio se
 sabe el nombre, no la calle. Límite conocido: Google prefiere una página por
 evento y aquí van todos en una, así que puede entenderlos y no destacarlos.
+
+## «Hoy en Sevilla» en la portada (`diario.js`)
+
+La curiosidad del día y el sitio del día, las mismas que la app. Se pintan en
+`<div id="hueco-diario">` de `index.html`; si la red falla o no hay nada para
+hoy, el hueco se queda vacío y la portada sigue igual.
+
+**Lo delicado es CÓMO se elige, no de dónde se lee.** Las dos tablas
+(`efemerides`, `lugar_destacado`) ya eran de lectura pública, así que esto no
+pidió SQL ni permisos. Lo que hubo que traducir de la app:
+
+- La curiosidad va por `month_day` de **hoy en Sevilla** (`Europe/Madrid`),
+  no en la hora del aparato.
+- El sitio: si alguno tiene `fecha_forzada` de hoy o una `fiesta_movil` que
+  cae hoy, ese; si no, `lista[día del año % total]` con la lista ordenada por
+  `id`. Es `LugarDestacadoService._resolver`.
+- **Dos copias que hay que mantener a la vez con el repo de la app**: el
+  algoritmo de Pascua (`lib/utils/fiestas_moviles.dart`) y el slug de la
+  efeméride (`lib/utils/efemeride_ref.dart`, que es de donde cuelgan los
+  vídeos). Están en la tabla de `docs/paridad_app_web.md`.
+
+**Fotos.** La del sitio solo se publica si tiene `foto_credito`; la de la
+efeméride **no se publica nunca**, porque `efemerides` no guarda autor ni
+licencia. **Vídeos**: enlace a YouTube, jamás incrustado, que es un tercero.

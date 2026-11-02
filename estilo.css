@@ -1140,3 +1140,76 @@ footer span { margin: 0 8px; }
   ::view-transition-new(root) { animation-duration: 0.2s; }
   .top-nav { view-transition-name: barra; }
 }
+
+/* ---------- Lo de hoy en la portada (diario.js) ---------- */
+
+.diario {
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 40px 24px 8px;
+}
+.diario h2 {
+  font-size: var(--t-seccion);
+  font-weight: 700;
+  color: var(--texto);
+  letter-spacing: -0.4px;
+  text-align: center;
+  margin-bottom: 22px;
+}
+.diario-tarjetas {
+  display: grid;
+  gap: 16px;
+}
+@media (min-width: 720px) {
+  .diario-tarjetas { grid-template-columns: 1fr 1fr; align-items: start; }
+}
+.diario-tarjeta {
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-lg);
+  padding: 20px 22px;
+  overflow: hidden;
+}
+/* La foto va a sangre por arriba: el padding de la tarjeta la dejaba
+   flotando con un marco de tres lados. */
+.diario-tarjeta .diario-foto {
+  display: block;
+  width: calc(100% + 44px);
+  margin: -20px -22px 16px;
+  height: 180px;
+  object-fit: cover;
+  background: var(--fondo);
+}
+.diario-etiqueta {
+  font-size: var(--t-etiqueta);
+  font-weight: 600;
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+  color: var(--verde-claro);
+  margin-bottom: 6px;
+}
+.diario-tarjeta h3 {
+  font-size: var(--t-item);
+  font-weight: 700;
+  color: var(--texto);
+  margin-bottom: 8px;
+  text-wrap: balance;
+}
+.diario-texto {
+  color: var(--apagado);
+  font-size: var(--t-cuerpo);
+  line-height: 1.5;
+}
+.diario-credito {
+  margin-top: 10px;
+  color: var(--apagado);
+  font-size: 0.74rem;
+  opacity: 0.8;
+}
+.diario-video {
+  display: inline-block;
+  margin-top: 12px;
+  color: var(--verde-claro);
+  font-size: var(--t-cuerpo);
+  font-weight: 600;
+}
