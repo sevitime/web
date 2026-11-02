@@ -53,6 +53,58 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
   });
 }
 
+// Quién nos está mirando: lo usan el aviso de instalación y la portada.
+//
+// El iPad con «solicitar web de escritorio» se presenta como un Mac; lo delata
+// que tenga pantalla táctil. En Firefox y Edge de iPhone no existe «Añadir a
+// pantalla de inicio», así que se distinguen: no se manda a nadie a buscar un
+// botón que su navegador no tiene.
+window.SeviIOS = (function () {
+  var ua = navigator.userAgent || '';
+  var es = /iPad|iPhone|iPod/.test(ua) ||
+    (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+  return {
+    es: es,
+    chrome: es && /CriOS/.test(ua),
+    safari: es && /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua),
+    instalada: navigator.standalone === true ||
+      (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches)
+  };
+}());
+
+// ── La portada, cuando quien la abre lleva un iPhone ───────────────────────
+//
+// Decía «Está para Android, en Google Play» con el badge de la tienda: a un
+// iPhone se le ofrecía lo único que no puede instalar. Ahora se le cuenta lo
+// que sí puede hacer, que es tenerla igual sin pasar por App Store.
+(function () {
+  if (!window.SeviIOS.es) return;
+  var bloque = document.querySelector('.cierre-iphone');
+  if (!bloque) return;
+
+  var enlaceHero = document.querySelector('.hero-iphone');
+  var badges = document.querySelectorAll('.badge');
+  var textoAndroid = document.querySelector('.cierre-android');
+
+  for (var i = 0; i < badges.length; i++) badges[i].hidden = true;
+  if (textoAndroid) textoAndroid.hidden = true;
+  if (enlaceHero) enlaceHero.hidden = false;
+  bloque.hidden = false;
+
+  // Ya instalada: no se le explica cómo instalar algo que ya tiene.
+  if (window.SeviIOS.instalada) {
+    bloque.hidden = true;
+    if (enlaceHero) enlaceHero.hidden = true;
+  }
+
+  if (window.SeviIOS.chrome) {
+    var navegador = bloque.querySelector('.paso-navegador');
+    var menu = bloque.querySelector('.paso-menu');
+    if (navegador) navegador.textContent = 'Chrome';
+    if (menu) menu.textContent = 'el men\u00fa \u22ef';
+  }
+}());
+
 // ── «Añádela a tu pantalla de inicio», solo en iPhone y iPad ───────────────
 //
 // En Android el navegador ofrece instalarla él solo. En iOS **no lo ofrece
@@ -78,15 +130,9 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
     try { return localStorage.getItem(clave); } catch (e) { return null; }
   }
 
-  var ua = navigator.userAgent || '';
-  // El iPad con «solicitar web de escritorio» se presenta como un Mac; lo
-  // delata que tenga pantalla táctil.
-  var esIOS = /iPad|iPhone|iPod/.test(ua) ||
-    (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
-  if (!esIOS) return;
-
-  var esChrome = /CriOS/.test(ua);
-  var esSafari = /Safari/.test(ua) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(ua);
+  if (!window.SeviIOS.es) return;
+  var esChrome = window.SeviIOS.chrome;
+  var esSafari = window.SeviIOS.safari;
   // En Firefox y Edge de iPhone no existe «Añadir a pantalla de inicio»:
   // contarlo ahí sería mandar a alguien a buscar un botón que no tiene.
   if (!esChrome && !esSafari) return;

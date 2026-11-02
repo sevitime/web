@@ -135,6 +135,9 @@ img { max-width: 100%; display: block; }
   transition: transform 0.18s ease, filter 0.18s ease;
 }
 .badge img { width: 200px; height: auto; }
+/* `display: inline-block` gana al `[hidden]` del navegador, y en iOS este
+   badge se esconde desde `nav.js`. */
+.badge[hidden] { display: none; }
 .badge:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
 /* El realce solo donde hay puntero real: en táctil :hover se queda pegado
    tras el toque. */
@@ -178,6 +181,50 @@ img { max-width: 100%; display: block; }
   text-decoration: none;
 }
 .hero a:not(.badge):hover, .cierre a:not(.badge):hover { text-decoration: underline; }
+
+/* ---------- en iPhone no hay tienda que ofrecer ----------
+
+   El badge de Google Play se cambia por esto en iOS (`nav.js`): mismo peso
+   visual que el botón verde del hero, pero contorneado, porque no es la
+   acción principal —lo primero sigue siendo entrar a mirar sitios—. Los
+   `[hidden]` se declaran para que el bloque no asome antes de que el script
+   decida. */
+.hero-iphone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 48px;
+  padding: 0 20px;
+  border: 1px solid var(--verde);
+  border-radius: var(--r-sm);
+  color: var(--verde-claro);
+  font-size: var(--t-cuerpo);
+  font-weight: 700;
+  text-decoration: none;
+}
+.hero .hero-iphone:hover { text-decoration: none; }
+.hero-iphone[hidden], .cierre-iphone[hidden] { display: none; }
+
+.cierre-iphone {
+  max-width: 34rem;
+  margin: 0 auto;
+  text-align: left;
+}
+.pasos-iphone {
+  margin: 16px 0 0;
+  padding: 0 0 0 1.4em;
+  display: grid;
+  gap: 8px;
+  color: var(--texto);
+  font-size: var(--t-cuerpo);
+  line-height: 1.45;
+}
+.pasos-iphone strong { color: var(--verde-claro); font-weight: 600; }
+.cierre-iphone-nota {
+  margin-top: 14px;
+  color: var(--apagado);
+  font-size: var(--t-etiqueta);
+}
 .hero a.hero-explorar { color: #fff; text-decoration: none; }
 .hero a.hero-explorar:hover { text-decoration: none; }
 
