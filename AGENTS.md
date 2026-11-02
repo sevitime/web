@@ -776,3 +776,27 @@ pidió SQL ni permisos. Lo que hubo que traducir de la app:
 en el servidor el 2-nov-2026 (`tool/fotos_efemerides.mjs` en el repo de la
 app): 232 con foto, 131 de ellas bajo CC BY o CC BY-SA. Aquí **solo se lee
 lo guardado**, nunca se pregunta a Wikipedia desde el navegador. **Vídeos**: enlace a YouTube, jamás incrustado, que es un tercero.
+
+## El manifiesto declara la app de Play (`related_applications`)
+
+Desde el 3-nov-2026 `manifest.webmanifest` lleva:
+
+```json
+"related_applications": [{ "platform": "play", "id": "com.selu.sevitime", … }],
+"prefer_related_applications": true
+```
+
+**Por qué.** En Android existe la app de Play y es mejor que la web instalada:
+los avisos no dependen de que el sistema no limpie el almacenamiento, se
+actualiza sola y aparece en la tienda. Con esto, Chrome en Android deja de
+ofrecer la instalación de la web y la gente va a Play, que es donde debe ir.
+Es además lo que recomienda la propia documentación de Chrome cuando hay app
+nativa.
+
+**En iPhone no cambia nada**, que es lo importante: Safari ignora este campo
+y la instalación allí la hace la persona a mano desde Compartir (o desde el
+menú ⋯ en Chrome de iOS). La vía de iPhone sigue intacta, porque allí no hay
+app y es la única forma de tenerla.
+
+El `id` tiene que ser el `applicationId` real del `build.gradle.kts` de la
+app (`com.selu.sevitime`): si no coincide, Chrome no lo relaciona con nada.
