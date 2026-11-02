@@ -18,11 +18,15 @@
 //    (`dia del año % total`), con la lista ordenada por id. Es la traducción
 //    de `LugarDestacadoService._resolver` y de `fiestas_moviles.dart`.
 //
-// FOTOS. La del lugar destacado solo se publica **si tiene guardado su
-// crédito** (`foto_credito`): es la regla de la web y no se salta ni aquí.
-// La de la efeméride **no se enseña**: `efemerides` no guarda autor ni
-// licencia de su imagen, así que publicarla sería incumplir lo que la web
-// promete. Texto y enlace, que es lo que se puede defender.
+// FOTOS. Ni la del sitio ni la de la curiosidad se publican **si no tienen
+// guardado su crédito** (`foto_credito`). Es una regla sola y vale para las
+// dos. La de la efeméride no existía hasta el 2-nov-2026: la app la sacaba
+// de Wikipedia en caliente y la pintaba sin decir de quién era, y de las 230
+// que se pudieron resolver, **131 están bajo CC BY o CC BY-SA**, que obligan
+// a nombrar al autor. Se resolvieron en el servidor con
+// `tool/fotos_efemerides.mjs` y aquí solo se lee lo guardado. Las que no
+// tienen crédito —porque Commons no da autor y su licencia lo exige— se
+// quedan sin foto a propósito.
 //
 // EL PLAN DEL DÍA. La misma frase que la app enseña en su portada, elegida
 // igual: primero la condición del tiempo (`fraseDelDia` en
@@ -237,9 +241,20 @@
 
   function tarjetaEfemeride(e, videos) {
     var art = el('article', 'diario-tarjeta');
+    if (e.imagen_url && e.foto_credito) {
+      var img = document.createElement('img');
+      img.src = e.imagen_url;
+      img.alt = e.wiki_title || 'Ilustración de la curiosidad de hoy';
+      img.loading = 'lazy';
+      img.className = 'diario-foto';
+      art.appendChild(img);
+    }
     art.appendChild(el('p', 'diario-etiqueta', 'La curiosidad de hoy'));
     art.appendChild(el('h3', null, titularEfemeride(e)));
     art.appendChild(el('p', 'diario-texto', e.text || ''));
+    if (e.imagen_url && e.foto_credito) {
+      art.appendChild(el('p', 'diario-credito', e.foto_credito));
+    }
     videos.forEach(function (v) {
       var a = enlaceVideo(v, 'Ver el vídeo');
       if (a) art.appendChild(a);
@@ -305,7 +320,8 @@
     }).catch(function () { return ''; });
 
     var contenido = Promise.all([
-      pedir('efemerides?select=year,text,wiki_title&month_day=eq.' +
+      pedir('efemerides?select=year,text,wiki_title,imagen_url,foto_credito' +
+        '&month_day=eq.' +
         encodeURIComponent(h.monthDay) + '&limit=1'),
       pedir('lugar_destacado?select=nombre,descripcion,imagen_url,foto_credito,' +
         'fecha_forzada,fiesta_movil&activo=eq.true&order=id.asc'),

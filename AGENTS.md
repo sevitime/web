@@ -771,6 +771,8 @@ pidió SQL ni permisos. Lo que hubo que traducir de la app:
   vídeos) y la elección de la frase-plan. Están en la tabla de
   `docs/paridad_app_web.md`.
 
-**Fotos.** La del sitio solo se publica si tiene `foto_credito`; la de la
-efeméride **no se publica nunca**, porque `efemerides` no guarda autor ni
-licencia. **Vídeos**: enlace a YouTube, jamás incrustado, que es un tercero.
+**Fotos.** Ni la del sitio ni la de la curiosidad se publican sin
+`foto_credito`. Una regla sola para las dos. La de la efeméride se resolvió
+en el servidor el 2-nov-2026 (`tool/fotos_efemerides.mjs` en el repo de la
+app): 232 con foto, 131 de ellas bajo CC BY o CC BY-SA. Aquí **solo se lee
+lo guardado**, nunca se pregunta a Wikipedia desde el navegador. **Vídeos**: enlace a YouTube, jamás incrustado, que es un tercero.
