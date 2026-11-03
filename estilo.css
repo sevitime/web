@@ -1555,3 +1555,46 @@ html.con-barra .tostada {
   max-height: 320px;
   object-fit: cover;
 }
+
+/* La tira de «Qué pasa» en la portada de Explorar. */
+.tira-crono {
+  margin: 18px 0 4px;
+  padding: 16px 18px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-lg);
+}
+.tira-crono-cabecera {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.tira-crono-cabecera h2 {
+  margin: 0;
+  font-size: var(--t-item);
+  font-weight: 700;
+  color: var(--texto);
+}
+.tira-crono-todo { color: var(--verde-claro); font-weight: 600; font-size: var(--t-cuerpo); }
+.tira-crono-lista { list-style: none; margin: 0; padding: 0; }
+.tira-crono-item { display: flex; align-items: flex-start; gap: 10px; }
+.tira-crono-item + .tira-crono-item { margin-top: 12px; }
+.tira-crono-texto { min-width: 0; }
+.tira-crono-linea {
+  margin: 0;
+  color: var(--texto);
+  font-size: var(--t-cuerpo);
+  line-height: 1.35;
+}
+.tira-crono-linea strong { font-weight: 700; }
+.tira-crono-honor {
+  display: block;
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--borde);
+  color: var(--verde-claro);
+  font-weight: 600;
+  font-size: var(--t-cuerpo);
+}

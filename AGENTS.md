@@ -934,3 +934,20 @@ dónde estuvo otra es dato de un tercero.
 los doce dibujos de la app. Pintarlos como imagen da
 `ERR_UNKNOWN_URL_SCHEME` y deja el hueco en blanco. Las tablas de color y
 emoji están duplicadas con `perfil/perfil.js`.
+
+### La tira «Qué pasa» en Explorar
+
+Las **tres últimas** entradas, con enlace a la cronología entera y al cuadro
+de honor —que estaba escondido tras Tu perfil—. Lo común con la pantalla
+grande (avatares, fechas, la línea «X ha reseñado Y») vive en
+`cronologia/comun.js`: son dos presentaciones de lo mismo.
+
+**Por qué una tira y no la cronología entera arriba del todo.** Medido el
+3-nov-2026: **siete entradas en catorce días, nueve días a cero**. Una
+pantalla de novedades que enseña lo mismo tres días seguidos dice «aquí no
+hay nadie», y eso es peor que no tenerla. Tres líneas con su «hace 3 días»
+envejecen bien; una pantalla vacía, no. **Se revisa cuando haya cinco o más
+entradas al día sostenidas**: ahí se gana el primer puesto, o una pestaña.
+
+Y por eso tampoco se quitó el tiempo para hacerle sitio: se usa a diario,
+ocupa una línea y de él sale la frase del plan del día.

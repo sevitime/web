@@ -17,96 +17,22 @@
   const estado = document.getElementById('estado');
   if (!lista) return;
 
-  const API = 'https://kdqiwhvtovafugpcrumf.supabase.co/rest/v1/';
-  const KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
-
-  function el(tag, clase, texto) {
-    const n = document.createElement(tag);
-    if (clase) n.className = clase;
-    if (texto != null) n.textContent = texto;
-    return n;
-  }
-
-  function haceCuanto(iso) {
-    const min = Math.max(0, Math.round((Date.now() - new Date(iso).getTime()) / 60000));
-    if (min < 60) return min <= 1 ? 'ahora mismo' : 'hace ' + min + ' min';
-    const h = Math.round(min / 60);
-    if (h < 24) return h === 1 ? 'hace 1 hora' : 'hace ' + h + ' horas';
-    const d = Math.round(h / 24);
-    if (d < 7) return d === 1 ? 'ayer' : 'hace ' + d + ' días';
-    const sem = Math.round(d / 7);
-    if (sem < 5) return sem === 1 ? 'hace 1 semana' : 'hace ' + sem + ' semanas';
-    return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
-  }
-
-  function estrellas(n) {
-    const v = Math.max(0, Math.min(5, Number(n) || 0));
-    return '★'.repeat(v) + '☆'.repeat(5 - v);
-  }
-
-  // Los avatares no son URLs: la mayoría son `preset:<id>`, un dibujo de los
-  // doce que ofrece la app. Pintarlos como imagen daba un error de esquema
-  // desconocido y dejaba el hueco en blanco. Mismas tablas que `perfil.js`.
-  const COLOR_PRESET = {
-    giralda: '#00897B', catedral: '#5E7A8A', azahar: '#7CB342', ceramica: '#1E88E5',
-    rebujito: '#C0A020', barco: '#00838F', flamenco: '#AD1457', abanico: '#6D4C9F',
-    farol: '#E65100', sol: '#F9A825', madruga: '#37474F', cafe: '#6D4C41',
-  };
-  const EMOJI_PRESET = {
-    giralda: '🏛️', catedral: '⛪', azahar: '🌸', ceramica: '🔷',
-    rebujito: '🍷', barco: '⛵', flamenco: '🎵', abanico: '🎐',
-    farol: '💡', sol: '☀️', madruga: '🌙', cafe: '☕',
-  };
-
-  function avatar(item) {
-    const guardado = item.avatar || '';
-    if (guardado.indexOf('preset:') === 0) {
-      const id = guardado.slice(7);
-      const d = el('span', 'crono-avatar crono-inicial', EMOJI_PRESET[id] || '📍');
-      d.style.background = COLOR_PRESET[id] || '#00897B';
-      return d;
-    }
-    if (guardado) {
-      const img = document.createElement('img');
-      img.className = 'crono-avatar';
-      img.src = guardado;
-      img.alt = '';
-      img.width = 40;
-      img.height = 40;
-      img.loading = 'lazy';
-      img.referrerPolicy = 'no-referrer';
-      return img;
-    }
-    // Sin nada, la inicial sobre un disco, como en el cuadro de honor.
-    return el('span', 'crono-avatar crono-inicial',
-      (item.apodo || '?').trim().charAt(0).toUpperCase());
-  }
+  const C = window.SeviCrono;
 
   function fila(item) {
+    const el = C.el;
     const li = el('li', 'crono-item');
 
-    const cabecera = el('div', 'crono-cabecera');
-    cabecera.appendChild(avatar(item));
-    const quien = el('div', 'crono-quien');
-    const linea = el('p', 'crono-linea');
-    linea.appendChild(el('strong', null, item.apodo));
-    linea.appendChild(document.createTextNode(
-      item.tipo === 'lugar' ? ' ha añadido ' : ' ha reseñado '));
-    // El sitio enlaza a su ficha, que es a donde quiere ir quien lo lea.
-    if (item.place_key) {
-      const a = el('a', 'crono-sitio', item.sitio);
-      a.href = '/lugar/?k=' + encodeURIComponent(item.place_key);
-      linea.appendChild(a);
-    } else {
-      linea.appendChild(el('span', 'crono-sitio', item.sitio));
-    }
-    quien.appendChild(linea);
-    quien.appendChild(el('span', 'crono-cuando', haceCuanto(item.cuando)));
+    const cabecera = C.el('div', 'crono-cabecera');
+    cabecera.appendChild(C.avatar(item));
+    const quien = C.el('div', 'crono-quien');
+    quien.appendChild(C.linea(item));
+    quien.appendChild(C.el('span', 'crono-cuando', C.haceCuanto(item.cuando)));
     cabecera.appendChild(quien);
     li.appendChild(cabecera);
 
     if (item.rating != null) {
-      li.appendChild(el('p', 'crono-estrellas', estrellas(item.rating)));
+      li.appendChild(el('p', 'crono-estrellas', C.estrellas(item.rating)));
     }
     if (item.texto) li.appendChild(el('p', 'crono-texto', '«' + item.texto + '»'));
     if (item.foto_url) {
@@ -120,12 +46,7 @@
     return li;
   }
 
-  fetch(API + 'rpc/fn_cronologia', {
-    method: 'POST',
-    headers: { apikey: KEY, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ p_limite: 40 }),
-  })
-    .then(function (r) { return r.ok ? r.json() : []; })
+  C.pedir(40)
     .then(function (filas) {
       if (!Array.isArray(filas) || !filas.length) {
         estado.textContent = 'Todavía no hay nada que contar. En cuanto alguien ' +
