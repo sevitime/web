@@ -190,6 +190,14 @@
   async function enviar(rating, comentario, aviso, boton) {
     boton.disabled = true;
     aviso.textContent = 'Enviando…';
+    if (fotosNuevas.length && window.SeviFotos) {
+      const puede = await window.SeviFotos.asegurar();
+      if (!puede) {
+        boton.disabled = false;
+        aviso.textContent = '';
+        return;
+      }
+    }
     try {
       const fotos = await subirFotos();
       let resultado = null;
@@ -421,6 +429,13 @@
         input.type = 'file';
         input.accept = 'image/*';
         input.multiple = true;
+        // El aviso se acepta una vez. Después de aceptar se vuelve a abrir
+        // el selector; el segundo clic ya pasa sin diálogo.
+        input.addEventListener('click', async (ev) => {
+          if (!window.SeviFotos || window.SeviFotos.yaAceptada()) return;
+          ev.preventDefault();
+          if (await window.SeviFotos.asegurar()) input.click();
+        });
         input.addEventListener('change', () => {
           const hueco = MAX_FOTOS - (fotosSubidas.length + fotosNuevas.length);
           Array.from(input.files || []).slice(0, hueco).forEach((f) => fotosNuevas.push(f));

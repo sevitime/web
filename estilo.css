@@ -1634,3 +1634,51 @@ html.con-barra .tostada {
   font-weight: 600;
   font-size: var(--t-cuerpo);
 }
+
+/* Aviso único de fotos con otras personas (fotos/aceptacion.js). */
+dialog.aceptacion-fotos {
+  width: calc(100% - 32px);
+  max-width: 440px;
+  padding: 22px;
+  border: 1px solid var(--borde);
+  border-radius: var(--r-lg);
+  background: var(--superficie);
+  color: var(--texto);
+}
+dialog.aceptacion-fotos::backdrop { background: rgba(0, 0, 0, 0.55); }
+.aceptacion-fotos h2 { margin: 0 0 10px; font-size: var(--t-item); }
+.aceptacion-fotos p {
+  margin: 0 0 12px;
+  font-size: var(--t-cuerpo);
+  line-height: 1.5;
+  color: var(--apagado);
+}
+.aceptacion-fotos a { color: var(--verde-claro); }
+.aceptacion-fotos-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 18px;
+}
+.aceptacion-fotos-acciones button {
+  min-height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--r-pill);
+  background: transparent;
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-cuerpo);
+  font-weight: 600;
+  cursor: pointer;
+}
+.aceptacion-fotos-acciones button.primario {
+  border-color: var(--verde-solido);
+  background: var(--verde-solido);
+  color: #fff;
+}
+.aceptacion-fotos-acciones button:focus-visible {
+  outline: 3px solid var(--verde-claro);
+  outline-offset: 2px;
+}

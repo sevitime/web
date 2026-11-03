@@ -601,6 +601,14 @@
     // evento vale sin cartel) pero se dice. Mismo criterio que la app
     // (envio_con_foto.dart).
     const archivo = f.get('foto');
+    if (archivo && archivo.size && window.SeviFotos) {
+      const puede = await window.SeviFotos.asegurar();
+      if (!puede) {
+        boton.disabled = false;
+        msgProp.textContent = '';
+        return;
+      }
+    }
     let rutaFoto = null;
     let fotoUrl = null;
     let fotoFallo = false;
