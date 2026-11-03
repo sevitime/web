@@ -1,0 +1,14 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.selu.sevitime",
+      "sha256_cert_fingerprints": [
+        "26:15:DE:0D:D0:78:08:4A:FA:1F:44:DC:E7:F0:20:7A:55:5F:9D:CA:28:DA:20:5E:D1:3F:3F:7D:EB:8B:57:1D",
+        "F2:FD:C9:80:38:AD:B5:ED:A9:30:6C:59:C9:FD:04:94:CF:CF:E9:88:3F:0B:2F:71:7D:69:D3:47:F5:21:03:29",
+        "17:7A:9F:E0:6F:CD:E8:B7:AE:80:C3:DE:D2:40:79:A4:92:B5:FC:DB:1E:C8:EB:DB:F8:10:23:C2:C3:06:29:10"
+      ]
+    }
+  }
+]
