@@ -387,7 +387,9 @@
 
   function pintar(hueco, frase, c) {
     var sec = el('section', 'diario');
-    sec.appendChild(el('h2', null, 'Hoy en Sevilla'));
+    // Sin titular: dentro de Explorar la cabecera verde ya dice dónde
+    // estás, y «Hoy en Sevilla» encima del tiempo era un rótulo de más.
+    // En la app estas tarjetas tampoco llevan título encima.
     if (frase) sec.appendChild(el('p', 'diario-plan', frase));
     var caja = el('div', 'diario-tarjetas');
     if (c.efemeride) caja.appendChild(tarjetaEfemeride(c.efemeride, c.videosE || []));
