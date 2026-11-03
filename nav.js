@@ -96,6 +96,55 @@ window.SeviLlegada = function (contenedor) {
   document.documentElement.classList.add('con-barra');
 }());
 
+// Instalada en la pantalla de inicio: entonces esto ES la app, y una app no
+// se presenta a sí misma en cada pantalla. Se marca aquí y `estilo.css`
+// quita lo que sobra: el logotipo con enlace a la portada —que es el gesto
+// más de «web» que hay— y el botón grande de entrar, que pasa a ser
+// compacto. La cabecera verde ya dice en qué pantalla estás y la barra de
+// abajo lleva a los cinco sitios.
+//
+// Vale para iPhone y para Android: `display-mode: standalone` lo cumplen las
+// dos, y `navigator.standalone` es el apaño que hace falta en iOS.
+(function () {
+  var instalada = navigator.standalone === true ||
+    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
+  if (!instalada) return;
+  document.documentElement.classList.add('instalada');
+
+  // El menú y la cuenta se mudan DENTRO de la cabecera verde, a la derecha
+  // del título, que es donde los pone la app. Así desaparece la franja
+  // blanca de arriba entera: la pantalla empieza por su cabecera, como en
+  // el móvil. Se mueven, no se duplican, para que `auth.js` siga pintando
+  // en el mismo `#auth-seccion` de siempre.
+  function mudar() {
+    // Solo en móvil. En un escritorio con la web instalada no hay barra de
+    // abajo, así que la navegación de arriba es la única forma de moverse:
+    // esconderla dejaba la ventana sin salida. Pasó en la primera versión.
+    if (!window.matchMedia || !window.matchMedia('(max-width: 719px)').matches) {
+      return;
+    }
+    var cabecera = document.querySelector('.cabecera-app > div');
+    var acciones = document.querySelector('.top-nav .nav-acciones');
+    var arriba = document.querySelector('.top-nav');
+    if (!cabecera || !acciones || !arriba) return;
+    // El título comparte fila con el menú y la cuenta; el subtítulo se queda
+    // debajo, a todo lo ancho. Con los tres en la misma fila, «Sevilla y su
+    // provincia» se partía en dos líneas.
+    var fila = document.createElement('div');
+    fila.className = 'cabecera-app-fila';
+    var titulo = cabecera.querySelector('h1');
+    if (titulo) fila.appendChild(titulo);
+    fila.appendChild(acciones);
+    cabecera.insertBefore(fila, cabecera.firstChild);
+    arriba.hidden = true;
+  }
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', mudar);
+  } else {
+    mudar();
+  }
+}());
+
 // El service worker, que está solo para que la web añadida a la pantalla de
 // inicio abra sin conexión en vez de dar el error del navegador. Lo que
 // guarda y lo que no, en `sw.js`. Se registra tras `load` para no competir
