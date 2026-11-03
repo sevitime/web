@@ -771,6 +771,19 @@ pidió SQL ni permisos. Lo que hubo que traducir de la app:
   vídeos) y la elección de la frase-plan. Están en la tabla de
   `docs/paridad_app_web.md`.
 
+### Interurbanos del Consorcio en `/transporte/` (3-nov-2026)
+
+`api.ctan.es` **permite CORS**, así que se lee desde el navegador sin
+función de servidor. Sirve las 1.147 paradas de una vez (255 KB): se bajan
+una sola vez, se recortan a lo que se usa y se guardan 7 días en
+`localStorage` (`sevi-ctan-paradas-v1`), igual que hace la app en
+`ctat_service.dart`. El radio son **3 km**, no los 700 m del resto: una
+parada interurbana sirve a un pueblo entero.
+
+Las salidas se piden solo de las paradas que se van a enseñar. La API
+devuelve **únicamente la hora siguiente**, así que de madrugada vuelve
+vacía y eso no es un fallo: se dice «Sin salidas en la próxima hora».
+
 **Fotos.** Ni la del sitio ni la de la curiosidad se publican sin
 `foto_credito`. Una regla sola para las dos. La de la efeméride se resolvió
 en el servidor el 2-nov-2026 (`tool/fotos_efemerides.mjs` en el repo de la

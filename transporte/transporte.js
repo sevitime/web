@@ -45,6 +45,18 @@
   const COLOR_LINEA_POR_DEFECTO = '#f54129';
   // Los de identidad de cada servicio (`colores_transporte.dart`).
   const COLOR_METRO = '#0D6928';
+  const COLOR_CTAN = '#E35205';
+  // El Consorcio sirve TODA su lista de paradas de una vez (1.147, 255 KB).
+  // Igual que la app (`ctat_service.dart`), se baja una vez, se guarda y se
+  // filtra en local. Siete días: las paradas interurbanas no se mueven.
+  const CTAN = 'https://api.ctan.es/v1/Consorcios/1';
+  const CTAN_CACHE = 'sevi-ctan-paradas-v1';
+  const CTAN_DIAS = 7;
+  // Más lejos que los 700 m del resto a propósito: una parada interurbana
+  // sirve a un pueblo entero y nadie espera tenerla en la puerta. Es el
+  // mismo radio que usa la app.
+  const CTAN_RADIO_M = 3000;
+  const CTAN_MAX = 3;
   const COLOR_SEVICI = '#BE0000';
 
   const estado = document.getElementById('estado');
@@ -160,6 +172,104 @@
       .slice(0, MAX_POR_SECCION);
   }
 
+  // --- Interurbanos (Consorcio de Transporte) -------------------------------
+
+  function ctanGuardadas() {
+    try {
+      const crudo = localStorage.getItem(CTAN_CACHE);
+      if (!crudo) return null;
+      const g = JSON.parse(crudo);
+      if (!g || !Array.isArray(g.paradas)) return null;
+      if (Date.now() - g.cuando > CTAN_DIAS * 86400000) return null;
+      return g.paradas;
+    } catch (e) { return null; }
+  }
+
+  async function ctanParadas() {
+    const guardadas = ctanGuardadas();
+    if (guardadas) return guardadas;
+    const d = await pedir(CTAN + '/paradas/?lang=ES');
+    const lista = (d && Array.isArray(d.paradas) ? d.paradas : [])
+      // Solo lo que se usa: así lo guardado baja de 255 KB a unos 60.
+      .map(function (p) {
+        return {
+          id: p.idParada,
+          nombre: p.nombre || '',
+          municipio: p.municipio || '',
+          lat: parseFloat(p.latitud),
+          lon: parseFloat(p.longitud),
+        };
+      })
+      .filter(function (p) { return isFinite(p.lat) && isFinite(p.lon); });
+    try {
+      localStorage.setItem(CTAN_CACHE,
+        JSON.stringify({ cuando: Date.now(), paradas: lista }));
+    } catch (e) {}
+    return lista;
+  }
+
+  /// Las próximas salidas de una parada. El código de línea sale de la
+  /// primera palabra del nombre («M-101A Circular Bormujos…»), igual que
+  /// `CtatServicio._extraerCodigo` en la app.
+  async function ctanServicios(id) {
+    const d = await pedir(CTAN + '/paradas/' + encodeURIComponent(id) + '/servicios?lang=ES');
+    const lista = (d && Array.isArray(d.servicios) ? d.servicios : []).slice(0, 4);
+    return lista.map(function (s) {
+      const nombre = (s.nombre || '').trim();
+      return {
+        hora: s.servicio || '',
+        linea: nombre.split(' ')[0] || nombre,
+        destino: s.destino || '',
+      };
+    });
+  }
+
+  async function ctan(punto) {
+    const todas = await ctanParadas();
+    const cerca = todas
+      .map(function (p) { return Object.assign({}, p, { m: metros(punto, p) }); })
+      .filter(function (p) { return p.m <= CTAN_RADIO_M; })
+      .sort(function (a, b) { return a.m - b.m; })
+      .slice(0, CTAN_MAX);
+    // Las salidas solo de las que se van a enseñar: una petición por parada.
+    await Promise.all(cerca.map(async function (p) {
+      p.servicios = await ctanServicios(p.id).catch(function () { return []; });
+    }));
+    return cerca;
+  }
+
+  function pintarCtan(paradas) {
+    const s = seccion('Interurbanos (Consorcio)', COLOR_CTAN);
+    if (!paradas.length) {
+      s.appendChild(el('p', 't-nada',
+        'No hay paradas del Consorcio a menos de 3 km. Son las de los ' +
+        'autobuses entre Sevilla y los pueblos.'));
+      return s;
+    }
+    const lista = el('ul', 't-lista');
+    paradas.forEach(function (p) {
+      const { fila, cuerpo } = filaBase(p.nombre, p.m);
+      if (p.municipio) cuerpo.appendChild(el('span', 't-detalle', p.municipio));
+      if (p.servicios && p.servicios.length) {
+        const prox = el('div', 't-lineas');
+        p.servicios.forEach(function (sv) {
+          const chip = el('span', 't-linea', sv.linea + (sv.hora ? ' · ' + sv.hora : ''));
+          chip.style.background = COLOR_CTAN;
+          chip.title = sv.destino;
+          prox.appendChild(chip);
+        });
+        cuerpo.appendChild(prox);
+      } else {
+        // El Consorcio devuelve solo la hora siguiente: de madrugada está
+        // vacío y no es un fallo. Decirlo así evita que parezca roto.
+        cuerpo.appendChild(el('span', 't-detalle', 'Sin salidas en la próxima hora'));
+      }
+      lista.appendChild(fila);
+    });
+    s.appendChild(lista);
+    return s;
+  }
+
   // --- Pintado -------------------------------------------------------------
 
   function seccion(titulo, color) {
@@ -248,15 +358,17 @@
 
     // Cada sección falla por su cuenta: que CityBikes esté caído no deja sin
     // autobuses a nadie.
-    const [paradas, estaciones, bicis] = await Promise.all([
+    const [paradas, estaciones, bicis, interurbanos] = await Promise.all([
       tussam(punto).catch(function () { return []; }),
       metro(punto).catch(function () { return []; }),
       sevici(punto).catch(function () { return []; }),
+      ctan(punto).catch(function () { return []; }),
     ]);
 
     secciones.append(
       pintarTussam(paradas),
       pintarMetro(estaciones),
+      pintarCtan(interurbanos),
       pintarSevici(bicis)
     );
     estado.textContent = '';
