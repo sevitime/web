@@ -236,7 +236,7 @@
       });
       botones.appendChild(voy);
     }
-    if (puedeIr) {
+    if (puedeIr && avisosListos !== false) {
       const clave = claveEvento(e);
       const puesto = misAvisos[clave];
       const avisar = el('button', 'boton-tonal',
@@ -331,6 +331,12 @@
   const AVISOS_CON_HORA = [30, 60, 120, 1440];
   const AVISOS_SIN_HORA = [1440, 0];
   let misAvisos = {};
+  // Si el servidor todavía no tiene las funciones de avisos, el botón no se
+  // pinta: es mejor que no esté a que esté y dé error al pulsarlo. Se
+  // enciende solo en cuanto la primera llamada funcione, sin publicar nada.
+  // `null` es «aún no se sabe», y entonces sí se enseña: sin sesión no se
+  // llega a preguntar y no hay motivo para esconderlo.
+  let avisosListos = null;
 
   function sinHora(inicio) {
     const d = new Date(inicio);
@@ -371,10 +377,15 @@
   async function cargarMisAvisos() {
     if (!usuario || !sb()) { misAvisos = {}; return; }
     try {
-      const { data } = await sb().rpc('fn_mis_avisos_evento', { p_device_id: null });
+      const { data, error } = await sb().rpc('fn_mis_avisos_evento', { p_device_id: null });
+      if (error) throw error;
+      avisosListos = true;
       misAvisos = {};
       (data || []).forEach(function (a) { misAvisos[a.clave] = a.minutos; });
-    } catch (_) { misAvisos = {}; }
+    } catch (_) {
+      avisosListos = false;
+      misAvisos = {};
+    }
   }
 
   function elegirAviso(e, alGuardar) {
