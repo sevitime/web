@@ -236,6 +236,38 @@
       });
       botones.appendChild(voy);
     }
+    if (puedeIr) {
+      const clave = claveEvento(e);
+      const puesto = misAvisos[clave];
+      const avisar = el('button', 'boton-tonal',
+        puesto != null ? '🔔 Te aviso ' + etiquetaAviso(puesto, e.inicio) : 'Avísame antes');
+      avisar.type = 'button';
+      avisar.setAttribute('aria-pressed', String(puesto != null));
+      avisar.addEventListener('click', async function () {
+        if (!usuario) { entrar(claveEvento(e)); return; }
+        if (puesto != null) {
+          avisar.disabled = true;
+          try { await sb().rpc('fn_quitar_aviso_evento', { p_clave: clave, p_device_id: null }); } catch (_) {}
+          delete misAvisos[clave];
+          cargarAsistencia(e, caja);
+          return;
+        }
+        elegirAviso(e, async function (minutos) {
+          try {
+            const { data } = await sb().rpc('fn_poner_aviso_evento', {
+              p_clave: clave, p_nombre: e.nombre, p_inicio: new Date(e.inicio).toISOString(),
+              p_minutos: minutos, p_lugar: e.lugar || null, p_device_id: null,
+            });
+            if (!data) { alertaSuave('Ya no da tiempo a ponerle un aviso.'); return; }
+            misAvisos[clave] = minutos;
+            cargarAsistencia(e, caja);
+          } catch (_) {
+            alertaSuave('No se ha podido guardar el aviso.');
+          }
+        });
+      });
+      botones.appendChild(avisar);
+    }
     if (hayUrl) {
       const entradas = urlEsDeEntradas(e.url);
       const link = el('a', 'boton-primario',
@@ -272,11 +304,118 @@
   async function cargarAsistencia(e, caja) {
     let a = { total: 0, voy: false, publico_mio: false, visibles: [] };
     try {
-      const { data, error } = await sb().rpc('fn_evento_asistencia', { p_clave: claveEvento(e) });
-      if (!error && data) a = data;
+      // Las dos a la vez: quién va y si tengo aviso puesto. El botón se
+      // pinta con las dos cosas, así que esperar en serie sería pintar dos
+      // veces por nada.
+      const [asistencia] = await Promise.all([
+        sb().rpc('fn_evento_asistencia', { p_clave: claveEvento(e) }),
+        cargarMisAvisos(),
+      ]);
+      if (asistencia && !asistencia.error && asistencia.data) a = asistencia.data;
     } catch (_) { /* se queda en cero */ }
     if (abierto !== e) return;
     pintarAccion(e, caja, a);
+  }
+
+
+  // --- «Avísame antes» ------------------------------------------------------
+  //
+  // En la app el recordatorio es una alarma del propio móvil. Un navegador no
+  // puede programar alarmas que sobrevivan a cerrar la pestaña, así que aquí
+  // se guarda en el servidor y lo manda él por push cuando toca
+  // (`docs/sql/avisos_evento.sql` y la función `avisar-eventos`).
+  //
+  // Por eso **pide cuenta**, aunque en la app no haga falta: sin cuenta no
+  // hay a dónde mandar el aviso. Es la misma regla del resto de la web.
+
+  const AVISOS_CON_HORA = [30, 60, 120, 1440];
+  const AVISOS_SIN_HORA = [1440, 0];
+  let misAvisos = {};
+
+  function sinHora(inicio) {
+    const d = new Date(inicio);
+    return d.toLocaleString('en-GB', {
+      timeZone: 'Europe/Madrid', hour: '2-digit', minute: '2-digit', hour12: false,
+    }) === '00:00';
+  }
+
+  /// Cuándo sonaría, o null si ya pasó. Mismas reglas que
+  /// `lib/utils/aviso_evento.dart` y que `fn_momento_aviso_evento`.
+  function momentoAviso(inicio, minutos) {
+    const d = new Date(inicio);
+    let momento;
+    if (sinHora(inicio)) {
+      const dia = new Date(d);
+      dia.setHours(0, 0, 0, 0);
+      momento = new Date(dia);
+      if (minutos >= 1440) {
+        momento.setDate(momento.getDate() - 1);
+        momento.setHours(10, 0, 0, 0);
+      } else {
+        momento.setHours(9, 0, 0, 0);
+      }
+    } else {
+      momento = new Date(d.getTime() - minutos * 60000);
+    }
+    return momento.getTime() > Date.now() ? momento : null;
+  }
+
+  function etiquetaAviso(minutos, inicio) {
+    if (sinHora(inicio)) return minutos >= 1440 ? 'el día antes' : 'ese día por la mañana';
+    if (minutos >= 1440) return '1 día antes';
+    if (minutos >= 120) return Math.floor(minutos / 60) + ' horas antes';
+    if (minutos === 60) return '1 hora antes';
+    return minutos + ' min antes';
+  }
+
+  async function cargarMisAvisos() {
+    if (!usuario || !sb()) { misAvisos = {}; return; }
+    try {
+      const { data } = await sb().rpc('fn_mis_avisos_evento', { p_device_id: null });
+      misAvisos = {};
+      (data || []).forEach(function (a) { misAvisos[a.clave] = a.minutos; });
+    } catch (_) { misAvisos = {}; }
+  }
+
+  function elegirAviso(e, alGuardar) {
+    const opciones = (sinHora(e.inicio) ? AVISOS_SIN_HORA : AVISOS_CON_HORA)
+      .filter(function (m) { return momentoAviso(e.inicio, m); });
+    if (!opciones.length) {
+      alertaSuave('Ya no da tiempo a ponerle un aviso.');
+      return;
+    }
+    const fondo = el('div', 'hoja-fondo');
+    const hoja = el('div', 'hoja');
+    hoja.setAttribute('role', 'dialog');
+    hoja.setAttribute('aria-modal', 'true');
+    hoja.appendChild(el('h2', null, '¿Cuándo te avisamos?'));
+    hoja.appendChild(el('p', null, e.nombre));
+
+    function cerrar() { fondo.remove(); document.removeEventListener('keydown', tecla); }
+    function tecla(ev) { if (ev.key === 'Escape') cerrar(); }
+
+    opciones.forEach(function (m) {
+      const b = el('button', 'hoja-opcion');
+      b.type = 'button';
+      b.appendChild(el('strong', null, etiquetaAviso(m, e.inicio)));
+      const cuando = momentoAviso(e.inicio, m);
+      b.appendChild(el('span', null, cuando.toLocaleString('es-ES', {
+        weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit',
+      })));
+      b.addEventListener('click', function () { cerrar(); alGuardar(m); });
+      hoja.appendChild(b);
+    });
+
+    const no = el('button', 'hoja-cancelar', 'Ahora no');
+    no.type = 'button';
+    no.addEventListener('click', cerrar);
+    hoja.appendChild(no);
+
+    fondo.appendChild(hoja);
+    fondo.addEventListener('click', function (ev) { if (ev.target === fondo) cerrar(); });
+    document.addEventListener('keydown', tecla);
+    document.body.appendChild(fondo);
+    hoja.querySelector('.hoja-opcion').focus();
   }
 
   async function asistir(e, voy, publico) {
