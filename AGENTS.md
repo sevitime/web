@@ -859,3 +859,26 @@ después. Lo que eso significa en la práctica, y que ya está hecho en parte:
 
 La portada (`/`) es la excepción: es página de aterrizaje para quien llega de
 fuera y su trabajo es convencer, no parecerse a la app.
+
+## `/ajustes/` (3-nov-2026)
+
+El engranaje que la web no tenía. Quien viene de Android lo busca y antes no
+estaba: las piezas vivían repartidas —los avisos sueltos **dentro de
+Guardados**, que es donde menos lógico resulta buscarlos; cerrar sesión en el
+menú de la cuenta; privacidad en el pie—.
+
+Reúne lo mismo que `settings_screen.dart`, con lo que tiene sentido en web:
+
+- **Avisos**: la tarjeta de `avisos.js`, que se **mudó** aquí desde Guardados
+  (no se duplicó: dos interruptores para lo mismo acaban discrepando).
+- **Tu cuenta**: con quién has entrado, enlace a tu perfil y cerrar sesión.
+  Sin sesión no se esconde, explica para qué sirve entrar.
+- **Privacidad** y **SeviTime**: enlaces a lo que ya existía.
+
+No lleva apariencia: la web sigue el tema del sistema y no hay interruptor
+que ofrecer. Va con `noindex` y fuera del sitemap, como Guardados y el buzón:
+es una página personal y no hay nada que buscar en ella.
+
+**Pendiente menor:** `/ajustes/` no está en la lista blanca de
+`fn_web_visita`, así que sus visitas caen en «otra». Se arregla cuando toque
+otro SQL.

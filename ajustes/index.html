@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ajustes — SeviTime</title>
+<meta name="description" content="Tus avisos, tu cuenta y la privacidad de SeviTime, en un sitio.">
+<meta name="robots" content="noindex">
+<link rel="canonical" href="https://sevitime.com/ajustes/">
+<!-- Es una página personal y detrás de sesión: no hay nada que indexar. -->
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SeviTime">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css?v=4f28a9ca">
+<script defer src="/nav.js?v=9252f9c4"></script>
+<script defer src="/lugares.js?v=f07b3d2b"></script>
+<script defer src="/auth.js?v=c7d7806f"></script>
+<script defer src="/avisos.js?v=8cb5ae2a"></script>
+<script defer src="/ajustes/ajustes.js?v=08244c52"></script>
+<style>
+  .guardados { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+  .guardados h1 {
+    font-size: var(--t-titulo); font-weight: 800; color: var(--texto);
+    letter-spacing: -0.02em; margin: 0 0 4px;
+  }
+  .guardados .resumen { margin: 0 0 16px; font-size: var(--t-etiqueta); color: var(--tenue); }
+  .pestanas { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 18px; }
+
+  .g-lista { list-style: none; margin: 0; padding: 0; --hueso-alto: 70px; --hueso-margen: 0 0 10px; }
+  .g-sitio {
+    position: relative; display: flex; align-items: center;
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); margin-bottom: 10px;
+  }
+  .g-enlace {
+    display: flex; gap: 12px; align-items: center; flex: 1; min-width: 0;
+    padding: 12px; text-decoration: none; color: var(--texto); border-radius: var(--r-lg);
+  }
+  @media (hover: hover) and (pointer: fine) {
+    .g-enlace:hover { background: var(--superficie-alta); }
+  }
+  .g-enlace:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: -3px; }
+  .g-ico {
+    flex: 0 0 auto; width: 42px; height: 42px; border-radius: var(--r-sm);
+    display: grid; place-items: center; font-size: 20px;
+  }
+  .g-txt { min-width: 0; flex: 1; }
+  .g-nombre {
+    display: block; font-size: var(--t-item); font-weight: 700; color: var(--texto);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .g-meta { display: flex; gap: 6px; margin-top: 2px; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .g-meta .g-punto { color: var(--tenue); }
+  .g-dir {
+    display: block; margin-top: 2px; font-size: var(--t-etiqueta); color: var(--tenue);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .g-quitar {
+    flex: 0 0 auto; width: 44px; height: 44px; margin-right: 6px;
+    border: none; border-radius: 50%; background: transparent;
+    color: var(--tenue); font: inherit; font-size: 22px; line-height: 1; cursor: pointer;
+  }
+  .g-quitar:hover { color: var(--error); background: var(--gris-bg); }
+  .g-quitar:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+  .g-aviso { position: absolute; right: 56px; bottom: 4px; font-size: var(--t-etiqueta); color: var(--error); }
+
+  .g-vacio {
+    list-style: none; border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); padding: 30px 22px; text-align: center;
+  }
+  .g-vacio-titulo { margin: 0 0 6px; font-size: var(--t-item); font-weight: 600; color: var(--apagado); }
+  .g-vacio-texto { margin: 0 0 16px; font-size: var(--t-cuerpo); color: var(--tenue); text-wrap: pretty; }
+  .g-entrar {
+    display: inline-block; min-height: 46px; line-height: 46px; padding: 0 20px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: transparent; color: var(--verde-claro);
+    font: inherit; font-weight: 700; text-decoration: none; cursor: pointer;
+  }
+  .g-entrar:hover { border-color: var(--verde-claro); }
+  .g-entrar:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
+  .g-pie { margin: 26px 0 0; padding-top: 18px; border-top: 1px solid var(--borde);
+    font-size: var(--t-cuerpo); color: var(--apagado); }
+  .g-pie a { color: var(--verde-claro); }
+
+  @media (min-width: 720px) {
+    .guardados { padding-left: 24px; padding-right: 24px; }
+  }
+</style>
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="/explorar/" class="nav-link">Explorar</a>
+      <a href="/rutas/" class="nav-link">Rutas</a>
+      <a href="/eventos/" class="nav-link">Eventos</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Añadir o corregir sitios</span>
+      </a>
+      </div>
+      <div id="auth-seccion"></div>
+    </div>
+  </div>
+</nav>
+
+<!-- La cabecera de la app, traída a la web: franja verde agua con el título
+     y el subtítulo, como `screen_header` en Flutter. Va FUERA de <main> para
+     que ocupe el ancho de la pantalla sin trucos de anchura. -->
+<header class="cabecera-app">
+  <div>
+    <h1>Ajustes</h1>
+    <p>Tus avisos, tu cuenta y lo que guardamos</p>
+  </div>
+</header>
+
+<main class="ajustes" id="contenido" tabindex="-1">
+
+  <!-- Los avisos vivían sueltos dentro de Guardados, que es la pantalla
+       donde menos lógico resulta buscarlos. Aquí están donde los pone la
+       app: en Ajustes. Lo pinta `avisos.js`, el mismo de siempre. -->
+  <div id="hueco-avisos"></div>
+
+  <section class="aj-bloque">
+    <h2>Tu cuenta</h2>
+    <div id="aj-cuenta">
+      <p class="aj-nota">Mirando si has entrado…</p>
+    </div>
+  </section>
+
+  <section class="aj-bloque">
+    <h2>Privacidad</h2>
+    <ul class="aj-lista">
+      <li><a href="/privacidad/">Qué guardamos y por qué</a></li>
+      <li><a href="/privacidad/borrar-cuenta">Borrar tu cuenta y tus datos</a></li>
+      <li><a href="/derechos/">Imágenes y derechos</a></li>
+    </ul>
+  </section>
+
+  <section class="aj-bloque">
+    <h2>SeviTime</h2>
+    <ul class="aj-lista">
+      <li><a href="mailto:sevitimeapp@gmail.com">Escribirnos</a></li>
+      <li><a href="https://play.google.com/store/apps/details?id=com.selu.sevitime" target="_blank" rel="noopener noreferrer">La app para Android</a></li>
+      <li><a href="/#llevatela">Añadirla a tu pantalla de inicio</a></li>
+    </ul>
+    <p class="aj-nota">La apariencia la decide tu móvil: SeviTime sigue el tema claro u oscuro que tengas puesto en el sistema.</p>
+  </section>
+</main>
+
+<footer>
+  <a href="/sitios/">Sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/rutas/">Rutas</a>
+  <span aria-hidden="true">·</span>
+  <a href="/ranking/">Cuadro de honor</a>
+  <span aria-hidden="true">·</span>
+  <a href="/mapa/?modo=colaborar">Añadir o corregir sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/derechos/">Imágenes y derechos</a>
+  <span aria-hidden="true">·</span>
+  <a href="/privacidad/">Privacidad</a>
+  <span aria-hidden="true">·</span>
+  <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
+</footer>
+
+<script defer src="/visitas.js?v=0c43496f"></script>
+</body>
+</html>

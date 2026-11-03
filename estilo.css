@@ -1417,3 +1417,70 @@ html.con-barra .tostada {
   html.instalada #barra { display: block; }
   html.instalada #barra .nav-marca { display: flex; }
 }
+
+/* ---------- Ajustes ---------- */
+.ajustes { max-width: 760px; margin: 0 auto; padding: 0 16px 60px; }
+.aj-bloque {
+  margin-top: 22px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-lg);
+  padding: 18px 20px;
+}
+.aj-bloque h2 {
+  font-size: var(--t-item);
+  font-weight: 700;
+  color: var(--texto);
+  margin: 0 0 12px;
+}
+.aj-lista { list-style: none; margin: 0; padding: 0; }
+.aj-lista li + li { border-top: 1px solid var(--borde); }
+.aj-lista a {
+  display: block;
+  padding: 13px 0;
+  color: var(--texto);
+  text-decoration: none;
+  font-size: var(--t-cuerpo);
+}
+.aj-lista a:hover { color: var(--verde-claro); }
+.aj-nota {
+  display: block;
+  margin: 10px 0 0;
+  color: var(--apagado);
+  font-size: var(--t-etiqueta);
+  line-height: 1.45;
+}
+.aj-cuenta-ficha { display: flex; align-items: center; gap: 12px; }
+.aj-cuenta-ficha strong { display: block; color: var(--texto); }
+.aj-cuenta-ficha .aj-nota { margin: 2px 0 0; }
+.aj-avatar { border-radius: 50%; flex: none; }
+.aj-enlace {
+  display: inline-block;
+  margin-top: 14px;
+  color: var(--verde-claro);
+  font-weight: 600;
+  font-size: var(--t-cuerpo);
+}
+.aj-boton {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 14px;
+  padding: 11px 18px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--verde-solido);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.aj-boton-suave {
+  background: none;
+  border: 1px solid var(--borde);
+  color: var(--apagado);
+  margin-left: 10px;
+}
+.aj-boton-suave:hover { border-color: var(--verde-claro); color: var(--texto); }
+/* La tarjeta de avisos ya trae su propio marco: dentro de Ajustes se pone
+   al nivel de los demás bloques en vez de flotar suelta. */
+.ajustes .avisos { margin-top: 22px; }
