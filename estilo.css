@@ -1297,4 +1297,19 @@ footer span { margin: 0 8px; }
 
 /* El aviso de instalar no tapa el contenido: mientras está, la página le
  * reserva sitio abajo. Antes flotaba encima y escondía la fila de filtros. */
-body.con-aviso-instalar main { padding-bottom: 150px; }
+body.con-aviso-instalar main { padding-bottom: 170px; }
+
+/* ---------- Nada flotante se esconde tras la barra de abajo ----------
+ *
+ * La barra mide 58 px y es fija. Todo lo que flota pegado al borde inferior
+ * —el botón de «Añadir lugar», los avisos, las tostadas— quedaba detrás de
+ * ella: el botón amarillo de Explorar salía literalmente cortado por la
+ * mitad. `--alto-barra` solo existe por debajo de 720 px, así que en
+ * escritorio el valor de reserva es 0 y nada se mueve. Y en `/mapa/` no hay
+ * barra, así que tampoco: la regla va atada a `html.con-barra`.
+ */
+html.con-barra .aviso-teselas,
+html.con-barra .instalar-ios,
+html.con-barra .tostada {
+  bottom: calc(var(--alto-barra, 0px) + 16px + env(safe-area-inset-bottom, 0px));
+}

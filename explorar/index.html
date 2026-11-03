@@ -25,7 +25,7 @@
 <meta name="apple-mobile-web-app-title" content="SeviTime">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=5256c9d5">
+<link rel="stylesheet" href="/estilo.css?v=d63dfe67">
 <script defer src="/nav.js?v=0c9f6a36"></script>
 <script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/auth.js?v=c7d7806f"></script>
@@ -252,6 +252,13 @@
     background: var(--dorado); color: #1A2E2B;
     font: inherit; font-weight: 800; cursor: pointer;
     box-shadow: var(--sombra-2);
+  }
+  /* Por encima de la barra de abajo, no debajo: la barra es fija y de 58 px,
+     y el botón quedaba cortado por la mitad detrás de ella. `--alto-barra`
+     solo existe por debajo de 720 px, así que en escritorio el valor de
+     reserva es 0 y el botón se queda donde estaba. */
+  html.con-barra .aportar {
+    bottom: calc(var(--alto-barra, 0px) + 20px + env(safe-area-inset-bottom, 0px));
   }
   .aportar:hover { filter: brightness(1.05); }
   .aportar:active { transform: translateY(1px); }
