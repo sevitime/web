@@ -1484,3 +1484,41 @@ html.con-barra .tostada {
 /* La tarjeta de avisos ya trae su propio marco: dentro de Ajustes se pone
    al nivel de los demás bloques en vez de flotar suelta. */
 .ajustes .avisos { margin-top: 22px; }
+
+/* La hoja cuando lleva un formulario dentro (sugerir un sitio). */
+.hoja-form { max-height: 86vh; overflow-y: auto; }
+.hoja-campo {
+  display: block;
+  margin: 14px 0 6px;
+  color: var(--apagado);
+  font-size: var(--t-etiqueta);
+  font-weight: 600;
+}
+.hoja-form input[type="text"],
+.hoja-form textarea {
+  width: 100%;
+  padding: 11px 14px;
+  border: 1px solid var(--borde);
+  border-radius: var(--r-md);
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+}
+.hoja-form textarea { resize: vertical; }
+.hoja-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.hoja-error { margin: 12px 0 0; color: var(--error); font-size: var(--t-cuerpo); }
+.hoja-ok { margin: 8px 0 0; color: var(--texto); font-size: var(--t-cuerpo); }
+.hoja-enviar {
+  display: block;
+  width: 100%;
+  margin-top: 18px;
+  padding: 13px;
+  border: none;
+  border-radius: var(--r-pill);
+  background: var(--verde-solido);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.hoja-enviar:disabled { opacity: 0.6; cursor: default; }

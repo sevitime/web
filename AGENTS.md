@@ -882,3 +882,32 @@ es una página personal y no hay nada que buscar en ella.
 **Pendiente menor:** `/ajustes/` no está en la lista blanca de
 `fn_web_visita`, así que sus visitas caen en «otra». Se arregla cuando toque
 otro SQL.
+
+## Sugerir un sitio: `/sugerir.js` (3-nov-2026)
+
+«Añadir lugar» en Explorar **ya no te saca al mapa**. En la app pulsas y se
+abre el formulario ahí mismo, sobre la lista; la web hacía un rodeo por
+`/mapa/?modo=sugerir` que además cargaba 600 KB de librería de mapas para
+rellenar cuatro campos.
+
+**Dos presentaciones, una sola lógica.** En el mapa el panel tiene que
+convivir con el mapa (el pin se arrastra mientras está abierto), así que no
+puede ser la misma hoja modal. Lo que **sí** es común vive en `/sugerir.js`:
+los tipos que se ofrecen, la validación, el aviso de posible duplicado (25 m,
+con los de nombre parecido primero), el `device_id` con el que se firma y el
+INSERT en `sugerencias`. Dos formularios escribiendo en la misma tabla
+acabarían comportándose distinto, y eso es lo que no puede pasar.
+
+- `/mapa/` lo carga **sin `defer`**: su script va en línea y se ejecuta antes
+  que los diferidos.
+- El `device_id` sigue usando la clave `sevitime_device_id`, la de siempre; no
+  se cambió para no partir en dos lo aportado por quien lleva tiempo
+  sugiriendo sin cuenta.
+
+## La barra de abajo es la de la app
+
+Explorar · Transporte · Eventos · Noticias · Rutas, en ese orden
+(`main_scaffold.dart`). Antes llevaba Mapa y Guardados, que en la app **no
+son pestañas**: el mapa se abre desde Explorar y los guardados viven tras el
+avatar. Si la barra es lo que hace que la web se lea como la app, llevar
+otros cinco la delata. Los dos siguen en el menú de arriba.

@@ -50,9 +50,12 @@ window.SeviLlegada = function (contenedor) {
 //
 // Decisiones:
 //
-// - **Cinco destinos, los que la web tiene de verdad**: Explorar, Mapa,
-//   Rutas, Eventos y Guardados. Los iconos son los de la app donde existe el
-//   equivalente (Rutas lleva el mapa plegado, como `Icons.map_rounded`).
+// - **Los cinco destinos de la app, y en su orden**: Explorar, Transporte,
+//   Eventos, Noticias y Rutas (`main_scaffold.dart`). Si la barra de abajo
+//   es lo que hace que la web se lea como la app, llevar otros cinco la
+//   delata. Antes estaban Mapa y Guardados, que en la app no son pestañas:
+//   el mapa se abre desde Explorar y los guardados viven tras el avatar.
+//   Los dos siguen en el menú de arriba, que es donde la app los tiene.
 // - **No sale en `/mapa/`**: esa página es el mapa a pantalla completa, con su
 //   propia hoja abajo y los controles de MapLibre en esa esquina. En la app el
 //   mapa también se come la pantalla.
@@ -66,10 +69,10 @@ window.SeviLlegada = function (contenedor) {
 
   var destinos = [
     ['/explorar/', 'Explorar', 'M12 10.9c-.61 0-1.1.49-1.1 1.1s.49 1.1 1.1 1.1c.61 0 1.1-.49 1.1-1.1s-.49-1.1-1.1-1.1zM12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm2.19 12.19L6 18l3.81-8.19L18 6l-3.81 8.19z'],
-    ['/mapa/', 'Mapa', 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z'],
-    ['/rutas/', 'Rutas', 'M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z'],
+    ['/transporte/', 'Transporte', 'M4 16c0 .88.39 1.67 1 2.22V20a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1h8v1a1 1 0 0 0 1 1h1a1 1 0 0 0 1-1v-1.78c.61-.55 1-1.34 1-2.22V6c0-3.5-3.58-4-8-4s-8 .5-8 4v10zm3.5 1a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm9 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm1.5-6H6V6h12v5z'],
     ['/eventos/', 'Eventos', 'M19 4h-1V2h-2v2H8V2H6v2H5c-1.11 0-1.99.9-1.99 2L3 20c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 16H5V9h14v11zM7 11h5v5H7z'],
-    ['/guardados/', 'Guardados', 'M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z']
+    ['/noticias/', 'Noticias', 'M20 3H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm0 16H4V5h16v14zM6 7h7v2H6V7zm0 4h7v2H6v-2zm0 4h7v2H6v-2zm9-8h3v10h-3V7z'],
+    ['/rutas/', 'Rutas', 'M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z']
   ];
 
   var barra = document.createElement('nav');

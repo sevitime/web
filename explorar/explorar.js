@@ -280,10 +280,139 @@
     );
   }
 
+  // El formulario se abre AQUÍ, sobre la lista, como en la app: pulsas
+  // «Añadir lugar» y rellenas, sin pasar por ningún mapa. Antes te mandaba a
+  // `/mapa/?modo=sugerir`, que es un rodeo que la app no hace y que además
+  // carga 600 KB de librería de mapas para rellenar cuatro campos.
+  //
+  // Lo que decide qué se guarda —validación, duplicados e INSERT— vive en
+  // `/sugerir.js`, compartido con el panel del mapa.
+  // Quién está mirando, para firmar la sugerencia. `auth.js` lo avisa.
+  let usuario = null;
+  if (window.SEVI && window.SEVI.onAuth) {
+    window.SEVI.onAuth.push(function (u) { usuario = u; });
+  }
+
   function irAlFormulario() {
-    location.href = '/mapa/?modo=sugerir' +
-      '&lat=' + encodeURIComponent(estado.origen.lat.toFixed(6)) +
-      '&lon=' + encodeURIComponent(estado.origen.lon.toFixed(6));
+    const fondo = document.createElement('div');
+    fondo.className = 'hoja-fondo';
+    const hoja = document.createElement('div');
+    hoja.className = 'hoja hoja-form';
+    hoja.setAttribute('role', 'dialog');
+    hoja.setAttribute('aria-modal', 'true');
+    hoja.setAttribute('aria-label', 'Sugerir un sitio nuevo');
+
+    function cerrar() { fondo.remove(); document.removeEventListener('keydown', tecla); }
+    function tecla(ev) { if (ev.key === 'Escape') cerrar(); }
+
+    const h = document.createElement('h2');
+    h.textContent = 'Un sitio que falta';
+    const sub = document.createElement('p');
+    sub.textContent = 'Lo ponemos donde estás. Se revisa antes de publicarse.';
+    hoja.append(h, sub);
+
+    function campo(etiqueta, nodo, id) {
+      const l = document.createElement('label');
+      l.className = 'hoja-campo';
+      l.htmlFor = id;
+      l.textContent = etiqueta;
+      hoja.append(l, nodo);
+    }
+
+    const nombre = document.createElement('input');
+    nombre.id = 'sug-nombre';
+    nombre.type = 'text';
+    nombre.maxLength = 120;
+    nombre.autocomplete = 'off';
+    campo('Cómo se llama', nombre, 'sug-nombre');
+
+    const etiquetaTipo = document.createElement('span');
+    etiquetaTipo.className = 'hoja-campo';
+    etiquetaTipo.id = 'sug-tipo-label';
+    etiquetaTipo.textContent = 'Qué es';
+    const chips = document.createElement('div');
+    chips.className = 'chips hoja-chips';
+    chips.setAttribute('role', 'group');
+    chips.setAttribute('aria-labelledby', 'sug-tipo-label');
+    let tipo = 'bar';
+    Object.entries(window.SeviSugerir.TIPOS).forEach(function ([valor, t]) {
+      const c = document.createElement('button');
+      c.type = 'button';
+      c.className = 'chip' + (valor === tipo ? ' seleccionado' : '');
+      c.dataset.valor = valor;
+      c.appendChild(document.createTextNode(t.emoji + ' ' + t.etiqueta));
+      c.addEventListener('click', function () {
+        tipo = valor;
+        chips.querySelectorAll('.chip').forEach(function (x) {
+          x.classList.toggle('seleccionado', x.dataset.valor === valor);
+        });
+      });
+      chips.appendChild(c);
+    });
+    hoja.append(etiquetaTipo, chips);
+
+    const notas = document.createElement('textarea');
+    notas.id = 'sug-notas';
+    notas.maxLength = 300;
+    notas.rows = 2;
+    campo('Notas (opcional)', notas, 'sug-notas');
+
+    const aviso = document.createElement('p');
+    aviso.className = 'hoja-error';
+    aviso.setAttribute('role', 'alert');
+    aviso.hidden = true;
+    hoja.appendChild(aviso);
+
+    const enviar = document.createElement('button');
+    enviar.type = 'button';
+    enviar.className = 'hoja-enviar';
+    enviar.textContent = 'Enviarlo';
+    enviar.addEventListener('click', async function () {
+      aviso.hidden = true;
+      enviar.disabled = true;
+      const r = await window.SeviSugerir.enviar({
+        nombre: nombre.value,
+        tipo: tipo,
+        notas: notas.value,
+        lat: estado.origen.lat,
+        lon: estado.origen.lon,
+        deviceId: window.SeviSugerir.deviceId(usuario),
+        cercanos: estado.sitios || [],
+        sb: window.SEVI.sb,
+      });
+      enviar.disabled = false;
+      if (r.cancelado) return;
+      if (r.error) {
+        aviso.textContent = r.error;
+        aviso.hidden = false;
+        return;
+      }
+      hoja.textContent = '';
+      const ok = document.createElement('p');
+      ok.className = 'hoja-ok';
+      ok.textContent = '¡Gracias! Lo revisamos y, si entra, lo verás en el mapa.';
+      hoja.appendChild(ok);
+      const cerrarlo = document.createElement('button');
+      cerrarlo.type = 'button';
+      cerrarlo.className = 'hoja-cancelar';
+      cerrarlo.textContent = 'Cerrar';
+      cerrarlo.addEventListener('click', cerrar);
+      hoja.appendChild(cerrarlo);
+    });
+    hoja.appendChild(enviar);
+
+    const no = document.createElement('button');
+    no.type = 'button';
+    no.className = 'hoja-cancelar';
+    no.textContent = 'Cancelar';
+    no.addEventListener('click', cerrar);
+    hoja.appendChild(no);
+
+    fondo.appendChild(hoja);
+    fondo.addEventListener('click', function (ev) { if (ev.target === fondo) cerrar(); });
+    document.addEventListener('keydown', tecla);
+    document.body.appendChild(fondo);
+    nombre.focus();
   }
 
   // --- Filtrado y orden -----------------------------------------------------

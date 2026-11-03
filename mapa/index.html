@@ -40,12 +40,15 @@
 </script>
 <script defer src="/libs/maplibre-gl.js"></script>
 <link href="/libs/maplibre-gl.css" rel="stylesheet" />
-<link rel="stylesheet" href="/estilo.css?v=4f28a9ca" />
+<link rel="stylesheet" href="/estilo.css?v=120e0499" />
 <script defer src="/libs/pmtiles.js"></script>
 <script defer src="/libs/supabase.min.js"></script>
 <script defer src="/mapa/estilo-mapa.js?v=55fd2f52"></script>
+<!-- Sin `defer` a propósito: el script de esta página va en línea y se
+     ejecuta antes que los diferidos; necesita `SeviSugerir` ya disponible. -->
+<script src="/sugerir.js?v=c9b3acca"></script>
 <script defer src="/lugares.js?v=f07b3d2b"></script>
-<script defer src="/nav.js?v=9252f9c4"></script>
+<script defer src="/nav.js?v=472b06e1"></script>
 <style>
   /* La paleta y la tipografía vienen de /estilo.css, el mismo que usan la
      portada y el cuadro de honor. Así el mapa también cambia a tema oscuro y
@@ -434,6 +437,8 @@
         <a href="/rutas/" class="nav-link">Rutas</a>
         <a href="/eventos/" class="nav-link">Eventos</a>
         <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/" class="nav-link">Mapa</a>
+      <a href="/guardados/" class="nav-link">Guardados</a>
       <a href="/ajustes/" class="nav-link">Ajustes</a>
       </div>
 
@@ -573,19 +578,10 @@ window.addEventListener('DOMContentLoaded', function () {
 
   // Mismos tipos que en la app (lib/data/tipos_de_sitio.dart), para no
   // guardar el mismo sitio con dos vocabularios distintos.
-  const TIPOS = {
-    bar: 'Bar / Pub',
-    restaurant: 'Restaurante',
-    cafe: 'Café',
-    fast_food: 'Comida rápida',
-    attraction: 'Atracción / Mirador',
-    museum: 'Museo / Galería',
-    monument: 'Monumento',
-    parking: 'Parking',
-    pharmacy: 'Farmacia',
-    atm: 'Cajero',
-    otro: 'Otro',
-  };
+  // Los tipos que se ofrecen al sugerir viven en `/sugerir.js`, compartidos
+  // con la hoja de Explorar: una lista en dos sitios acaba siendo dos listas.
+  const TIPOS = Object.fromEntries(
+    Object.entries(window.SeviSugerir.TIPOS).map(([k, v]) => [k, v.etiqueta]));
 
   const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
@@ -690,16 +686,10 @@ window.addEventListener('DOMContentLoaded', function () {
     }
   });
 
+  // La regla vive en `/sugerir.js`, compartida con la hoja de Explorar: la
+  // cuenta si hay sesión y, si no, el UUID de este navegador.
   function deviceId() {
-    if (usuarioActual && usuarioActual.id) {
-      return usuarioActual.id;
-    }
-    let id = localStorage.getItem('sevitime_device_id');
-    if (!id) {
-      id = crypto.randomUUID();
-      localStorage.setItem('sevitime_device_id', id);
-    }
-    return id;
+    return window.SeviSugerir.deviceId(usuarioActual);
   }
 
   // ---- Mis aportaciones ----
@@ -1291,11 +1281,8 @@ window.addEventListener('DOMContentLoaded', function () {
   });
 
   // ---- Chips de tipo (sugerir) y de motivo (reportar) ----
-  const TIPOS_EMOJI = {
-    bar: '🍻', restaurant: '🍽️', cafe: '☕', fast_food: '🍔',
-    attraction: '🎡', museum: '🖼️', monument: '🗿', parking: '🅿️',
-    pharmacy: '💊', atm: '🏧', otro: '➕',
-  };
+  const TIPOS_EMOJI = Object.fromEntries(
+    Object.entries(window.SeviSugerir.TIPOS).map(([k, v]) => [k, v.emoji]));
   // Los mismos cuatro que ofrece la app en su hoja de quejas
   // (`motivosDeQueja` en lib/utils/moderacion_labels.dart): quien usa las dos
   // no debe encontrarse opciones distintas según por dónde entre.
@@ -1673,94 +1660,33 @@ window.addEventListener('DOMContentLoaded', function () {
     return 2 * r * Math.asin(Math.sqrt(h));
   }
 
-  function normalizarNombre(nombre) {
-    return nombre.toLocaleLowerCase('es-ES').normalize('NFD')
-      .replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9 ]/g, ' ')
-      .replace(/\s+/g, ' ').trim();
-  }
-
-  function pareceElMismo(nombreA, nombreB) {
-    const a = normalizarNombre(nombreA);
-    const b = normalizarNombre(nombreB);
-    if (!a || !b) return false;
-    if (a.includes(b) || b.includes(a)) return true;
-    const palabraA = a.split(' ').find((p) => p.length >= 4) || '';
-    const palabraB = b.split(' ').find((p) => p.length >= 4) || '';
-    return Boolean(palabraA && palabraA === palabraB);
-  }
-
-  async function confirmarPosibleDuplicado(nombre, lat, lon) {
-    if (!lugaresCargados) {
-      try { lugaresCargados = await cargar(); } catch (_) { return true; }
-    }
-    const encontrados = lugaresCargados
-      .map((p) => ({ ...p, distancia: distanciaMetros(lat, lon, p.lat, p.lon) }))
-      // El nombre puede haber cambiado en OSM; cualquier sitio a esta
-      // distancia merece una confirmación. Los que coinciden por nombre se
-      // ordenan primero y se explican como coincidencia fuerte.
-      .filter((p) => p.distancia <= 25)
-      .map((p) => ({ ...p, parecido: pareceElMismo(nombre, p.nombre) }))
-      .sort((a, b) => a.distancia - b.distancia)
-      .slice(0, 3);
-    if (!encontrados.length) return true;
-
-    encontrados.sort((a, b) => Number(b.parecido) - Number(a.parecido) || a.distancia - b.distancia);
-    const resumen = encontrados.map((p) =>
-      `• «${p.nombre}», a unos ${Math.round(p.distancia)} m (${p.label || 'sitio'})${p.parecido ? ' · nombre parecido' : ''}`
-    ).join('\n');
-    return window.confirm(
-      'Puede que ya exista un sitio en ese punto:\n\n' + resumen +
-      '\n\nComprueba que no sea el mismo lugar. Pulsa «Aceptar» solo si es otro local.'
-    );
-  }
+  // La validación, el aviso de duplicados y el INSERT viven en
+  // `/sugerir.js`, compartidos con la hoja de Explorar: es lo único que no
+  // puede comportarse distinto según por dónde entres.
 
   document.querySelectorAll('.btn-cancelar').forEach((b) => b.addEventListener('click', apagarModos));
 
   document.getElementById('btn-enviar-sugerir').addEventListener('click', async () => {
-    const nombre = document.getElementById('s-nombre').value.trim();
-    const tipo = sTipoChips.valorSeleccionado();
-    const notas = document.getElementById('s-notas').value.trim();
     const errorEl = panelSugerir.querySelector('.error');
     errorEl.style.display = 'none';
 
-    if (!nombre) {
-      errorEl.textContent = 'Ponle un nombre al sitio.';
-      errorEl.style.display = 'block';
-      return;
-    }
-    if (tipo === 'otro' && notas.length < 3) {
-      errorEl.textContent = 'Cuéntanos qué es en las notas.';
-      errorEl.style.display = 'block';
-      return;
+    if (!lugaresCargados) {
+      try { lugaresCargados = await cargar(); } catch (_) { lugaresCargados = []; }
     }
 
-    if (!await confirmarPosibleDuplicado(
-      nombre,
-      parseFloat(panelSugerir.dataset.lat),
-      parseFloat(panelSugerir.dataset.lng),
-    )) return;
-
-    const fila = {
-      nombre,
-      tipo,
+    const r = await window.SeviSugerir.enviar({
+      nombre: document.getElementById('s-nombre').value,
+      tipo: sTipoChips.valorSeleccionado(),
+      notas: document.getElementById('s-notas').value,
       lat: parseFloat(panelSugerir.dataset.lat),
       lon: parseFloat(panelSugerir.dataset.lng),
-      device_id: deviceId(),
-      // 'web' y no 'mapa' para poder saber si este mapa aporta algo: la app
-      // manda 'mapa' cuando se marca el punto a mano y 'gps' cuando lo pone
-      // el móvil, y con el mismo valor las dos eran indistinguibles. Ojo: el
-      // panel de moderación trata 'mapa' y 'web' igual (punto puesto a mano,
-      // sin lectura de GPS que valorar), así que si sale otro origen nuevo
-      // hay que darlo de alta allí en `_esMarcadoAMano`.
-      punto_origen: 'web',
-    };
-    if (notas) fila.notas = notas;
-
-    const { error } = await sb.from('sugerencias').insert(fila);
-    if (error) {
-      errorEl.textContent = error.code === '23505'
-        ? 'Ya sugeriste este sitio antes.'
-        : 'No se pudo enviar. Inténtalo de nuevo.';
+      deviceId: deviceId(),
+      cercanos: lugaresCargados,
+      sb: sb,
+    });
+    if (r.cancelado) return;
+    if (r.error) {
+      errorEl.textContent = r.error;
       errorEl.style.display = 'block';
       return;
     }
