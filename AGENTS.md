@@ -822,3 +822,27 @@ También de ese día: la caja de la ubicación de Explorar dejó de ser una
 tarjeta con párrafo y pasó a ser solo el botón —la web se explicaba y la app
 enseña—, y el aviso de instalar añade `con-aviso-instalar` al `<body>` para
 que la página le reserve sitio abajo en vez de tapar la fila de filtros.
+
+## Móvil primero, en todo el sitio
+
+Criterio acordado el 3-nov-2026: **la web se diseña primero para el móvil**,
+porque es donde se usa y porque en iPhone la web ES la app. Escritorio
+después. Lo que eso significa en la práctica, y que ya está hecho en parte:
+
+- Las pantallas que comparte con la app abren con su **cabecera verde agua**
+  (`.cabecera-app`) y llevan la **barra de abajo** con los cinco destinos.
+- **Nada flotante se esconde tras esa barra**: hay una regla en `estilo.css`
+  que sube el botón de «Añadir lugar», los avisos y las tostadas usando
+  `--alto-barra`, con 0 de reserva para escritorio y `/mapa/`.
+- **En `/mapa/` manda el mapa**: ocupa la pantalla entera y los controles
+  flotan encima, sin banda opaca. La barra lleva fondo transparente y cada
+  pieza (icono, menú, acceso, buscador, botón) su propia sombra. En
+  escritorio sigue siendo una barra de cristal normal.
+- Las preguntas cortas se hacen con una **hoja de abajo** (`.hoja`), no con
+  un `confirm` ni con un aviso sin salida: sube desde abajo en móvil y se
+  centra en pantalla ancha.
+- La web **no se explica**: donde la app enseña contenido, la web no pone un
+  párrafo de presentación. Si hay que pedir algo (la ubicación), es un botón.
+
+La portada (`/`) es la excepción: es página de aterrizaje para quien llega de
+fuera y su trabajo es convencer, no parecerse a la app.

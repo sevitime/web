@@ -271,7 +271,31 @@
      herramientas del mapa en una fila propia debajo. Las secundarias viven
      dentro del menú (#nav-enlaces). */
   @media (max-width: 719px) {
-    #barra.top-nav { padding: 10px 12px; }
+    /* En móvil el mapa manda y los controles FLOTAN encima, como en la app.
+       La barra era una banda opaca de tres filas que se comía el tercio
+       superior: el mapa ya ocupaba toda la pantalla, pero no se veía. Ahora
+       la banda es transparente y cada pieza lleva su propio fondo. */
+    #barra.top-nav {
+      padding: 10px 12px;
+      background: none;
+      border-bottom: 0;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+    }
+    /* El nombre sobra sobre el mapa: el icono ya dice de quién es, y así
+       cabe todo en una fila. */
+    #barra .nav-marca span { display: none; }
+    #barra .nav-marca {
+      padding: 7px;
+      border-radius: var(--r-pill);
+      background: var(--superficie);
+      box-shadow: var(--sombra-2);
+    }
+    #barra .nav-menu-toggle,
+    #barra .auth-entrar,
+    #barra .auth-info { box-shadow: var(--sombra-2); }
+    .mapa-herramientas .buscar-caja input,
+    .btn-anadir { box-shadow: var(--sombra-2); }
     #barra .top-nav-inner { flex-wrap: wrap; row-gap: 8px; }
     #barra .nav-marca { order: 1; }
     #barra .nav-acciones { order: 2; margin-left: auto; }
