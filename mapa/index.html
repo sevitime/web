@@ -1173,7 +1173,11 @@ window.addEventListener('DOMContentLoaded', function () {
     const lon = parseFloat(params.get('lon'));
     sugerenciaDirectaProcesada = true;
     if (!isFinite(lat) || !isFinite(lon)) {
-      abrirPanelColaborar();
+      // Se llega aquí desde «Marcarlo en el mapa» en Explorar. Esa persona
+      // ya ha dicho lo que quiere hacer: preguntárselo otra vez con el
+      // panel de «¿añadir o corregir?» es la misma pregunta dos veces. Va
+      // directa a tocar el mapa.
+      activarModoAnadir();
       return;
     }
     if (!usuarioActual) {
