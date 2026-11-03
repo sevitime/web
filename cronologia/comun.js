@@ -88,6 +88,43 @@
   const API = 'https://kdqiwhvtovafugpcrumf.supabase.co/rest/v1/';
   const KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
 
+  // --- Novedades desde la última visita -------------------------------------
+  //
+  // Local y por dispositivo, igual que en la app: no es una tabla ni se
+  // sincroniza. Solo sirve para el contador de «Qué pasa»; la cronología se
+  // ve entera siempre.
+  const CLAVE_VISTO = 'sevi-crono-visto';
+
+  function leerVisto() {
+    try { return localStorage.getItem(CLAVE_VISTO); } catch (_) { return null; }
+  }
+
+  function marcarVisto(cuando) {
+    const t = new Date(cuando).getTime();
+    if (isNaN(t)) return;
+    try {
+      const previo = new Date(localStorage.getItem(CLAVE_VISTO) || '').getTime();
+      if (!isNaN(previo) && !(t > previo)) return;
+      localStorage.setItem(CLAVE_VISTO, new Date(t).toISOString());
+    } catch (_) { /* almacenamiento lleno o bloqueado: sin contador */ }
+  }
+
+  // La primera vez se siembra con la entrada más reciente, para no enseñar
+  // como nuevas las que ya estaban antes de que nadie abriera la página.
+  function inicializarVisto(filas) {
+    if (leerVisto()) return;
+    if (Array.isArray(filas) && filas.length) marcarVisto(filas[0].cuando);
+  }
+
+  function nuevas(filas) {
+    const desde = new Date(leerVisto() || '').getTime();
+    if (isNaN(desde) || !Array.isArray(filas)) return 0;
+    return filas.reduce(function (total, f) {
+      const t = new Date(f.cuando).getTime();
+      return !isNaN(t) && t > desde ? total + 1 : total;
+    }, 0);
+  }
+
   function pedir(limite) {
     return fetch(API + 'rpc/fn_cronologia', {
       method: 'POST',
@@ -105,5 +142,9 @@
     estrellas: estrellas,
     linea: linea,
     pedir: pedir,
+    leerVisto: leerVisto,
+    marcarVisto: marcarVisto,
+    inicializarVisto: inicializarVisto,
+    nuevas: nuevas,
   };
 }());

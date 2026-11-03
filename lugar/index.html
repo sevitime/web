@@ -33,7 +33,7 @@
 <meta name="apple-mobile-web-app-title" content="SeviTime">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=6bd1c69e">
+<link rel="stylesheet" href="/estilo.css?v=c7e7a022">
 <link rel="stylesheet" href="/libs/maplibre-gl.css">
 <script defer src="/nav.js?v=472b06e1"></script>
 <script defer src="/libs/maplibre-gl.js"></script>
@@ -46,7 +46,7 @@
      solo lee no se descarga 216 KB. La nota y las reseñas se leen con la
      clave pública por `fetch`. -->
 <script defer src="/auth.js?v=c7d7806f"></script>
-<script defer src="/lugar/resena.js?v=87716e58"></script>
+<script defer src="/lugar/resena.js?v=a82e299c"></script>
 <script defer src="/lugar/guardar.js?v=4673c2e3"></script>
 <script defer src="/lugar/abierto.js?v=e24baf8b"></script>
 <script defer src="/lugar/quedar.js?v=f4cc71d3"></script>
@@ -136,9 +136,10 @@
   .resenas-mas:hover { border-color: var(--verde-claro); }
   .opiniones-pie { margin-top: 12px; font-size: var(--t-etiqueta); color: var(--tenue); }
 
-  /* «Útil» en la reseña de otra persona. Solo sale con sesión y nunca en la
-     propia: la RLS la rechazaría. */
+  /* «Me gusta» en la reseña de otra persona. Solo sale con sesión y nunca en
+     la propia: la RLS la rechazaría. */
   .resena-util-btn {
+    display: inline-flex; align-items: center; gap: 6px;
     margin-top: 8px; min-height: 36px; padding: 0 14px;
     border: 1px solid var(--borde); border-radius: var(--r-pill);
     background: transparent; color: var(--texto);
@@ -571,7 +572,7 @@
   // dos cosas tal como salen en la app: la media de `place_ratings` y las
   // reseñas aprobadas de `fn_resenas_publicas`, de cinco en cinco.
   //
-  // Solo se leen. Valorar, reseñar y marcar una reseña como útil piden
+  // Solo se leen. Valorar, reseñar y dar me gusta a una reseña piden
   // cuenta en la app, y aquí no se ofrecen: se manda a la app.
   //
   // Todo lo que viene de una reseña es texto de un usuario: se pinta con
@@ -589,7 +590,7 @@
 
   // El token de la sesión, si la hay. Importa para `fn_resenas_publicas`:
   // con la clave pública a secas el servidor no puede decir cuáles reseñas
-  // son tuyas ni a cuáles ya diste «útil», y el botón saldría mal puesto.
+  // son tuyas ni a cuáles ya diste «me gusta», y el botón saldría mal puesto.
   let tokenActual = null;
 
   function leerToken() {
@@ -868,14 +869,14 @@
       fecha.textContent = cuando.toLocaleDateString('es-ES', { day: 'numeric', month: 'short', year: 'numeric' });
       cab.appendChild(fecha);
     }
-    // Con sesión, el recuento se convierte en el botón de «Útil» (lo pone
+    // Con sesión, el recuento se convierte en el botón de «Me gusta» (lo pone
     // `lugar/resena.js`, que es quien puede escribirlo). Sin sesión, o en la
     // reseña propia, se queda en el texto de siempre.
     const boton = window.SeviResena ? window.SeviResena.botonUtil(r) : null;
     if (!boton && r.utiles_count > 0) {
       const util = document.createElement('span');
       util.className = 'resena-util';
-      util.textContent = r.utiles_count === 1 ? 'Útil para 1 persona' : 'Útil para ' + r.utiles_count + ' personas';
+      util.textContent = r.utiles_count === 1 ? 'Le gusta a 1 persona' : 'Le gusta a ' + r.utiles_count + ' personas';
       cab.appendChild(util);
     }
     li.appendChild(cab);

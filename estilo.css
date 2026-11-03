@@ -1518,11 +1518,13 @@ html.con-barra .tostada {
 .crono-estado { margin: 22px 0; color: var(--apagado); font-size: var(--t-cuerpo); line-height: 1.5; }
 .crono-lista { list-style: none; margin: 0; padding: 0; }
 .crono-item {
+  position: relative;
   margin-top: 16px;
   padding: 16px 18px;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--r-lg);
+  overflow: hidden;
 }
 .crono-cabecera { display: flex; align-items: flex-start; gap: 12px; }
 .crono-avatar {
@@ -1544,16 +1546,35 @@ html.con-barra .tostada {
 .crono-linea { margin: 0; color: var(--texto); font-size: var(--t-cuerpo); line-height: 1.4; }
 .crono-linea strong { font-weight: 700; }
 .crono-sitio { color: var(--verde-claro); font-weight: 600; }
+/* El nombre del sitio estira su zona tocable a toda la tarjeta: es una
+   tarjeta, y como en la app se abre tocando cualquier parte. La foto queda
+   por encima para seguir abriéndose sola. */
+.crono-sitio::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+}
 .crono-cuando { display: block; margin-top: 2px; color: var(--apagado); font-size: var(--t-etiqueta); }
 .crono-estrellas { margin: 10px 0 0; color: var(--dorado); letter-spacing: 2px; }
 .crono-texto { margin: 8px 0 0; color: var(--apagado); font-size: var(--t-cuerpo); line-height: 1.5; }
-.crono-foto {
-  width: calc(100% + 38px);
-  max-width: none;
+.crono-foto-enlace {
+  position: relative;
+  z-index: 1;
+  display: block;
   margin: 14px -19px -17px;
   border-radius: 0 0 var(--r-lg) var(--r-lg);
+  overflow: hidden;
+}
+.crono-foto {
+  display: block;
+  width: 100%;
+  max-width: none;
   max-height: 320px;
   object-fit: cover;
+}
+.crono-foto-enlace:focus-visible {
+  outline: 3px solid var(--verde-claro);
+  outline-offset: -3px;
 }
 
 /* La tira de «Qué pasa» en la portada de Explorar. */
@@ -1571,15 +1592,30 @@ html.con-barra .tostada {
   gap: 12px;
   margin-bottom: 12px;
 }
+.tira-crono-titulo {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  min-width: 0;
+}
 .tira-crono-cabecera h2 {
   margin: 0;
   font-size: var(--t-item);
   font-weight: 700;
   color: var(--texto);
 }
+.tira-crono-nuevas {
+  flex: none;
+  padding: 2px 7px;
+  border-radius: var(--r-pill);
+  background: var(--gris-bg);
+  color: var(--verde-claro);
+  font-size: var(--t-etiqueta);
+  font-weight: 700;
+}
 .tira-crono-todo { color: var(--verde-claro); font-weight: 600; font-size: var(--t-cuerpo); }
 .tira-crono-lista { list-style: none; margin: 0; padding: 0; }
-.tira-crono-item { display: flex; align-items: flex-start; gap: 10px; }
+.tira-crono-item { position: relative; display: flex; align-items: flex-start; gap: 10px; }
 .tira-crono-item + .tira-crono-item { margin-top: 12px; }
 .tira-crono-texto { min-width: 0; }
 .tira-crono-linea {

@@ -4,7 +4,7 @@
 // Hasta el 1-nov-2026 la ficha de la web solo leía: la nota, las reseñas y un
 // pie que decía «ábrelo en SeviTime». En Android eso es un empujón a la app;
 // en un iPhone es un callejón sin salida, porque la app no existe. Desde aquí
-// se puede valorar, reseñar, cambiar la reseña, borrarla y marcar útiles las
+// se puede valorar, reseñar, cambiar la reseña, borrarla y dar me gusta a las
 // de los demás.
 //
 // Lo que se respeta porque manda el servidor, no esta página:
@@ -536,7 +536,7 @@
     }
   }
 
-  // --- «Útil» en las reseñas de los demás -----------------------------------
+  // --- «Me gusta» en las reseñas de los demás ------------------------------
 
   // La llama la ficha al pintar cada reseña pública. Sin sesión no se ofrece
   // (sin `user_id` no hay forma de impedir diez votos de la misma persona) y
@@ -547,12 +547,34 @@
     let cuantos = Number(fila.utiles_count) || 0;
     const b = el('button', 'resena-util-btn');
     b.type = 'button';
+    // Corazón en SVG y no un carácter: Inter no trae ♥/♡ y el sistema lo
+    // pintaría como emoji o con otra fuente, distinto en cada móvil.
+    const NS = 'http://www.w3.org/2000/svg';
+    const icono = document.createElementNS(NS, 'svg');
+    icono.setAttribute('viewBox', '0 0 24 24');
+    icono.setAttribute('width', '14');
+    icono.setAttribute('height', '14');
+    icono.setAttribute('aria-hidden', 'true');
+    const corazon = document.createElementNS(NS, 'path');
+    corazon.setAttribute('d',
+      'M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 ' +
+      '4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 ' +
+      '16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 ' +
+      '11.54L12 21.35z');
+    corazon.setAttribute('stroke', 'currentColor');
+    corazon.setAttribute('stroke-width', '2');
+    corazon.setAttribute('stroke-linejoin', 'round');
+    icono.appendChild(corazon);
+    const texto = el('span');
+    b.append(icono, texto);
     function repintar() {
-      b.textContent = cuantos === 0 ? 'Útil' : 'Útil · ' + cuantos;
+      texto.textContent =
+        'Me gusta' + (cuantos > 0 ? ' · ' + cuantos : '');
+      corazon.setAttribute('fill', puesto ? 'currentColor' : 'none');
       b.classList.toggle('marcado', puesto);
       b.setAttribute('aria-pressed', puesto ? 'true' : 'false');
       b.setAttribute('aria-label', cuantos === 1
-        ? 'A 1 persona le ha servido' : 'A ' + cuantos + ' personas les ha servido');
+        ? 'Le gusta a 1 persona' : 'Le gusta a ' + cuantos + ' personas');
     }
     repintar();
     b.addEventListener('click', async () => {
@@ -613,7 +635,7 @@
         await cargarMia();
         pintar();
         // Con sesión, la lista pública se pide otra vez: solo entonces el
-        // servidor puede decir cuáles son tuyas y a cuáles ya diste «útil».
+        // servidor puede decir cuáles son tuyas y a cuáles ya diste «me gusta».
         // Si lo primero que se sabe es que NO hay sesión, no hay nada que
         // volver a pedir: la ficha ya la está cargando con la clave pública.
         if (primeraVez && !user) return;

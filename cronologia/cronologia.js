@@ -36,12 +36,22 @@
     }
     if (item.texto) li.appendChild(el('p', 'crono-texto', '«' + item.texto + '»'));
     if (item.foto_url) {
+      // La foto se abre sola, como en la ficha del sitio; el enlace al sitio
+      // ya está en el nombre. Antes tocarla no hacía nada.
+      const enlace = document.createElement('a');
+      enlace.className = 'crono-foto-enlace';
+      enlace.href = item.foto_url;
+      enlace.target = '_blank';
+      enlace.rel = 'noopener';
+      enlace.setAttribute('aria-label',
+        'Ver la foto de la reseña de ' + item.apodo + ' en ' + item.sitio);
       const img = document.createElement('img');
       img.className = 'crono-foto';
       img.src = item.foto_url;
-      img.alt = 'Foto de ' + item.sitio + ', por ' + item.apodo;
+      img.alt = '';
       img.loading = 'lazy';
-      li.appendChild(img);
+      enlace.appendChild(img);
+      li.appendChild(enlace);
     }
     return li;
   }
@@ -53,6 +63,9 @@
           'reseñe un sitio o añada uno nuevo, saldrá aquí.';
         return;
       }
+      // Entrar aquí es haber visto la cronología: al volver a Explorar, el
+      // contador de novedades de la tira se apaga.
+      C.marcarVisto(filas[0].cuando);
       estado.hidden = true;
       filas.forEach(function (f) { lista.appendChild(fila(f)); });
     })
