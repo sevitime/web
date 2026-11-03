@@ -911,3 +911,26 @@ Explorar · Transporte · Eventos · Noticias · Rutas, en ese orden
 son pestañas**: el mapa se abre desde Explorar y los guardados viven tras el
 avatar. Si la barra es lo que hace que la web se lea como la app, llevar
 otros cinco la delata. Los dos siguen en el menú de arriba.
+
+## `/cronologia/` — «Qué pasa» (3-nov-2026)
+
+Lo que va pasando en SeviTime, con nombre: las reseñas de la gente, sus
+fotos y los sitios que añaden, en orden de fecha. Es lo mismo que ya está
+repartido por las fichas, junto, para que al abrirlo se note que esto lo
+mueve gente.
+
+**Lo que decide qué sale está en el servidor** (`fn_cronologia`), no en el
+navegador: solo lo aprobado, solo quien tiene apodo y solo quien no ha
+pedido salirse de las listas públicas (`perfiles.en_ranking`, el interruptor
+de «Salir en el cuadro de honor»: quien dijo que no quiere figurar entre
+quienes aportan, tampoco figura aquí).
+
+**No entra «¿Está abierto?»**: hoy esa respuesta es anónima de cara al
+resto, y sacarla con nombre sería cambiarle las reglas a quien ya la usó.
+**Y no se puede etiquetar a nadie**, a propósito: que una persona publique
+dónde estuvo otra es dato de un tercero.
+
+**Trampa de los avatares:** la mayoría no son URLs sino `preset:<id>`, uno de
+los doce dibujos de la app. Pintarlos como imagen da
+`ERR_UNKNOWN_URL_SCHEME` y deja el hueco en blanco. Las tablas de color y
+emoji están duplicadas con `perfil/perfil.js`.

@@ -1512,3 +1512,46 @@ html.con-barra .tostada {
   cursor: pointer;
 }
 .hoja-enviar:disabled { opacity: 0.6; cursor: default; }
+
+/* ---------- La cronología ---------- */
+.cronologia { max-width: 760px; margin: 0 auto; padding: 0 16px 60px; }
+.crono-estado { margin: 22px 0; color: var(--apagado); font-size: var(--t-cuerpo); line-height: 1.5; }
+.crono-lista { list-style: none; margin: 0; padding: 0; }
+.crono-item {
+  margin-top: 16px;
+  padding: 16px 18px;
+  background: var(--superficie);
+  border: 1px solid var(--borde);
+  border-radius: var(--r-lg);
+}
+.crono-cabecera { display: flex; align-items: flex-start; gap: 12px; }
+.crono-avatar {
+  flex: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.crono-inicial {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--verde-solido);
+  color: #fff;
+  font-weight: 800;
+}
+.crono-quien { min-width: 0; }
+.crono-linea { margin: 0; color: var(--texto); font-size: var(--t-cuerpo); line-height: 1.4; }
+.crono-linea strong { font-weight: 700; }
+.crono-sitio { color: var(--verde-claro); font-weight: 600; }
+.crono-cuando { display: block; margin-top: 2px; color: var(--apagado); font-size: var(--t-etiqueta); }
+.crono-estrellas { margin: 10px 0 0; color: var(--dorado); letter-spacing: 2px; }
+.crono-texto { margin: 8px 0 0; color: var(--apagado); font-size: var(--t-cuerpo); line-height: 1.5; }
+.crono-foto {
+  width: calc(100% + 38px);
+  max-width: none;
+  margin: 14px -19px -17px;
+  border-radius: 0 0 var(--r-lg) var(--r-lg);
+  max-height: 320px;
+  object-fit: cover;
+}
