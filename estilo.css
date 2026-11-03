@@ -1313,3 +1313,72 @@ html.con-barra .instalar-ios,
 html.con-barra .tostada {
   bottom: calc(var(--alto-barra, 0px) + 16px + env(safe-area-inset-bottom, 0px));
 }
+
+/* ---------- Hoja de abajo, como las de la app ----------
+ * Para preguntas cortas con dos o tres caminos. Sube desde abajo, se cierra
+ * tocando fuera o con Escape, y en pantalla ancha se queda centrada y con
+ * un ancho cómodo en vez de estirarse de lado a lado. */
+.hoja-fondo {
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.45);
+}
+.hoja {
+  width: 100%;
+  max-width: 520px;
+  padding: 22px 20px calc(20px + env(safe-area-inset-bottom, 0px));
+  border-radius: var(--r-lg) var(--r-lg) 0 0;
+  background: var(--superficie);
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.35);
+}
+.hoja h2 {
+  font-size: var(--t-item);
+  font-weight: 800;
+  color: var(--texto);
+  margin: 0 0 4px;
+}
+.hoja > p {
+  margin: 0 0 16px;
+  color: var(--apagado);
+  font-size: var(--t-cuerpo);
+}
+.hoja-opcion {
+  display: block;
+  width: 100%;
+  text-align: left;
+  margin-bottom: 10px;
+  padding: 14px 16px;
+  border: 1px solid var(--borde);
+  border-radius: var(--r-md);
+  background: var(--fondo);
+  font: inherit;
+  cursor: pointer;
+}
+.hoja-opcion:hover { border-color: var(--verde-claro); }
+.hoja-opcion strong { display: block; color: var(--texto); font-weight: 700; }
+.hoja-opcion span {
+  display: block;
+  margin-top: 2px;
+  color: var(--apagado);
+  font-size: var(--t-etiqueta);
+}
+.hoja-cancelar {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+  padding: 12px;
+  border: 0;
+  background: none;
+  color: var(--apagado);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+@media (min-width: 720px) {
+  .hoja-fondo { align-items: center; }
+  .hoja { border-radius: var(--r-lg); }
+}

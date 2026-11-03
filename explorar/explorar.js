@@ -175,12 +175,77 @@
   // El formulario es el de `/mapa/`, no una copia: allí está la comprobación
   // de duplicados, los tipos, el aviso de tapas y la sesión. Dos formularios
   // escribiendo en `sugerencias` acabarían comportándose distinto.
+  // Las dos formas de decir dónde está el sitio, igual que en la app: o
+  // estás delante y vale tu posición, o lo marcas tú en el mapa.
+  //
+  // Antes esto exigía el GPS y, si fallaba o lo denegabas, soltaba un aviso
+  // y te dejaba ahí. Quien no quiere dar la ubicación —o está en casa
+  // acordándose de un sitio— no tenía por dónde seguir, aunque la otra vía
+  // existiera en `/mapa/`. Preguntar es una pulsación más y no deja a nadie
+  // fuera.
+  function elegirComoUbicar() {
+    const fondo = document.createElement('div');
+    fondo.className = 'hoja-fondo';
+    const hoja = document.createElement('div');
+    hoja.className = 'hoja';
+    hoja.setAttribute('role', 'dialog');
+    hoja.setAttribute('aria-modal', 'true');
+    hoja.setAttribute('aria-label', 'Dónde está el sitio que quieres añadir');
+
+    const h = document.createElement('h2');
+    h.textContent = '¿Dónde está el sitio?';
+    const p = document.createElement('p');
+    p.textContent = 'Lo necesitamos para no clavarlo en el centro de Sevilla.';
+    hoja.append(h, p);
+
+    function opcion(titulo, detalle, alPulsar) {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'hoja-opcion';
+      const t = document.createElement('strong');
+      t.textContent = titulo;
+      const d = document.createElement('span');
+      d.textContent = detalle;
+      b.append(t, d);
+      b.addEventListener('click', () => { cerrar(); alPulsar(); });
+      return b;
+    }
+
+    function cerrar() {
+      fondo.remove();
+      document.removeEventListener('keydown', porTecla);
+    }
+    function porTecla(e) { if (e.key === 'Escape') cerrar(); }
+
+    hoja.appendChild(opcion('Estoy delante del sitio',
+      'Usamos tu ubicación y podrás ajustar el punto después.', porUbicacion));
+    hoja.appendChild(opcion('Marcarlo en el mapa',
+      'Lo pones tú donde esté, sin dar tu ubicación.',
+      () => { location.href = '/mapa/?modo=sugerir'; }));
+
+    const no = document.createElement('button');
+    no.type = 'button';
+    no.className = 'hoja-cancelar';
+    no.textContent = 'Ahora no';
+    no.addEventListener('click', cerrar);
+    hoja.appendChild(no);
+
+    fondo.appendChild(hoja);
+    fondo.addEventListener('click', (e) => { if (e.target === fondo) cerrar(); });
+    document.addEventListener('keydown', porTecla);
+    document.body.appendChild(fondo);
+    hoja.querySelector('.hoja-opcion').focus();
+  }
+
   function anadirLugar() {
     if (estado.ubicacionReal) { irAlFormulario(); return; }
+    elegirComoUbicar();
+  }
 
+  function porUbicacion() {
     if (!navigator.geolocation) {
-      avisar('Para añadir un sitio necesitamos saber dónde estás, y tu ' +
-        'navegador no sabe decírnoslo. Puedes añadirlo marcándolo en el mapa.');
+      avisar('Tu navegador no sabe decirnos dónde estás. Puedes añadirlo ' +
+        'marcándolo en el mapa.');
       return;
     }
     const boton = $('btn-aportar');
@@ -206,9 +271,10 @@
       },
       () => {
         boton.disabled = false;
-        avisar('Para añadir un sitio tenemos que saber dónde estás: si no, se ' +
-          'quedaría clavado en el centro de Sevilla. Dale permiso de ubicación ' +
-          'o márcalo tú en el mapa.');
+        // Sin ubicación no se acaba el camino: se sigue por el mapa.
+        avisar('No hemos podido leer tu ubicación. Te llevamos al mapa para ' +
+          'que lo marques tú.');
+        setTimeout(() => { location.href = '/mapa/?modo=sugerir'; }, 1600);
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
     );
