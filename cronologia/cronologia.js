@@ -34,7 +34,12 @@
     if (item.rating != null) {
       li.appendChild(el('p', 'crono-estrellas', C.estrellas(item.rating)));
     }
-    if (item.texto) li.appendChild(el('p', 'crono-texto', '«' + item.texto + '»'));
+    const dicho = C.cita(item);
+    if (dicho) li.appendChild(el('p', 'crono-texto', '«' + dicho + '»'));
+    // El nombre nuevo de un sitio renombrado va sin comillas: no lo dijo
+    // nadie, es un dato.
+    const dato = C.detalle(item);
+    if (dato) li.appendChild(el('p', 'crono-detalle', dato));
     if (item.foto_url) {
       // La foto se abre sola, como en la ficha del sitio; el enlace al sitio
       // ya está en el nombre. Antes tocarla no hacía nada.
@@ -44,7 +49,7 @@
       enlace.target = '_blank';
       enlace.rel = 'noopener';
       enlace.setAttribute('aria-label',
-        'Ver la foto de la reseña de ' + item.apodo + ' en ' + item.sitio);
+        'Ver la foto que puso ' + item.apodo + ' en ' + item.sitio);
       const img = document.createElement('img');
       img.className = 'crono-foto';
       img.src = item.foto_url;
@@ -60,7 +65,7 @@
     .then(function (filas) {
       if (!Array.isArray(filas) || !filas.length) {
         estado.textContent = 'Todavía no hay nada que contar. En cuanto alguien ' +
-          'reseñe un sitio o añada uno nuevo, saldrá aquí.';
+          'reseñe un sitio, añada uno nuevo o corrija algo, saldrá aquí.';
         return;
       }
       // Entrar aquí es haber visto la cronología: al volver a Explorar, el

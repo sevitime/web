@@ -1557,6 +1557,9 @@ html.con-barra .tostada {
 .crono-cuando { display: block; margin-top: 2px; color: var(--apagado); font-size: var(--t-etiqueta); }
 .crono-estrellas { margin: 10px 0 0; color: var(--dorado); letter-spacing: 2px; }
 .crono-texto { margin: 8px 0 0; color: var(--apagado); font-size: var(--t-cuerpo); line-height: 1.5; }
+/* El nombre nuevo de un sitio renombrado: un dato, no una cita, así que
+   sin comillas y con algo más de peso que el comentario de una reseña. */
+.crono-detalle { margin: 8px 0 0; color: var(--texto); font-size: var(--t-cuerpo); line-height: 1.5; font-weight: 600; }
 .crono-foto-enlace {
   position: relative;
   z-index: 1;

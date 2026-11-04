@@ -69,15 +69,85 @@
   }
 
 
-  /// «Fulano ha reseñado Tal sitio», con el sitio enlazando a su ficha.
+  // Qué hizo cada persona, en palabras. La misma tabla que
+  // `ItemCronologia.frase` en la app (`lib/models/item_cronologia.dart`): si
+  // cambia una, cambian las dos, o la web y la app dejan de contar lo mismo.
+  //
+  // Todas llevan el sitio detrás, así que piden sustantivo: «ha avisado del
+  // cierre de El Ambigú» y no «ha avisado de que El Ambigú ha cerrado».
+  const FRASES = {
+    lugar: 'ha añadido',
+    resena: 'ha reseñado',
+    resena_foto: 'ha reseñado',
+    aviso_cerrado: 'ha avisado del cierre de',
+    aviso_no_existe: 'ha avisado de la desaparición de',
+    aviso_renombrado: 'ha avisado del nuevo nombre de',
+    ruta: 'ha publicado la ruta',
+    evento: 'ha propuesto',
+    comentario_evento: 'ha comentado en',
+  };
+
+  const ARTICULOS = { horario: 'el', 'teléfono': 'el', web: 'la' };
+
+  // «ha añadido el horario y el teléfono de». `texto` trae lo aportado
+  // separado por comas, tal como lo monta `fn_cronologia`.
+  function fraseDelDato(texto) {
+    const datos = String(texto || '')
+      .split(',')
+      .map(function (d) { return d.trim(); })
+      .filter(function (d) { return d; })
+      .map(function (d) { return (ARTICULOS[d] || 'el') + ' ' + d; });
+
+    if (!datos.length) return 'ha completado la ficha de';
+    const ultimo = datos.pop();
+    const lista = datos.length ? datos.join(', ') + ' y ' + ultimo : ultimo;
+    return 'ha añadido ' + lista + ' de';
+  }
+
+  // Lo que dijo esta persona, para enseñarlo entre comillas. Igual que
+  // `ItemCronologia.cita` en la app: en una aportación `texto` trae el dato
+  // («horario»), que ya va en la frase, y en un renombrado el nombre nuevo.
+  function cita(item) {
+    const citables = ['resena', 'resena_foto', 'comentario_evento', 'ruta'];
+    return citables.indexOf(item.tipo) >= 0 ? (item.texto || null) : null;
+  }
+
+  // El nombre nuevo de un sitio renombrado, que no cabe en la frase porque
+  // esta acaba en el nombre viejo.
+  function detalle(item) {
+    if (item.tipo === 'aviso_renombrado' && item.texto) {
+      return 'Ahora se llama ' + item.texto;
+    }
+    return null;
+  }
+
+  function frase(item) {
+    if (item.tipo === 'dato') return fraseDelDato(item.texto);
+    // Un tipo que esta versión de la web no conoce: mejor decir poco que
+    // llamar reseña a un aviso de cierre.
+    return FRASES[item.tipo] || 'ha participado en';
+  }
+
+  // A dónde lleva la entrada, o null si no lleva a ninguna página.
+  //
+  // Los eventos van a la lista y no al evento: la web no tiene todavía una
+  // página por evento, así que enlazar a una clave daría un 404.
+  function destino(item) {
+    if (item.place_key) return '/lugar/?k=' + encodeURIComponent(item.place_key);
+    if (item.ruta_id) return '/rutas/?id=' + encodeURIComponent(item.ruta_id);
+    if (item.evento_clave) return '/eventos/';
+    return null;
+  }
+
+  /// «Fulano ha reseñado Tal sitio», con el sitio enlazando a donde toque.
   function linea(item, clase) {
     const p = el('p', clase || 'crono-linea');
     p.appendChild(el('strong', null, item.apodo));
-    p.appendChild(document.createTextNode(
-      item.tipo === 'lugar' ? ' ha añadido ' : ' ha reseñado '));
-    if (item.place_key) {
+    p.appendChild(document.createTextNode(' ' + frase(item) + ' '));
+    const url = destino(item);
+    if (url) {
       const a = el('a', 'crono-sitio', item.sitio);
-      a.href = '/lugar/?k=' + encodeURIComponent(item.place_key);
+      a.href = url;
       p.appendChild(a);
     } else {
       p.appendChild(el('span', 'crono-sitio', item.sitio));
@@ -129,7 +199,11 @@
     return fetch(API + 'rpc/fn_cronologia', {
       method: 'POST',
       headers: { apikey: KEY, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ p_limite: limite }),
+      // `p_ampliada` trae además las correcciones, las rutas, los eventos
+      // propuestos y los comentarios. La función no los manda por defecto
+      // para no romper las versiones de la app que no los conocen; la web se
+      // actualiza con el repositorio, así que aquí siempre se piden.
+      body: JSON.stringify({ p_limite: limite, p_ampliada: true }),
     })
       .then(function (r) { return r.ok ? r.json() : []; })
       .catch(function () { return []; });
@@ -141,6 +215,9 @@
     haceCuanto: haceCuanto,
     estrellas: estrellas,
     linea: linea,
+    frase: frase,
+    cita: cita,
+    detalle: detalle,
     pedir: pedir,
     leerVisto: leerVisto,
     marcarVisto: marcarVisto,
