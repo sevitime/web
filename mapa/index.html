@@ -40,13 +40,13 @@
 </script>
 <script defer src="/libs/maplibre-gl.js"></script>
 <link href="/libs/maplibre-gl.css" rel="stylesheet" />
-<link rel="stylesheet" href="/estilo.css?v=7e02aff6" />
+<link rel="stylesheet" href="/estilo.css?v=05493bc8" />
 <script defer src="/libs/pmtiles.js"></script>
 <script defer src="/libs/supabase.min.js"></script>
 <script defer src="/mapa/estilo-mapa.js?v=55fd2f52"></script>
 <!-- Sin `defer` a propósito: el script de esta página va en línea y se
      ejecuta antes que los diferidos; necesita `SeviSugerir` ya disponible. -->
-<script src="/sugerir.js?v=c9b3acca"></script>
+<script src="/sugerir.js?v=fbf31424"></script>
 <script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/nav.js?v=472b06e1"></script>
 <style>
@@ -400,6 +400,14 @@
   .tarjeta-sitio-ficha:focus-visible, .tarjeta-sitio-corregir:focus-visible {
     outline: 3px solid var(--verde-claro); outline-offset: 2px;
   }
+
+  /* «Ponen tapas»: casilla en el panel de sugerir. */
+  .casilla {
+    display: flex; align-items: center; gap: 8px;
+    margin: 4px 0 10px; font-size: var(--t-cuerpo); cursor: pointer;
+  }
+  .casilla input { width: 18px; height: 18px; accent-color: var(--verde); }
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -468,6 +476,13 @@
 
   <span id="s-tipo-label" class="campo-label">Qué es</span>
   <div id="s-tipo-chips" class="chips" role="group" aria-labelledby="s-tipo-label"></div>
+
+  <!-- «¿Ponen tapas?», solo en bares y restaurantes, como en la app
+       (`tipoConTapas`). Sin esto, un bar sugerido desde la web no entraba
+       nunca en «Dónde tapear». -->
+  <label id="s-tapas-fila" class="casilla" hidden>
+    <input id="s-tapas" type="checkbox" /> Ponen tapas
+  </label>
 
   <label for="s-notas">Notas (opcional)</label>
   <textarea id="s-notas" maxlength="300"></textarea>
@@ -1325,7 +1340,16 @@ window.addEventListener('DOMContentLoaded', function () {
   const opcionesTipo = Object.fromEntries(
     Object.entries(TIPOS).map(([valor, etiqueta]) => [valor, { emoji: TIPOS_EMOJI[valor] || '📍', etiqueta }])
   );
-  pintarChips(sTipoChips, opcionesTipo, 'bar', () => {});
+  // La pregunta de las tapas aparece y desaparece con el tipo elegido.
+  const filaTapas = document.getElementById('s-tapas-fila');
+  const casillaTapas = document.getElementById('s-tapas');
+  function tapasSegunTipo(tipo) {
+    const cabe = tipo === 'bar' || tipo === 'restaurant';
+    filaTapas.hidden = !cabe;
+    if (!cabe) casillaTapas.checked = false;
+  }
+  pintarChips(sTipoChips, opcionesTipo, 'bar', tapasSegunTipo);
+  tapasSegunTipo('bar');
 
   const rMotivoChips = document.getElementById('r-motivo-chips');
   const cajaNombreNuevo = document.getElementById('r-nombre-nuevo-caja');
@@ -1621,6 +1645,8 @@ window.addEventListener('DOMContentLoaded', function () {
     document.getElementById('s-ubicacion-ayuda').textContent =
       'Arrastra el pin del mapa si el sitio no cae justo en la puerta.';
     document.getElementById('s-nombre').value = '';
+    casillaTapas.checked = false;
+    tapasSegunTipo(sTipoChips.valorSeleccionado());
     document.getElementById('s-notas').value = '';
     sTipoChips.seleccionar('bar');
     limpiarMensajes(panelSugerir);
@@ -1685,6 +1711,9 @@ window.addEventListener('DOMContentLoaded', function () {
       notas: document.getElementById('s-notas').value,
       lat: parseFloat(panelSugerir.dataset.lat),
       lon: parseFloat(panelSugerir.dataset.lng),
+      tapas: document.getElementById('s-tapas').checked,
+      // Aquí el punto lo ha puesto una persona tocando el mapa, no un GPS.
+      puntoOrigen: 'mapa',
       deviceId: deviceId(),
       cercanos: lugaresCargados,
       sb: sb,

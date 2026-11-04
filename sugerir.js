@@ -30,6 +30,13 @@
     otro: { emoji: '➕', etiqueta: 'Otro' },
   };
 
+  /// Los tipos en los que tiene sentido preguntar «¿ponen tapas?».
+  /// Igual que `tipoConTapas` en la app: si cambia una, cambia la otra.
+  const TIPOS_CON_TAPAS = ['bar', 'restaurant'];
+
+  /// Cómo se obtuvo el punto, en los mismos valores que usa la app.
+  const ORIGENES = ['gps', 'mapa'];
+
   function normalizarNombre(nombre) {
     return (nombre || '').toLocaleLowerCase('es-ES').normalize('NFD')
       .replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9 ]/g, ' ')
@@ -113,9 +120,34 @@
       lat: opciones.lat,
       lon: opciones.lon,
       device_id: opciones.deviceId,
-      punto_origen: 'web',
+      // De dónde sale el punto. Quien lo revisa y quien lo mapea no se fían
+      // igual de un GPS en la puerta que de una chincheta puesta con el
+      // dedo, así que se dice cuál de las dos es, como en la app. `'web'`
+      // queda para lo que no sabemos de dónde viene.
+      punto_origen: ORIGENES.indexOf(opciones.puntoOrigen) >= 0
+        ? opciones.puntoOrigen
+        : 'web',
     };
     if (notas) fila.notas = notas;
+
+    // Las tapas, solo donde la pregunta tiene sentido. Misma regla que
+    // `tipoConTapas` en la app (`lib/utils/tapas.dart`): en una heladería o
+    // una hamburguesería sobra. Sin esto, un bar sugerido desde la web no
+    // entraba nunca en «Dónde tapear».
+    if (opciones.tapas === true && TIPOS_CON_TAPAS.indexOf(tipo) >= 0) {
+      fila.tapas = true;
+    }
+
+    // La calidad del fix, solo si el punto es un fix. En una chincheta no hay
+    // precisión que medir y decir que la hay sería engañar a quien modera.
+    if (fila.punto_origen === 'gps') {
+      if (isFinite(opciones.precisionM)) {
+        fila.gps_precision_m = opciones.precisionM;
+      }
+      if (opciones.tomadoEl) {
+        fila.gps_fix_el = new Date(opciones.tomadoEl).toISOString();
+      }
+    }
 
     const { error } = await opciones.sb.from('sugerencias').insert(fila);
     if (error) {

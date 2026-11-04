@@ -109,7 +109,14 @@
     boton.textContent = 'Buscando dónde estás…';
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const punto = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        const punto = {
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          // Se guardan para poder contarle a quien modera lo fiable que es
+          // el punto cuando desde aquí se sugiere un sitio.
+          precisionM: pos.coords.accuracy,
+          tomadoEl: pos.timestamp,
+        };
         const aSevilla = L.metros(punto, L.SEVILLA);
         if (aSevilla > LEJOS) {
           // Está fuera de la provincia: su posición es correcta y aun así no
@@ -253,7 +260,14 @@
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         boton.disabled = false;
-        const punto = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        const punto = {
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          // Se guardan para poder contarle a quien modera lo fiable que es
+          // el punto cuando desde aquí se sugiere un sitio.
+          precisionM: pos.coords.accuracy,
+          tomadoEl: pos.timestamp,
+        };
         if (L.metros(punto, L.SEVILLA) > LEJOS) {
           avisar('Estás a ' + L.formatDist(L.metros(punto, L.SEVILLA)) +
             ' de Sevilla y SeviTime solo cubre Sevilla y su provincia, así que ' +
@@ -346,10 +360,28 @@
         chips.querySelectorAll('.chip').forEach(function (x) {
           x.classList.toggle('seleccionado', x.dataset.valor === valor);
         });
+        actualizarTapas();
       });
       chips.appendChild(c);
     });
     hoja.append(etiquetaTipo, chips);
+
+    // «¿Ponen tapas?», solo en bares y restaurantes, como en la app. Sin
+    // esto, un bar sugerido desde la web no entraba en «Dónde tapear».
+    const filaTapas = document.createElement('label');
+    filaTapas.className = 'hoja-casilla';
+    const tapas = document.createElement('input');
+    tapas.type = 'checkbox';
+    tapas.id = 'sug-tapas';
+    filaTapas.append(tapas, document.createTextNode(' Ponen tapas'));
+    hoja.appendChild(filaTapas);
+
+    function actualizarTapas() {
+      const cabe = tipo === 'bar' || tipo === 'restaurant';
+      filaTapas.hidden = !cabe;
+      if (!cabe) tapas.checked = false;
+    }
+    actualizarTapas();
 
     const notas = document.createElement('textarea');
     notas.id = 'sug-notas';
@@ -376,6 +408,12 @@
         notas: notas.value,
         lat: estado.origen.lat,
         lon: estado.origen.lon,
+        tapas: tapas.checked,
+        // Aquí el punto es donde está quien sugiere, no una chincheta: salvo
+        // que no haya dado la ubicación y la lista salga del centro.
+        puntoOrigen: estado.ubicacionReal ? 'gps' : 'web',
+        precisionM: estado.origen.precisionM,
+        tomadoEl: estado.origen.tomadoEl,
         deviceId: window.SeviSugerir.deviceId(usuario),
         cercanos: estado.sitios || [],
         sb: window.SEVI.sb,
@@ -656,7 +694,14 @@
     $('ubicacion-caja').hidden = true;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        const punto = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        const punto = {
+          lat: pos.coords.latitude,
+          lon: pos.coords.longitude,
+          // Se guardan para poder contarle a quien modera lo fiable que es
+          // el punto cuando desde aquí se sugiere un sitio.
+          precisionM: pos.coords.accuracy,
+          tomadoEl: pos.timestamp,
+        };
         if (L.metros(punto, L.SEVILLA) > LEJOS) return;
         estado.origen = punto;
         estado.ubicacionReal = true;

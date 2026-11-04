@@ -1559,6 +1559,14 @@ html.con-barra .tostada {
 .crono-texto { margin: 8px 0 0; color: var(--apagado); font-size: var(--t-cuerpo); line-height: 1.5; }
 /* El nombre nuevo de un sitio renombrado: un dato, no una cita, así que
    sin comillas y con algo más de peso que el comentario de una reseña. */
+/* «Ponen tapas» en la hoja de sugerir de Explorar. */
+.hoja-casilla {
+  display: flex; align-items: center; gap: 8px;
+  margin: 2px 0 6px; font-size: var(--t-cuerpo); color: var(--texto);
+  cursor: pointer;
+}
+.hoja-casilla input { width: 18px; height: 18px; accent-color: var(--verde-claro); }
+
 .crono-detalle { margin: 8px 0 0; color: var(--texto); font-size: var(--t-cuerpo); line-height: 1.5; font-weight: 600; }
 .crono-foto-enlace {
   position: relative;
