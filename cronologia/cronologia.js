@@ -61,7 +61,38 @@
     return li;
   }
 
-  C.pedir(40)
+  // De 40 en 40, con botón, como la lista de Explorar. La app hace lo mismo
+  // cargando al llegar al final, que es su costumbre; aquí el botón es la de
+  // la web.
+  const PAGINA = 40;
+  const mas = document.getElementById('btn-mas');
+  let cargadas = 0;
+  let pidiendo = false;
+
+  function pintar(filas) {
+    filas.forEach(function (f) { lista.appendChild(fila(f)); });
+    cargadas += filas.length;
+    // Una página incompleta es el final de la lista.
+    if (mas) mas.hidden = filas.length < PAGINA;
+  }
+
+  function siguiente() {
+    if (pidiendo) return;
+    pidiendo = true;
+    if (mas) mas.textContent = 'Cargando…';
+    C.pedir(PAGINA, cargadas)
+      .then(function (filas) {
+        pintar(Array.isArray(filas) ? filas : []);
+      })
+      .finally(function () {
+        pidiendo = false;
+        if (mas) mas.textContent = 'Ver más';
+      });
+  }
+
+  if (mas) mas.addEventListener('click', siguiente);
+
+  C.pedir(PAGINA, 0)
     .then(function (filas) {
       if (!Array.isArray(filas) || !filas.length) {
         estado.textContent = 'Todavía no hay nada que contar. En cuanto alguien ' +
@@ -72,7 +103,7 @@
       // contador de novedades de la tira se apaga.
       C.marcarVisto(filas[0].cuando);
       estado.hidden = true;
-      filas.forEach(function (f) { lista.appendChild(fila(f)); });
+      pintar(filas);
     })
     .catch(function () {
       estado.textContent = 'No hemos podido cargarlo. Inténtalo en un momento.';

@@ -22,7 +22,13 @@
     if (d < 7) return d === 1 ? 'ayer' : 'hace ' + d + ' días';
     const sem = Math.round(d / 7);
     if (sem < 5) return sem === 1 ? 'hace 1 semana' : 'hace ' + sem + ' semanas';
-    return new Date(iso).toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
+    // El año solo cuando no es el de ahora, igual que `timeAgo` en la app
+    // (`lib/utils/date_utils.dart`): «Qué pasa» mezcla cosas de hace meses y
+    // en enero habría dos años diciendo «4 de septiembre».
+    const f = new Date(iso);
+    const opciones = { day: 'numeric', month: 'long' };
+    if (f.getFullYear() !== new Date().getFullYear()) opciones.year = 'numeric';
+    return f.toLocaleDateString('es-ES', opciones);
   }
 
   function estrellas(n) {
@@ -195,7 +201,7 @@
     }, 0);
   }
 
-  function pedir(limite) {
+  function pedir(limite, desde) {
     return fetch(API + 'rpc/fn_cronologia', {
       method: 'POST',
       headers: { apikey: KEY, 'Content-Type': 'application/json' },
@@ -203,7 +209,13 @@
       // propuestos y los comentarios. La función no los manda por defecto
       // para no romper las versiones de la app que no los conocen; la web se
       // actualiza con el repositorio, así que aquí siempre se piden.
-      body: JSON.stringify({ p_limite: limite, p_ampliada: true }),
+      body: JSON.stringify({
+        p_limite: limite,
+        p_ampliada: true,
+        // Desplazamiento, para poder llegar al final de la lista: pidiendo
+        // solo 40 quedaban 52 entradas sin forma de verse.
+        p_desde: desde || 0,
+      }),
     })
       .then(function (r) { return r.ok ? r.json() : []; })
       .catch(function () { return []; });

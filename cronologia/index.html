@@ -19,8 +19,8 @@
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/estilo.css?v=7e02aff6">
 <script defer src="/nav.js?v=472b06e1"></script>
-<script defer src="/cronologia/comun.js?v=1e49eb19"></script>
-<script defer src="/cronologia/cronologia.js?v=b8ca1f7b"></script>
+<script defer src="/cronologia/comun.js?v=b7003c41"></script>
+<script defer src="/cronologia/cronologia.js?v=e51dc545"></script>
 <script defer src="/auth.js?v=c7d7806f"></script>
 <style>
   .noticias { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
@@ -52,6 +52,23 @@
   }
   .n-enlace:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: -3px; }
   .n-pie { margin: 24px 0 0; font-size: var(--t-etiqueta); color: var(--tenue); text-wrap: pretty; }
+
+  /* «Ver más»: el mismo botón que la lista de Explorar. */
+  .btn-mas {
+    display: block; width: 100%; min-height: 48px; margin-top: 16px;
+    border: 1px solid var(--borde); border-radius: var(--r-pill);
+    background: var(--superficie); color: var(--texto);
+    font: inherit; font-weight: 600; cursor: pointer;
+  }
+  .btn-mas:hover { border-color: var(--verde-claro); }
+  .btn-mas:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
+  /* Obligatorio, no decorativo: `.btn-mas` trae su propio `display`, y una
+     regla de autor gana al `[hidden] { display: none }` del navegador. Sin
+     esto el atributo `hidden` no oculta nada y el botón se queda a la vista
+     con la lista ya completa. Es el mismo tropiezo que hubo en
+     `explorar/index.html` y en `lugar/index.html`. */
+  [hidden] { display: none !important; }
 </style>
 </head>
 <body>
@@ -95,6 +112,7 @@
 <main class="cronologia" id="contenido" tabindex="-1">
   <p class="crono-estado" id="estado" role="status">Cargando…</p>
   <ul class="crono-lista" id="lista"></ul>
+  <button class="btn-mas" id="btn-mas" type="button" hidden>Ver más</button>
 </main>
 
 <footer>
