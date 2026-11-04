@@ -1567,6 +1567,12 @@ html.con-barra .tostada {
 }
 .hoja-casilla input { width: 18px; height: 18px; accent-color: var(--verde-claro); }
 
+/* El apodo lleva al perfil, pero se sigue leyendo como antes: negrita y
+   color de texto, no de enlace. Lo que invita a tocarlo es el nombre, no un
+   azul en mitad de la frase. */
+.crono-apodo { font-weight: 700; color: var(--texto); text-decoration: none; }
+.crono-apodo:hover, .crono-apodo:focus-visible { text-decoration: underline; }
+
 .crono-detalle { margin: 8px 0 0; color: var(--texto); font-size: var(--t-cuerpo); line-height: 1.5; font-weight: 600; }
 .crono-foto-enlace {
   position: relative;

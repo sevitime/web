@@ -148,7 +148,14 @@
   /// «Fulano ha reseñado Tal sitio», con el sitio enlazando a donde toque.
   function linea(item, clase) {
     const p = el('p', clase || 'crono-linea');
-    p.appendChild(el('strong', null, item.apodo));
+
+    // Cada nombre lleva a lo que nombra: el apodo al perfil de quien lo hizo
+    // y el sitio a su ficha. Antes el apodo era solo texto en negrita, así
+    // que de la persona no se podía llegar a ninguna parte.
+    const quien = el('a', 'crono-apodo', item.apodo);
+    quien.href = '/perfil/?n=' + encodeURIComponent(item.apodo);
+    p.appendChild(quien);
+
     p.appendChild(document.createTextNode(' ' + frase(item) + ' '));
     const url = destino(item);
     if (url) {
