@@ -1373,39 +1373,43 @@ html.con-barra .tostada {
   .hoja { border-radius: var(--r-lg); }
 }
 
-/* ---------- Instalada en la pantalla de inicio ----------
+/* ---------- En el móvil, esto es la app ----------
  *
- * Cuando la web se abre desde su icono, esto ES la app. Y una app no lleva
- * su propio logotipo con enlace a la portada en cada pantalla, ni un botón
- * del tamaño de un titular para entrar. La cabecera verde ya dice dónde
- * estás y la barra de abajo lleva a los cinco destinos.
+ * Una app no lleva su propio logotipo con enlace a la portada en cada
+ * pantalla, ni un botón del tamaño de un titular para entrar: la cabecera
+ * verde ya dice dónde estás y la barra de abajo lleva a los cinco destinos.
  *
- * Solo en móvil: en un escritorio con la web instalada, la navegación de
- * arriba sigue siendo la forma de moverse, porque allí no hay barra abajo.
+ * La clase la pone `nav.js` cuando ha mudado el menú y la cuenta dentro de la
+ * cabecera verde, y solo entonces. Antes dependía de tener la web instalada;
+ * desde el 5-nov-2026 es en todo móvil, porque el parecido con la app no
+ * puede depender de un gesto que la mayoría no ha hecho.
+ *
+ * Donde no hay cabecera verde (la portada y `/mapa/`) la clase no se pone y
+ * la franja de arriba se queda tal cual, con su marca. Eso es lo que quiere
+ * la portada, que se presenta a quien aún no nos conoce.
+ *
+ * Solo en móvil: en escritorio la navegación de arriba sigue siendo la forma
+ * de moverse, porque allí no hay barra abajo.
  */
 @media (max-width: 719px) {
-  html.instalada .nav-marca { display: none; }
+  html.como-app .nav-marca { display: none; }
   /* El menú y la cuenta viven dentro de la cabecera verde (los muda
      `nav.js`), así que la fila se convierte en título + acciones. */
-  html.instalada .cabecera-app-fila {
+  html.como-app .cabecera-app-fila {
     display: flex;
     align-items: center;
     gap: 10px;
     margin-bottom: 4px;
   }
-  html.instalada .cabecera-app-fila h1 { flex: 1 1 auto; min-width: 0; margin: 0; }
-  html.instalada .cabecera-app .nav-acciones {
+  html.como-app .cabecera-app-fila h1 { flex: 1 1 auto; min-width: 0; margin: 0; }
+  html.como-app .cabecera-app .nav-acciones {
     flex: 0 0 auto;
     display: flex;
     align-items: center;
     gap: 8px;
   }
   /* Sobre el verde, el botón de entrar no necesita ser un titular. */
-  html.instalada .cabecera-app .auth-entrar { font-size: var(--t-etiqueta); padding: 8px 12px; }
-  /* En `/mapa/` no hay cabecera verde ni barra de abajo: allí la fila de
-     arriba se queda, con su icono, que es lo único que dice dónde estás. */
-  html.instalada #barra { display: block; }
-  html.instalada #barra .nav-marca { display: flex; }
+  html.como-app .cabecera-app .auth-entrar { font-size: var(--t-etiqueta); padding: 8px 12px; }
 }
 
 /* ---------- Ajustes ---------- */

@@ -99,33 +99,38 @@ window.SeviLlegada = function (contenedor) {
   document.documentElement.classList.add('con-barra');
 }());
 
-// Instalada en la pantalla de inicio: entonces esto ES la app, y una app no
-// se presenta a sí misma en cada pantalla. Se marca aquí y `estilo.css`
-// quita lo que sobra: el logotipo con enlace a la portada —que es el gesto
-// más de «web» que hay— y el botón grande de entrar, que pasa a ser
-// compacto. La cabecera verde ya dice en qué pantalla estás y la barra de
-// abajo lleva a los cinco sitios.
+// Una sola cabecera en el móvil: la de la app.
 //
-// Vale para iPhone y para Android: `display-mode: standalone` lo cumplen las
-// dos, y `navigator.standalone` es el apaño que hace falta en iOS.
+// En el móvil la web apilaba tres cosas: la barra del navegador, la franja
+// blanca de SeviTime (logotipo + hamburguesa + cuenta) y la cabecera verde
+// con el título de la pantalla. Tres rótulos para decir dos cosas.
+//
+// La app no hace eso: cada pantalla empieza por su cabecera, y el menú y la
+// cuenta van dentro, a la derecha del título. Así que el menú y la cuenta se
+// mudan DENTRO de la cabecera verde y la franja blanca desaparece.
+//
+// Esto se hacía **solo con la web instalada** (5-nov-2026: ahora siempre en
+// móvil). Era la condición equivocada: no tiene que ver con haberla
+// instalado, tiene que ver con ser un móvil. Quien la abre en Chrome ve la
+// misma app que quien la tiene en su pantalla de inicio, que es a donde va
+// esto.
+//
+// Se mueven, no se duplican, para que `auth.js` siga pintando en el mismo
+// `#auth-seccion` de siempre.
 (function () {
-  var instalada = navigator.standalone === true ||
-    (window.matchMedia && window.matchMedia('(display-mode: standalone)').matches);
-  if (!instalada) return;
-  document.documentElement.classList.add('instalada');
-
-  // El menú y la cuenta se mudan DENTRO de la cabecera verde, a la derecha
-  // del título, que es donde los pone la app. Así desaparece la franja
-  // blanca de arriba entera: la pantalla empieza por su cabecera, como en
-  // el móvil. Se mueven, no se duplican, para que `auth.js` siga pintando
-  // en el mismo `#auth-seccion` de siempre.
+  // Solo en móvil. En escritorio no hay barra de abajo, así que la
+  // navegación de arriba es la única forma de moverse: esconderla dejaba la
+  // ventana sin salida. Pasó en la primera versión.
   function mudar() {
-    // Solo en móvil. En un escritorio con la web instalada no hay barra de
-    // abajo, así que la navegación de arriba es la única forma de moverse:
-    // esconderla dejaba la ventana sin salida. Pasó en la primera versión.
     if (!window.matchMedia || !window.matchMedia('(max-width: 719px)').matches) {
       return;
     }
+    // Sin cabecera verde no hay donde mudar nada, y es lo que salva dos
+    // pantallas que necesitan la franja de arriba tal cual: la portada, que
+    // se presenta a quien aún no conoce la app y por eso lleva su marca, y
+    // `/mapa/`, que es el mapa a pantalla completa y no tiene cabecera ni
+    // barra abajo. En las dos, esta función se va sin tocar nada y la clase
+    // no se pone.
     var cabecera = document.querySelector('.cabecera-app > div');
     var acciones = document.querySelector('.top-nav .nav-acciones');
     var arriba = document.querySelector('.top-nav');
@@ -140,6 +145,9 @@ window.SeviLlegada = function (contenedor) {
     fila.appendChild(acciones);
     cabecera.insertBefore(fila, cabecera.firstChild);
     arriba.hidden = true;
+    // La clase se pone aquí y no antes: así el CSS de «esto es la app» no
+    // alcanza nunca a una pantalla donde la mudanza no ha ocurrido.
+    document.documentElement.classList.add('como-app');
   }
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mudar);
