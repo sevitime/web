@@ -122,6 +122,7 @@ window.SeviLlegada = function (contenedor) {
    ['/cronologia/', 'Qu\u00e9 pasa'], ['/ranking/', 'Cuadro de honor'],
    ['/mapa/', 'Mapa'], ['/guardados/', 'Guardados'],
    ['/ajustes/', 'Ajustes'], ['/buzon/', 'Buz\u00f3n'],
+   ['/tu-perfil/', 'Tu perfil'],
    ['/mapa/?modo=colaborar', 'A\u00f1adir o corregir sitios'],
    ['/', 'Inicio']].forEach(function (d) {
     // En su propia página no se repite el enlace. La portada se compara
@@ -263,7 +264,9 @@ window.SeviLlegada = function (contenedor) {
   // El orden sí lo pone esto, y es el de la app: primero lo tuyo, que es lo
   // que allí vive detrás del avatar; después el resto; y la portada al final,
   // porque en la app no existe.
-  var PRIMERO = ['/guardados/', '/ranking/', '/ajustes/'];
+  // «Tu perfil» primero: es lo que abre la app al tocar el avatar, y desde
+  // ahí se llega a tus reseñas, tus rutas y tus aportaciones.
+  var PRIMERO = ['/tu-perfil/', '/guardados/', '/ranking/', '/ajustes/'];
 
   function leerEnlaces(menu) {
     var enlaces = [];

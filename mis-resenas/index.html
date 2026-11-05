@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mis reseñas — SeviTime</title>
+<meta name="description" content="Las reseñas que has escrito en SeviTime y en qué han quedado.">
+<link rel="canonical" href="https://sevitime.com/mis-resenas/">
+<!-- Es una página personal y detrás de sesión: no hay nada que indexar. -->
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SeviTime">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css?v=51bb9719">
+<script defer src="/nav.js?v=ab74ef38"></script>
+<script defer src="/lugares.js?v=f07b3d2b"></script>
+<script defer src="/auth.js?v=c7d7806f"></script>
+<script defer src="/mis-resenas/mis-resenas.js?v=5de7f011"></script>
+<style>
+  .tuyo { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+  .tuyo-seccion { margin-top: 26px; }
+  .tuyo-titulo {
+    font-size: var(--t-etiqueta); font-weight: 800; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--tenue); margin: 0 0 10px;
+  }
+  /* Filas con chevrón, como las de Tu perfil en la app: toda la fila es el
+     destino, no un enlace de texto suelto en medio de un párrafo. */
+  .tuyo-fila {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px; margin-bottom: 10px;
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); color: var(--texto); text-decoration: none;
+  }
+  .tuyo-fila:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: -3px; }
+  @media (hover: hover) and (pointer: fine) {
+    .tuyo-fila:hover { background: var(--superficie-alta); }
+  }
+  .tuyo-ico {
+    flex: 0 0 auto; width: 40px; height: 40px; border-radius: var(--r-sm);
+    display: grid; place-items: center; font-size: 19px;
+    background: var(--fondo);
+  }
+  .tuyo-txt { flex: 1; min-width: 0; }
+  .tuyo-txt strong { display: block; font-size: var(--t-item); font-weight: 700; }
+  .tuyo-txt span { display: block; margin-top: 2px; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .tuyo-chevron { flex: 0 0 auto; color: var(--tenue); }
+
+  /* Las fichas de una lista de «Lo tuyo»: un estado arriba, el nombre y el
+     cuándo. Mismo borde y mismo fondo que el resto de tarjetas de la web. */
+  .t-lista { list-style: none; margin: 0; padding: 0; --hueso-alto: 86px; --hueso-margen: 0 0 10px; }
+  .t-ficha {
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); padding: 14px 16px; margin-bottom: 10px;
+  }
+  .t-cabeza { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .t-nombre {
+    flex: 1; min-width: 0; font-size: var(--t-item); font-weight: 700; color: var(--texto);
+    text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  a.t-nombre:hover { text-decoration: underline; }
+  .t-estado {
+    flex: 0 0 auto; padding: 3px 9px; border-radius: 999px;
+    font-size: var(--t-etiqueta); font-weight: 700;
+  }
+  .t-estado.es-aprobada { background: var(--ok-bg); color: var(--ok-fg); }
+  .t-estado.es-pendiente { background: var(--gris-bg); color: var(--gris-fg); }
+  .t-estado.es-rechazada { background: rgba(255, 138, 138, 0.16); color: var(--error); }
+  .t-texto { margin-top: 8px; color: var(--apagado); font-size: var(--t-cuerpo); }
+  .t-meta { margin-top: 8px; font-size: var(--t-etiqueta); color: var(--tenue); }
+  .t-motivo {
+    margin-top: 8px; padding: 10px 12px; border-radius: var(--r-sm);
+    background: rgba(255, 138, 138, 0.10); color: var(--texto); font-size: var(--t-cuerpo);
+  }
+  .t-vacio { text-align: center; padding: 34px 16px; color: var(--apagado); }
+  .t-vacio strong { display: block; color: var(--texto); font-size: var(--t-item); margin-bottom: 6px; }
+</style>
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<noscript>
+  <p class="noscript-aviso">Esta página necesita JavaScript para leer tus reseñas. Puedes verlas en <a href="/">la app de SeviTime</a>.</p>
+</noscript>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="/explorar/" class="nav-link">Explorar</a>
+      <a href="/rutas/" class="nav-link">Rutas</a>
+      <a href="/eventos/" class="nav-link">Eventos</a>
+      <a href="/cronologia/" class="nav-link">Qué pasa</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/" class="nav-link">Mapa</a>
+      <a href="/guardados/" class="nav-link">Guardados</a>
+      <a href="/ajustes/" class="nav-link">Ajustes</a>
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Añadir o corregir sitios</span>
+      </a>
+      </div>
+      <div id="auth-seccion"></div>
+    </div>
+  </div>
+</nav>
+
+<header class="cabecera-app">
+  <div>
+    <h1>Mis reseñas</h1>
+    <p>Lo que has escrito y en qué ha quedado</p>
+  </div>
+</header>
+
+<main class="tuyo" id="contenido" tabindex="-1">
+  <p class="resumen" id="resumen" aria-live="polite" style="margin:0 0 14px;font-size:var(--t-etiqueta);color:var(--tenue)">Cargando tus reseñas…</p>
+
+  <ul class="t-lista" id="lista" aria-busy="true">
+    <li class="hueso" aria-hidden="true"></li>
+    <li class="hueso" aria-hidden="true"></li>
+    <li class="hueso" aria-hidden="true"></li>
+  </ul>
+
+  <p class="t-meta" style="margin-top:22px">Las reseñas pasan por moderación antes de publicarse. En qué queda cada una te lo contamos también en <a href="/buzon/">tu buzón</a>.</p>
+</main>
+
+<footer>
+  <a href="/sitios/">Sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/rutas/">Rutas</a>
+  <span aria-hidden="true">·</span>
+  <a href="/ranking/">Cuadro de honor</a>
+  <span aria-hidden="true">·</span>
+  <a href="/mapa/?modo=colaborar">Añadir o corregir sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/derechos/">Imágenes y derechos</a>
+  <span aria-hidden="true">·</span>
+  <a href="/privacidad/">Privacidad</a>
+  <span aria-hidden="true">·</span>
+  <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
+</footer>
+
+<script defer src="/visitas.js?v=0c43496f"></script>
+</body>
+</html>

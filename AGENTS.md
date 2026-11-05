@@ -910,7 +910,71 @@ Explorar · Transporte · Eventos · Noticias · Rutas, en ese orden
 (`main_scaffold.dart`). Antes llevaba Mapa y Guardados, que en la app **no
 son pestañas**: el mapa se abre desde Explorar y los guardados viven tras el
 avatar. Si la barra es lo que hace que la web se lea como la app, llevar
-otros cinco la delata. Los dos siguen en el menú de arriba.
+otros cinco la delata. Los dos siguen detrás del avatar.
+
+## La cabecera del móvil, sin hamburguesa (5-nov-2026)
+
+En el móvil **no hay menú de hamburguesa**: en la app no existe, y era lo que
+más la delataba. Lo monta `nav.js` y hay tres casos, con una clase en `<html>`
+para cada uno. Las clases se ponen **después** de mover el DOM, nunca antes:
+si la mudanza no ocurre, el CSS de «esto es la app» no debe alcanzar a esa
+pantalla.
+
+| Pantallas | Clase | Qué se ve arriba |
+|---|---|---|
+| Las que tienen `.cabecera-app` (Explorar, Eventos, Rutas, Noticias, Transporte, Guardados, Ajustes, Qué pasa…) | `como-app` | La franja blanca desaparece; el título comparte fila con el buzón y tu avatar |
+| Las de segundo nivel sin cabecera verde (buzón, cuadro de honor, lugar, perfil, sitios, crear ruta, encuentro) | `como-app-barra` + `como-app-acciones` | Se queda la franja, pero con **flecha de volver** en vez del logotipo, y buzón + avatar en vez del ☰ |
+| La portada | `como-app-acciones` | **La marca se queda** (es la página de aterrizaje); se van el ☰ y la cápsula de la cuenta |
+| `/mapa/` | ninguna | Intacto: es el mapa a pantalla completa, con su propia fila flotante |
+
+- **El avatar abre una hoja de abajo** con «Tu perfil» primero y después
+  Guardados, Cuadro de honor, Ajustes, Qué pasa, Mapa, Añadir o corregir e
+  Inicio. Las cinco pestañas de la barra de abajo no se repiten ahí, ni el
+  enlace a la pantalla en la que ya estás.
+- **`#auth-seccion` se MUEVE dentro de la hoja**, no se duplica: `auth.js` lo
+  busca por id y lo repinta al entrar y al salir. Ojo al orden: montar la
+  hoja se lleva ese nodo, así que un `insertBefore(..., auth)` posterior sobre
+  la barra lanza `NotFoundError` y deja la pantalla a medias.
+- **Los destinos secundarios se inyectan desde una sola lista** en `nav.js`.
+  Antes cada página escribía la suya y no coincidían: en el cuadro de honor
+  el menú tenía tres enlaces y en Explorar siete.
+- La flecha de volver es un **enlace de verdad** (a `/explorar/`), y solo hace
+  `history.back()` si vienes de dentro de la web.
+
+## `/tu-perfil/` y «Lo tuyo» (5-nov-2026)
+
+La gemela de `tu_perfil_screen.dart`, que es lo que la app abre al tocar el
+avatar. Hasta ese día en la web no existía: detrás del avatar solo había
+Guardados y Salir, así que **Mis reseñas, Mis rutas y Mis aportaciones no se
+podían ver desde un iPhone de ninguna manera**. Era el hueco más grande que
+quedaba entre las dos.
+
+- `/tu-perfil/` — tarjeta de nivel + accesos. Los números salen de
+  **`fn_mis_puntos`**, la misma función que usa la app
+  (`ContribucionesService`): nivel, título, puesto en el cuadro de honor y
+  cuánto falta para el siguiente. **Nada se calcula en el cliente**, para que
+  la web y la app no puedan decir cosas distintas.
+- `/mis-resenas/` — lee la tabla `resenas` filtrada por tu `user_id`, que es
+  lo que deja ver la política `resenas_leer_propia`. No hace falta función de
+  servidor. Lo que importa es el **estado**: pendiente, publicada o no
+  publicada con su motivo.
+- `/mis-rutas/` — **`fn_mis_rutas`**, que incluye las pendientes y las
+  rechazadas (las que `fn_rutas_publicas` no enseña). Solo las publicadas
+  llevan enlace: una ruta en revisión no tiene página todavía.
+- `/mis-aportaciones/` — **`fn_mis_aportaciones(p_device_id)`**, con el
+  `auth.uid()` como `device_id`, igual que la app.
+
+**Las palabras están copiadas de `lib/utils/aportaciones_labels.dart` una por
+una, y son decisiones:** `enviado` se llama **Publicada** (a quien lo mandó le
+importa que su dato esté, no el papeleo con OSM) y `descartado` se llama **No
+se pudo aplicar** y nunca «Rechazada», que suena a suspenso y casi siempre es
+que el dato no se pudo confirmar. Si cambian en la app, cambian aquí.
+
+Las cuatro páginas llevan `noindex` y no van al sitemap: son personales.
+
+**El Pasaporte no está.** Sus sellos sí están en el servidor
+(`passport_stamps`), pero el catálogo de sellos y sus iconos viven dentro de
+la app; traerlos es un trabajo aparte y no se deja a medias.
 
 ## `/cronologia/` — «Qué pasa» (3-nov-2026)
 
