@@ -480,7 +480,12 @@ window.SeviIOS = (function () {
   // en un iPhone es el resto: ahí lo de Google Play no sirve de nada.
   for (var i = 0; i < badges.length; i++) badges[i].hidden = true;
   if (textoAndroid) textoAndroid.hidden = true;
-  if (enlaceHero) enlaceHero.hidden = false;
+  // El botón ya se ve para todo el mundo; en un iPhone deja de describir una
+  // posibilidad y pasa a ser lo que hay que hacer.
+  if (enlaceHero) {
+    enlaceHero.hidden = false;
+    enlaceHero.textContent = 'A\u00f1\u00e1dela a tu iPhone';
+  }
   var titulo = bloque.querySelector('.cierre-iphone-titulo');
   if (titulo) titulo.textContent = 'En tu iPhone, sin App Store';
 

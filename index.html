@@ -32,7 +32,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" as="image" href="/capturas/explorar.webp" type="image/webp">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=6a9d39d1">
+<link rel="stylesheet" href="/estilo.css?v=5d463714">
 <!-- El movimiento de la portada. Va aquí dentro, y no en un fichero aparte,
      por dos motivos: la clase `anim` tiene que estar puesta antes del primer
      pintado (si no, las tarjetas se verían un instante y luego se
@@ -65,7 +65,7 @@
   });
 })();
 </script>
-<script defer src="/nav.js?v=b9a852ae"></script>
+<script defer src="/nav.js?v=c63d3e8e"></script>
 <!-- Supabase (216 KB) no se carga aquí a propósito: auth.js lo pide solo si
      hay sesión, se vuelve del login o se pulsa «Entrar con Google». -->
 <script type="application/ld+json">
@@ -135,10 +135,17 @@
     <a class="badge" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
       <img src="/play-badge.png" alt="Disponible en Google Play" width="646" height="250">
     </a>
-    <!-- Solo en iPhone y iPad: `nav.js` esconde el badge de Play y enseña
-         esto. Ofrecerle Google Play a un iPhone es un callejón sin salida, y
-         es lo que hacía esta portada. -->
-    <a class="hero-iphone" href="#llevatela" hidden>Añádela a tu iPhone</a>
+    <!-- La vía del iPhone, **a la vista de todo el mundo** y al lado de la de
+         Google Play (5-nov-2026). Antes solo aparecía dentro de un iPhone, y
+         entonces la mitad de la gente que podía contarlo —quien la abre en
+         Android o en el ordenador— no se enteraba de que existía. Son las
+         dos vías y van juntas.
+
+         Lleva a las instrucciones de abajo, que ya estaban escritas en el
+         HTML y se ven siempre. En un iPhone, `nav.js` esconde el badge de
+         Play (ofrecerle Google Play a un iPhone es un callejón sin salida) y
+         le cambia el texto a este botón por la acción directa. -->
+    <a class="hero-iphone" href="#llevatela">En iPhone, sin App Store</a>
   </div>
   <ul class="senas">
     <li>Gratis y sin anuncios</li>

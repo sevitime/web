@@ -182,13 +182,17 @@ img { max-width: 100%; display: block; }
 }
 .hero a:not(.badge):hover, .cierre a:not(.badge):hover { text-decoration: underline; }
 
-/* ---------- en iPhone no hay tienda que ofrecer ----------
+/* ---------- las dos vías, juntas ----------
 
-   El badge de Google Play se cambia por esto en iOS (`nav.js`): mismo peso
-   visual que el botón verde del hero, pero contorneado, porque no es la
-   acción principal —lo primero sigue siendo entrar a mirar sitios—. Los
-   `[hidden]` se declaran para que el bloque no asome antes de que el script
-   decida. */
+   Google Play y «en iPhone, sin App Store» se ven las dos a la vez y para
+   todo el mundo (5-nov-2026). Contorneado y no relleno porque, con el botón
+   verde de «Explorar Sevilla» al lado, la acción principal sigue siendo
+   entrar a mirar sitios; pero se ve, que antes solo aparecía dentro de un
+   iPhone y nadie más sabía que esa vía existía.
+
+   En un iPhone, `nav.js` esconde el badge de Play y le cambia el texto.
+   El `[hidden]` se queda declarado para cuando ya está instalada: a quien
+   la tiene no se le explica cómo instalarla. */
 .hero-iphone {
   display: inline-flex;
   align-items: center;
