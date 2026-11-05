@@ -99,29 +99,252 @@ window.SeviLlegada = function (contenedor) {
   document.documentElement.classList.add('con-barra');
 }());
 
-// Una sola cabecera en el móvil: la de la app.
+// Los destinos secundarios, en el menú de todas las páginas.
 //
-// En el móvil la web apilaba tres cosas: la barra del navegador, la franja
-// blanca de SeviTime (logotipo + hamburguesa + cuenta) y la cabecera verde
-// con el título de la pantalla. Tres rótulos para decir dos cosas.
+// Los pone el script y no el HTML de cada página porque son quince ficheros y
+// los enlaces son siempre los mismos. Cada página escribía su propia lista y
+// no coincidían: en el cuadro de honor el menú tenía tres enlaces y en
+// Explorar siete, así que la hoja de «Tu perfil» (más abajo) enseñaba cosas
+// distintas según dónde estuvieras. Esta es la única lista.
 //
-// La app no hace eso: cada pantalla empieza por su cabecera, y el menú y la
-// cuenta van dentro, a la derecha del título. Así que el menú y la cuenta se
-// mudan DENTRO de la cabecera verde y la franja blanca desaparece.
+// Van delante del botón de «Añadir o corregir sitios», que es el que cierra
+// el menú. Quien no haya entrado verá el buzón o los guardados pidiéndole
+// cuenta, que es lo honesto: existen, y son suyos en cuanto entre.
 //
-// Esto se hacía **solo con la web instalada** (5-nov-2026: ahora siempre en
-// móvil). Era la condición equivocada: no tiene que ver con haberla
-// instalado, tiene que ver con ser un móvil. Quien la abre en Chrome ve la
-// misma app que quien la tiene en su pantalla de inicio, que es a donde va
-// esto.
-//
-// Se mueven, no se duplican, para que `auth.js` siga pintando en el mismo
-// `#auth-seccion` de siempre.
+// **Tiene que ejecutarse antes del bloque de la cabecera**, que lee este
+// menú para montar la hoja.
 (function () {
-  // Solo en móvil. En escritorio no hay barra de abajo, así que la
-  // navegación de arriba es la única forma de moverse: esconderla dejaba la
-  // ventana sin salida. Pasó en la primera versión.
+  var menu = document.querySelector('.nav-enlaces');
+  if (!menu) return;
+  var boton = menu.querySelector('.nav-btn-mapa');
+
+  [['/noticias/', 'Noticias'], ['/transporte/', 'Transporte'],
+   ['/cronologia/', 'Qu\u00e9 pasa'], ['/ranking/', 'Cuadro de honor'],
+   ['/mapa/', 'Mapa'], ['/guardados/', 'Guardados'],
+   ['/ajustes/', 'Ajustes'], ['/buzon/', 'Buz\u00f3n'],
+   ['/mapa/?modo=colaborar', 'A\u00f1adir o corregir sitios'],
+   ['/', 'Inicio']].forEach(function (d) {
+    // En su propia página no se repite el enlace. La portada se compara
+    // entera: con `indexOf` toda ruta empieza por «/» y no se pondría nunca.
+    if (d[0] === '/' ? location.pathname === '/' : location.pathname.indexOf(d[0]) === 0) return;
+    if (menu.querySelector('a[href="' + d[0] + '"]')) return;
+    var enlace = document.createElement('a');
+    enlace.className = 'nav-link';
+    enlace.href = d[0];
+    enlace.textContent = d[1];
+    if (boton) menu.insertBefore(enlace, boton);
+    else menu.appendChild(enlace);
+  });
+}());
+
+// Una sola cabecera en el móvil, y sin hamburguesa: la de la app.
+//
+// Dos cosas que delataban a la web, arregladas aquí:
+//
+// 1. **Tres rótulos apilados** (barra del navegador + franja blanca de
+//    SeviTime + cabecera verde). Ahora el título, el buzón y el avatar
+//    comparten una sola fila y la franja blanca desaparece. Esto se hacía
+//    solo con la web instalada, que era la condición equivocada: no depende
+//    de haberla instalado, depende de ser un móvil (5-nov-2026).
+//
+// 2. **El menú de hamburguesa con trece enlaces en fila**, que en la app no
+//    existe: allí la cabecera lleva el buzón y el avatar, y detrás del avatar
+//    está lo tuyo (`home_screen.dart` → Tu perfil → Guardados, Cuadro de
+//    honor, Ajustes). Así que el icono de ☰ se va y el avatar abre una hoja
+//    de abajo, que es el gesto de la app.
+//
+// Las cinco pestañas de abajo no se repiten en la hoja: ya están a un toque.
+//
+// Nada se vuelve inalcanzable: lo que no es personal (Mapa, Qué pasa,
+// Sitios, Añadir o corregir sitios) sigue además en el pie de cada página,
+// que es lo que ven los buscadores.
+//
+// `#auth-seccion` se MUEVE dentro de la hoja, no se duplica: `auth.js` lo
+// busca por id y lo repinta al entrar y al salir.
+(function () {
+  // Las cinco de la barra de abajo, que no se repiten en la hoja.
+  var PESTANAS = ['/explorar/', '/transporte/', '/eventos/', '/noticias/', '/rutas/'];
+
+  var ICONO_BUZON = 'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z';
+  var ICONO_PERSONA = 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z';
+
+  function icono(path) {
+    return '<svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" ' +
+      'aria-hidden="true"><path d="' + path + '"/></svg>';
+  }
+
+  // La hoja se construye una vez y se queda; abrirla es enseñarla. Si se
+  // creara en cada toque habría que mudar `#auth-seccion` de ida y de
+  // vuelta, y en una de esas `auth.js` repintaría sobre el sitio
+  // equivocado.
+  function hacerHoja(enlaces, auth) {
+    var fondo = document.createElement('div');
+    fondo.className = 'hoja-fondo hoja-perfil';
+    fondo.style.display = 'none';
+
+    var hoja = document.createElement('div');
+    hoja.className = 'hoja';
+    hoja.setAttribute('role', 'dialog');
+    hoja.setAttribute('aria-modal', 'true');
+    hoja.setAttribute('aria-label', 'Tu perfil y más opciones');
+
+    var titulo = document.createElement('h2');
+    titulo.textContent = 'Tu perfil';
+    hoja.appendChild(titulo);
+
+    if (auth) hoja.appendChild(auth);
+
+    for (var i = 0; i < enlaces.length; i++) {
+      var a = document.createElement('a');
+      a.className = 'hoja-opcion';
+      a.href = enlaces[i].href;
+      a.innerHTML = '<strong>' + enlaces[i].texto + '</strong>';
+      hoja.appendChild(a);
+    }
+
+    var cerrar = document.createElement('button');
+    cerrar.type = 'button';
+    cerrar.className = 'hoja-cancelar';
+    cerrar.textContent = 'Cerrar';
+    hoja.appendChild(cerrar);
+
+    fondo.appendChild(hoja);
+    document.body.appendChild(fondo);
+
+    function ocultar() {
+      fondo.style.display = 'none';
+      document.documentElement.classList.remove('hoja-abierta');
+    }
+    cerrar.addEventListener('click', ocultar);
+    fondo.addEventListener('click', function (e) {
+      if (e.target === fondo) ocultar();
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && fondo.style.display !== 'none') ocultar();
+    });
+
+    return {
+      abrir: function () {
+        fondo.style.display = 'flex';
+        // Sin esto, el fondo se desplaza por debajo de la hoja.
+        document.documentElement.classList.add('hoja-abierta');
+        cerrar.focus();
+      }
+    };
+  }
+
+  // Tu foto en el botón, en cuanto `auth.js` la pinte: el avatar es el gesto
+  // de la app, y un monigote genérico no lo es. Mientras no haya sesión se
+  // queda el monigote, que es lo que la app enseña también.
+  function seguirAvatar(auth, boton) {
+    if (!auth || !window.MutationObserver) return;
+    function mirar() {
+      var img = auth.querySelector('.auth-avatar img');
+      if (!img || !img.getAttribute('src')) return;
+      if (boton.getAttribute('data-foto') === img.getAttribute('src')) return;
+      boton.setAttribute('data-foto', img.getAttribute('src'));
+      boton.innerHTML = '';
+      var mia = document.createElement('img');
+      mia.src = img.getAttribute('src');
+      mia.alt = '';
+      mia.referrerPolicy = 'no-referrer';
+      boton.appendChild(mia);
+    }
+    new MutationObserver(mirar).observe(auth, { childList: true, subtree: true });
+    mirar();
+  }
+
+  // Los enlaces de la hoja salen del menú de arriba, no de una lista escrita
+  // aquí: así cada página sigue decidiendo los suyos y no hay dos verdades
+  // que se separen con el tiempo. Fuera las cinco pestañas (están abajo) y
+  // el buzón (está al lado del avatar).
+  //
+  // El orden sí lo pone esto, y es el de la app: primero lo tuyo, que es lo
+  // que allí vive detrás del avatar; después el resto; y la portada al final,
+  // porque en la app no existe.
+  var PRIMERO = ['/guardados/', '/ranking/', '/ajustes/'];
+
+  function leerEnlaces(menu) {
+    var enlaces = [];
+    var vistos = {};
+    var todos = menu.querySelectorAll('a');
+    for (var i = 0; i < todos.length; i++) {
+      var href = todos[i].getAttribute('href') || '';
+      if (PESTANAS.indexOf(href) !== -1 || href.indexOf('/buzon/') === 0) continue;
+      // Ni un enlace a la pantalla en la que ya estás. Los inyectados de
+      // arriba ya se saltan el suyo, pero el que viene escrito en el HTML de
+      // la propia página no: en `/guardados/` la hoja ofrecía «Guardados».
+      if (href === location.pathname) continue;
+      if (vistos[href]) continue;
+      vistos[href] = true;
+      enlaces.push({ href: href, texto: (todos[i].textContent || '').trim() });
+    }
+    return enlaces.sort(function (a, b) {
+      return peso(a.href) - peso(b.href);
+    });
+  }
+
+  function peso(href) {
+    var i = PRIMERO.indexOf(href);
+    if (i !== -1) return i;
+    if (href === '/') return 99;
+    return 50;
+  }
+
+  // Las pantallas de segundo nivel (el buzón, el cuadro de honor, la ficha de
+  // un sitio, un perfil, Sitios, crear ruta, un punto de encuentro) no tienen
+  // cabecera verde: en la app son pantallas que se abren encima, con flecha
+  // de volver. Aquí se quedan con su franja de arriba, pero **sin
+  // hamburguesa**: el ☰ se cambia por el buzón y el avatar, que es lo que
+  // lleva la app. La marca de la izquierda hace de vuelta.
+  function soloQuitarHamburguesa() {
+    var acciones = document.querySelector('.top-nav .nav-acciones');
+    var menu = document.querySelector('.top-nav .nav-enlaces');
+    if (!acciones || !menu) return;
+    // Con `appendChild` y no `insertBefore(..., auth)`: `hacerBotones` monta la
+    // hoja, y montarla se lleva `#auth-seccion` dentro. Pedirle luego a la
+    // barra que inserte «antes de» un hijo que ya no es suyo lanzaba
+    // NotFoundError, y la clase de abajo no llegaba a ponerse: la hamburguesa
+    // seguía ahí y los botones nuevos no se veían.
+    acciones.appendChild(hacerBotones(leerEnlaces(menu), 'en-barra'));
+    document.documentElement.classList.add('como-app-barra');
+  }
+
+  // El buzón y el avatar, con su hoja detrás. `extra` distingue la cabecera
+  // verde de la franja blanca, que llevan colores distintos.
+  function hacerBotones(enlaces, extra) {
+    var botones = document.createElement('div');
+    botones.className = 'cabecera-botones' + (extra ? ' ' + extra : '');
+
+    if (location.pathname.indexOf('/buzon/') !== 0) {
+      var buzon = document.createElement('a');
+      buzon.className = 'cabecera-icono';
+      buzon.href = '/buzon/';
+      buzon.title = 'Tu buzón';
+      buzon.setAttribute('aria-label', 'Tu buzón');
+      buzon.innerHTML = icono(ICONO_BUZON);
+      botones.appendChild(buzon);
+    }
+
+    var boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'cabecera-avatar';
+    boton.title = 'Tu perfil y más opciones';
+    boton.setAttribute('aria-label', 'Tu perfil y más opciones');
+    boton.innerHTML = icono(ICONO_PERSONA);
+    botones.appendChild(boton);
+
+    var auth = document.getElementById('auth-seccion');
+    var hoja = hacerHoja(enlaces, auth);
+    boton.addEventListener('click', hoja.abrir);
+    seguirAvatar(auth, boton);
+    return botones;
+  }
+
   function mudar() {
+    // Solo en móvil. En escritorio no hay barra de abajo, así que la
+    // navegación de arriba es la única forma de moverse: esconderla dejaba
+    // la ventana sin salida. Pasó en la primera versión.
     if (!window.matchMedia || !window.matchMedia('(max-width: 719px)').matches) {
       return;
     }
@@ -129,26 +352,38 @@ window.SeviLlegada = function (contenedor) {
     // pantallas que necesitan la franja de arriba tal cual: la portada, que
     // se presenta a quien aún no conoce la app y por eso lleva su marca, y
     // `/mapa/`, que es el mapa a pantalla completa y no tiene cabecera ni
-    // barra abajo. En las dos, esta función se va sin tocar nada y la clase
-    // no se pone.
+    // barra abajo. En las dos, esta función se va sin tocar nada.
     var cabecera = document.querySelector('.cabecera-app > div');
-    var acciones = document.querySelector('.top-nav .nav-acciones');
     var arriba = document.querySelector('.top-nav');
-    if (!cabecera || !acciones || !arriba) return;
-    // El título comparte fila con el menú y la cuenta; el subtítulo se queda
-    // debajo, a todo lo ancho. Con los tres en la misma fila, «Sevilla y su
-    // provincia» se partía en dos líneas.
+    var menu = document.querySelector('.top-nav .nav-enlaces');
+    if (!arriba || !menu) return;
+    if (!cabecera) {
+      // La portada y `/mapa/` se quedan intactas: la primera se presenta a
+      // quien aún no nos conoce y la segunda es el mapa a pantalla completa.
+      if (location.pathname === '/' || location.pathname.indexOf('/mapa/') === 0) {
+        return;
+      }
+      soloQuitarHamburguesa();
+      return;
+    }
+
+    // El título comparte fila con el buzón y el avatar; el subtítulo se
+    // queda debajo, a todo lo ancho. Con todo en la misma fila, «Sevilla y
+    // su provincia» se partía en dos líneas.
     var fila = document.createElement('div');
     fila.className = 'cabecera-app-fila';
-    var titulo = cabecera.querySelector('h1');
-    if (titulo) fila.appendChild(titulo);
-    fila.appendChild(acciones);
+    var h1 = cabecera.querySelector('h1');
+    if (h1) fila.appendChild(h1);
+
+    fila.appendChild(hacerBotones(leerEnlaces(menu)));
     cabecera.insertBefore(fila, cabecera.firstChild);
+
     arriba.hidden = true;
     // La clase se pone aquí y no antes: así el CSS de «esto es la app» no
     // alcanza nunca a una pantalla donde la mudanza no ha ocurrido.
     document.documentElement.classList.add('como-app');
   }
+
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', mudar);
   } else {
@@ -167,32 +402,6 @@ if ('serviceWorker' in navigator && window.isSecureContext) {
     navigator.serviceWorker.register('/sw.js').catch(function () {});
   });
 }
-
-// Noticias, Transporte y Buzón, en el menú de todas las páginas.
-//
-// Los pone el script y no el HTML de cada página porque son quince ficheros y
-// los enlaces son siempre los mismos. Van delante del botón de «Añadir o
-// corregir sitios», que es el que cierra el menú. Quien no haya entrado verá
-// el buzón pidiéndole cuenta, que es lo honesto: existe, y es suyo en cuanto
-// entre.
-(function () {
-  var menu = document.querySelector('.nav-enlaces');
-  if (!menu) return;
-  var boton = menu.querySelector('.nav-btn-mapa');
-
-  [['/noticias/', 'Noticias'], ['/transporte/', 'Transporte'],
-   ['/buzon/', 'Buz\u00f3n']].forEach(function (d) {
-    // En su propia página no se repite el enlace.
-    if (location.pathname.indexOf(d[0]) === 0) return;
-    if (menu.querySelector('a[href="' + d[0] + '"]')) return;
-    var enlace = document.createElement('a');
-    enlace.className = 'nav-link';
-    enlace.href = d[0];
-    enlace.textContent = d[1];
-    if (boton) menu.insertBefore(enlace, boton);
-    else menu.appendChild(enlace);
-  });
-}());
 
 // Quién nos está mirando: lo usan el aviso de instalación y la portada.
 //
