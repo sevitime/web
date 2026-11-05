@@ -1266,9 +1266,11 @@ footer span { margin: 0 8px; }
   text-wrap: balance;
 }
 
-/* Pegada al tiempo: encima es la tarjeta del tiempo y debajo «Qué pasa»,
-   así que necesita aire propio y no el margen de encabezar unas tarjetas. */
-.diario-plan.suelto { margin: -4px 0 18px; }
+/* Debajo del tiempo, pero sin tocarlo. El margen de arriba (12 px) es menor
+   que el de abajo (20 px) a propósito: así la frase se lee agrupada con la
+   tarjeta del tiempo —de la que sale— y separada de «Qué pasa», que es otra
+   cosa. Tuvo -4 px un rato y quedaba pegada al borde de la tarjeta. */
+.diario-plan.suelto { margin: 12px 0 20px; }
 
 /* ---------- La cabecera de la app, en la web ---------- */
 /*
