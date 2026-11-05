@@ -1266,6 +1266,10 @@ footer span { margin: 0 8px; }
   text-wrap: balance;
 }
 
+/* Pegada al tiempo: encima es la tarjeta del tiempo y debajo «Qué pasa»,
+   así que necesita aire propio y no el margen de encabezar unas tarjetas. */
+.diario-plan.suelto { margin: -4px 0 18px; }
+
 /* ---------- La cabecera de la app, en la web ---------- */
 /*
  * La franja verde agua con el título, como la de las pantallas de la app

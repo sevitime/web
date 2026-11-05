@@ -390,7 +390,17 @@
     // Sin titular: dentro de Explorar la cabecera verde ya dice dónde
     // estás, y «Hoy en Sevilla» encima del tiempo era un rótulo de más.
     // En la app estas tarjetas tampoco llevan título encima.
-    if (frase) sec.appendChild(el('p', 'diario-plan', frase));
+    //
+    // La frase del plan va en su propio hueco, justo debajo del tiempo,
+    // porque **sale del tiempo**: con dos bloques en medio parecía una
+    // frase suelta y no la consecuencia de que esté nublado. Si esa página
+    // no tiene ese hueco, se queda donde estaba, encabezando las tarjetas.
+    var huecoPlan = document.getElementById('hueco-plan');
+    if (frase && huecoPlan) {
+      huecoPlan.appendChild(el('p', 'diario-plan suelto', frase));
+    } else if (frase) {
+      sec.appendChild(el('p', 'diario-plan', frase));
+    }
     var caja = el('div', 'diario-tarjetas');
     if (c.efemeride) caja.appendChild(tarjetaEfemeride(c.efemeride, c.videosE || []));
     if (c.destacado) caja.appendChild(tarjetaDestacado(c.destacado, c.videosD || []));

@@ -25,7 +25,7 @@
 <meta name="apple-mobile-web-app-title" content="SeviTime">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="/estilo.css?v=51bb9719">
+<link rel="stylesheet" href="/estilo.css?v=e509fd24">
 <script defer src="/nav.js?v=d28ae2af"></script>
 <script defer src="/lugares.js?v=f07b3d2b"></script>
 <script defer src="/auth.js?v=c7d7806f"></script>
@@ -33,7 +33,7 @@
 <script defer src="/explorar/explorar.js?v=b94642c8"></script>
 <script defer src="/cronologia/comun.js?v=c95f5ece"></script>
 <script defer src="/cronologia/tira.js?v=dbfdcdf7"></script>
-<script defer src="/diario.js?v=eb0904f5"></script>
+<script defer src="/diario.js?v=5148e9d1"></script>
 <script defer src="/explorar/tiempo.js?v=2f1eee15"></script>
 <script type="application/ld+json">
 {
@@ -331,6 +331,14 @@
        antes de decidir si se sale a la calle. -->
   <div id="hueco-tiempo"></div>
 
+  <!-- El plan del día, pegado al tiempo, porque **sale de él**: la frase que
+       toca la elige la condición del cielo («Tarde nublada ideal para…»).
+       Separado del tiempo por dos bloques, la relación entre los dos no se
+       veía y parecía una frase suelta. La escribe `diario.js`, que si
+       encuentra este hueco pone aquí la frase y deja las tarjetas de la
+       curiosidad y el sitio del día en el suyo. -->
+  <div id="hueco-plan"></div>
+
   <!-- «Qué pasa»: las tres últimas cosas que ha hecho la gente, con enlace
        a la cronología entera y al cuadro de honor. Va la primera, como la
        tarjeta de la app: lo que mueve la gente es la razón para entrar, y
@@ -338,7 +346,8 @@
        volumen que hay: ver `cronologia/tira.js`. -->
   <div id="hueco-crono"></div>
 
-  <!-- Lo de hoy: el plan según el tiempo, la curiosidad y el sitio del día.
+  <!-- Lo de hoy: la curiosidad y el sitio del día (el plan va arriba, con el
+       tiempo del que sale).
        Va aquí y no en la portada de la web porque en la app vive en SU
        portada, que es esta pestaña, justo debajo del tiempo y por delante
        de la lista (`DiscoveriesCarousel` en `home_screen.dart`). Lo rellena
