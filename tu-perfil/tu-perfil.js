@@ -14,9 +14,9 @@
 // Las tres pantallas de «Lo tuyo» son páginas aparte, como en la app, donde
 // se abren encima con su flecha de volver.
 //
-// **El Pasaporte no está todavía.** Sus sellos sí están en el servidor
-// (`passport_stamps`), pero el catálogo de sellos y sus iconos viven dentro
-// de la app; traerlos es un trabajo aparte y no se deja a medias aquí.
+// El Pasaporte sí está desde el 5-nov-2026 (`/pasaporte/`), con el catálogo
+// generado desde la app. De momento solo enseña: sellar sigue siendo cosa
+// del móvil.
 (function () {
   'use strict';
 
@@ -66,6 +66,7 @@
 
   function pintarLoTuyo() {
     pintarFilas($('lotuyo'), [
+      fila('/pasaporte/', '🛂', 'Pasaporte', 'Los sellos de Sevilla que llevas'),
       fila('/mis-resenas/', '✍️', 'Mis reseñas', 'Lo que has escrito y en qué ha quedado'),
       fila('/mis-rutas/', '🧭', 'Mis rutas', 'Las que has creado'),
       fila('/mis-aportaciones/', '📍', 'Mis aportaciones', 'Los sitios y datos que has aportado'),

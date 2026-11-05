@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pasaporte — SeviTime</title>
+<meta name="description" content="Tu Pasaporte de Sevilla en SeviTime: los sellos que llevas conseguidos y los que te faltan.">
+<link rel="canonical" href="https://sevitime.com/pasaporte/">
+<!-- Es una página personal y detrás de sesión: no hay nada que indexar. -->
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-192.png" type="image/png" sizes="192x192">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="manifest" href="/manifest.webmanifest">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="SeviTime">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="preload" href="/fuentes/inter-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/estilo.css?v=51bb9719">
+<script defer src="/nav.js?v=d28ae2af"></script>
+<script defer src="/lugares.js?v=f07b3d2b"></script>
+<script defer src="/auth.js?v=c7d7806f"></script>
+<script defer src="/pasaporte/sellos.js?v=b81cae0a"></script>
+<script defer src="/pasaporte/pasaporte.js?v=6c3617b3"></script>
+<style>
+  .pas { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
+
+  /* El carné, como la cabecera del Pasaporte en la app: fondo oscuro con el
+     verde de marca, «PASAPORTE» en versalitas espaciadas y «Sevilla» grande. */
+  .pas-carne {
+    border-radius: var(--r-lg);
+    padding: 20px;
+    background: linear-gradient(140deg, #00695C 0%, #004C45 60%, #06302C 100%);
+    color: #fff;
+  }
+  .pas-rotulo {
+    font-size: 12px; font-weight: 700; letter-spacing: 3.5px;
+    color: rgba(255, 255, 255, 0.55); margin: 0;
+  }
+  .pas-ciudad { font-size: 30px; font-weight: 800; margin: 4px 0 6px; color: #fff; }
+  .pas-faltan { font-size: 12px; color: rgba(255, 255, 255, 0.65); margin: 0; }
+  .pas-faltan.completo { color: var(--dorado); font-weight: 600; }
+  .pas-barra {
+    height: 8px; margin-top: 14px; border-radius: 999px;
+    background: rgba(255, 255, 255, 0.18); overflow: hidden;
+  }
+  .pas-relleno { height: 100%; background: var(--dorado); border-radius: 999px; }
+
+  .pas-como {
+    margin-top: 12px; background: none; border: 0; padding: 0;
+    color: rgba(255, 255, 255, 0.8); font: inherit; font-size: var(--t-etiqueta);
+    font-weight: 600; text-decoration: underline; cursor: pointer;
+  }
+  .pas-pasos { margin: 14px 0 0; padding-left: 20px; color: rgba(255, 255, 255, 0.75); font-size: var(--t-cuerpo); }
+  .pas-pasos li { margin-bottom: 6px; }
+
+  .pas-rejilla {
+    list-style: none; margin: 22px 0 0; padding: 0;
+    display: grid; gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  }
+  .pas-sello {
+    border: 1px solid var(--borde); border-radius: var(--r-lg);
+    background: var(--superficie); padding: 14px; text-align: center;
+  }
+  .pas-ico {
+    width: 46px; height: 46px; margin: 0 auto 8px; border-radius: 50%;
+    display: grid; place-items: center; color: #fff;
+  }
+  .pas-nombre { display: block; font-size: var(--t-cuerpo); font-weight: 700; color: var(--texto); }
+  .pas-cuando { display: block; margin-top: 3px; font-size: var(--t-etiqueta); color: var(--verde-claro); font-weight: 600; }
+  .pas-pista { display: block; margin-top: 4px; font-size: var(--t-etiqueta); color: var(--tenue); }
+  /* Los que faltan, apagados pero legibles: la pista es lo que invita a ir. */
+  .pas-sello.falta .pas-ico { background: var(--fondo) !important; color: var(--tenue); }
+  .pas-sello.falta .pas-nombre { color: var(--apagado); }
+
+  .pas-aviso {
+    margin-top: 20px; padding: 14px 16px; border: 1px solid var(--borde);
+    border-radius: var(--r-lg); background: var(--superficie);
+    color: var(--apagado); font-size: var(--t-cuerpo);
+  }
+  .pas-aviso strong { color: var(--texto); }
+  .pas-entrar { text-align: center; padding: 26px 16px; }
+  .pas-entrar p { color: var(--apagado); margin-bottom: 14px; }
+</style>
+</head>
+<body>
+
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+
+<noscript>
+  <p class="noscript-aviso">Esta página necesita JavaScript para leer tus sellos. Puedes verlos en <a href="/">la app de SeviTime</a>.</p>
+</noscript>
+
+<nav class="top-nav">
+  <div class="top-nav-inner">
+    <a href="/" class="nav-marca">
+      <img src="/icono.png" alt="" width="28" height="28">
+      <span>Sevi<span class="wordmark-time">Time</span></span>
+    </a>
+    <div class="nav-acciones">
+      <button class="nav-menu-toggle" type="button" aria-label="Abrir menú de navegación" aria-controls="nav-enlaces" aria-expanded="false"><svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/></svg></button>
+      <div class="nav-enlaces" id="nav-enlaces">
+      <a href="/" class="nav-link">Inicio</a>
+      <a href="/explorar/" class="nav-link">Explorar</a>
+      <a href="/rutas/" class="nav-link">Rutas</a>
+      <a href="/eventos/" class="nav-link">Eventos</a>
+      <a href="/cronologia/" class="nav-link">Qué pasa</a>
+      <a href="/ranking/" class="nav-link">Cuadro de honor</a>
+      <a href="/mapa/" class="nav-link">Mapa</a>
+      <a href="/guardados/" class="nav-link">Guardados</a>
+      <a href="/ajustes/" class="nav-link">Ajustes</a>
+      <a href="/mapa/?modo=colaborar" class="nav-btn-mapa">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20.5 3l-.16.03L15 5.1 9 3 3.46 4.84c-.29.1-.46.34-.46.63V20.5c0 .28.22.5.5.5l.16-.03L9 18.9l6 2.1 5.54-1.84c.29-.1.46-.34.46-.63V3.5c0-.28-.22-.5-.5-.5zM15 19l-6-2.11V5l6 2.11V19z"/></svg>
+        <span>Añadir o corregir sitios</span>
+      </a>
+      </div>
+      <div id="auth-seccion"></div>
+    </div>
+  </div>
+</nav>
+
+<header class="cabecera-app">
+  <div>
+    <h1>Pasaporte</h1>
+    <p>Los sellos de Sevilla que llevas</p>
+  </div>
+</header>
+
+<main class="pas" id="contenido" tabindex="-1">
+
+  <div class="pas-carne" id="carne" aria-live="polite">
+    <p class="pas-rotulo">PASAPORTE</p>
+    <p class="pas-ciudad">Sevilla</p>
+    <p class="pas-faltan" id="faltan">Cargando tus sellos…</p>
+    <div class="pas-barra" aria-hidden="true"><div class="pas-relleno" id="relleno" style="width:0"></div></div>
+    <button class="pas-como" id="como" type="button" aria-expanded="false" aria-controls="pasos">¿Cómo funciona?</button>
+    <ol class="pas-pasos" id="pasos" hidden>
+      <li>Acércate a un lugar de Sevilla hasta estar a menos de 30 metros.</li>
+      <li>Abre la ficha del lugar desde la app. Si estás cerca y no vas en vehículo, aparecerá un botón para sellar.</li>
+      <li>Pulsa «Sellar» para conseguir ese sello. Cada lugar solo se puede sellar una vez.</li>
+    </ol>
+  </div>
+
+  <ul class="pas-rejilla" id="rejilla"></ul>
+
+  <p class="pas-aviso" id="aviso" hidden></p>
+</main>
+
+<footer>
+  <a href="/sitios/">Sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/rutas/">Rutas</a>
+  <span aria-hidden="true">·</span>
+  <a href="/ranking/">Cuadro de honor</a>
+  <span aria-hidden="true">·</span>
+  <a href="/mapa/?modo=colaborar">Añadir o corregir sitios</a>
+  <span aria-hidden="true">·</span>
+  <a href="/derechos/">Imágenes y derechos</a>
+  <span aria-hidden="true">·</span>
+  <a href="/privacidad/">Privacidad</a>
+  <span aria-hidden="true">·</span>
+  <a href="mailto:sevitimeapp@gmail.com">Contacto</a>
+</footer>
+
+<script defer src="/visitas.js?v=0c43496f"></script>
+</body>
+</html>

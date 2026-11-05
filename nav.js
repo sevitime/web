@@ -122,7 +122,7 @@ window.SeviLlegada = function (contenedor) {
    ['/cronologia/', 'Qu\u00e9 pasa'], ['/ranking/', 'Cuadro de honor'],
    ['/mapa/', 'Mapa'], ['/guardados/', 'Guardados'],
    ['/ajustes/', 'Ajustes'], ['/buzon/', 'Buz\u00f3n'],
-   ['/tu-perfil/', 'Tu perfil'],
+   ['/tu-perfil/', 'Tu perfil'], ['/pasaporte/', 'Pasaporte'],
    ['/mapa/?modo=colaborar', 'A\u00f1adir o corregir sitios'],
    ['/', 'Inicio']].forEach(function (d) {
     // En su propia página no se repite el enlace. La portada se compara

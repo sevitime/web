@@ -972,9 +972,32 @@ que el dato no se pudo confirmar. Si cambian en la app, cambian aquí.
 
 Las cuatro páginas llevan `noindex` y no van al sitemap: son personales.
 
-**El Pasaporte no está.** Sus sellos sí están en el servidor
-(`passport_stamps`), pero el catálogo de sellos y sus iconos viven dentro de
-la app; traerlos es un trabajo aparte y no se deja a medias.
+## `/pasaporte/` (5-nov-2026)
+
+La gemela de `PassportScreen`. Lee `passport_stamps`, la misma tabla que
+sincroniza la app: un sello conseguido en el móvil sale aquí y al revés.
+
+- **El catálogo se genera, no se copia**: `node tool/actualizar_sellos.mjs`
+  lee `lib/services/passport_service.dart` del repo de la app y escribe
+  `pasaporte/sellos.js`. Mismo patrón que `actualizar_categorias.mjs`. Si se
+  añade un sello en la app, se regenera y ya.
+- **Los iconos son los del móvil, no emoji.** Los trazados están en
+  `tool/sellos_svg.json`, sacados una vez de `MaterialIcons-Regular.otf` del
+  SDK de Flutter (Apache 2.0) con fontTools: codepoint de cada
+  `Icons.*_rounded` en `icons.dart`, contorno del glifo, escalado a 24×24 con
+  el eje Y dado la vuelta. En Rutas la web sí usa emoji, pero allí son doce;
+  aquí son veinticinco en una rejilla y una rejilla de emoji junto a unos
+  candados no se lee como un pasaporte. Un sello sin trazado cae en el icono
+  de monumento, como en la app.
+- Los conseguidos van **delante** y los que faltan detrás con su candado y su
+  pista, como en la app.
+
+**Solo enseña, no sella.** Para conseguir un sello hay que estar a menos de
+30 metros y pulsar «Sellar» en la ficha del sitio, y eso hoy solo lo hace la
+app. La página lo dice en vez de callarlo: un pasaporte que no se puede
+rellenar y no lo explica parece roto. Si algún día lo hace la web, va en
+`/lugar/` y necesita la misma comprobación de distancia y de que no vas en
+vehículo.
 
 ## `/cronologia/` — «Qué pasa» (3-nov-2026)
 
