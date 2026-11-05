@@ -1444,6 +1444,27 @@ html.con-barra .tostada {
      lista se van y quedan el buzón y el avatar. */
   html.como-app-barra .nav-menu-toggle,
   html.como-app-barra .top-nav .nav-enlaces { display: none; }
+  /* El logotipo con enlace a la portada se cambia por la flecha de volver:
+     en la app estas pantallas se abren encima y lo que hay arriba a la
+     izquierda es la vuelta, no la marca. */
+  html.como-app-barra .nav-marca { display: none; }
+  .cabecera-volver {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    margin-left: -8px;
+    border-radius: 50%;
+    color: var(--texto);
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .cabecera-volver:active { background: var(--superficie-alta); }
+  .cabecera-volver:focus-visible {
+    outline: 3px solid var(--verde-claro);
+    outline-offset: 2px;
+  }
   .cabecera-botones.en-barra .cabecera-icono,
   .cabecera-botones.en-barra .cabecera-avatar {
     width: 40px;

@@ -166,6 +166,7 @@ window.SeviLlegada = function (contenedor) {
   var PESTANAS = ['/explorar/', '/transporte/', '/eventos/', '/noticias/', '/rutas/'];
 
   var ICONO_BUZON = 'M20 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z';
+  var ICONO_VOLVER = 'M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z';
   var ICONO_PERSONA = 'M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z';
 
   function icono(path) {
@@ -293,14 +294,17 @@ window.SeviLlegada = function (contenedor) {
 
   // Las pantallas de segundo nivel (el buzón, el cuadro de honor, la ficha de
   // un sitio, un perfil, Sitios, crear ruta, un punto de encuentro) no tienen
-  // cabecera verde: en la app son pantallas que se abren encima, con flecha
-  // de volver. Aquí se quedan con su franja de arriba, pero **sin
-  // hamburguesa**: el ☰ se cambia por el buzón y el avatar, que es lo que
-  // lleva la app. La marca de la izquierda hace de vuelta.
+  // cabecera verde: en la app son pantallas que se abren **encima**, con
+  // flecha de volver arriba a la izquierda. Aquí se quedan con su franja de
+  // arriba, pero con los dos gestos de la app en vez de los de una web: el ☰
+  // se cambia por el buzón y el avatar, y el logotipo con enlace a la portada
+  // se cambia por la flecha de volver.
   function soloQuitarHamburguesa() {
     var acciones = document.querySelector('.top-nav .nav-acciones');
     var menu = document.querySelector('.top-nav .nav-enlaces');
-    if (!acciones || !menu) return;
+    var dentro = document.querySelector('.top-nav-inner');
+    if (!acciones || !menu || !dentro) return;
+    dentro.insertBefore(hacerVolver(), dentro.firstChild);
     // Con `appendChild` y no `insertBefore(..., auth)`: `hacerBotones` monta la
     // hoja, y montarla se lleva `#auth-seccion` dentro. Pedirle luego a la
     // barra que inserte «antes de» un hijo que ya no es suyo lanzaba
@@ -339,6 +343,34 @@ window.SeviLlegada = function (contenedor) {
     boton.addEventListener('click', hoja.abrir);
     seguirAvatar(auth, boton);
     return botones;
+  }
+
+  // La flecha de volver.
+  //
+  // Es un enlace de verdad y no un botón: sin JavaScript, o si alguien llega
+  // a esta pantalla desde un enlace de fuera, sigue llevando a algún sitio.
+  // Con historia propia dentro de la web se prefiere `history.back()`, que es
+  // lo que hace la app: deshace el camino que traías, no te manda a una
+  // pantalla fija.
+  //
+  // El destino de reserva es Explorar y no la portada: la portada es la
+  // página de aterrizaje, y quien ya está dentro no vuelve a ella.
+  function hacerVolver() {
+    var a = document.createElement('a');
+    a.className = 'cabecera-volver';
+    a.href = '/explorar/';
+    a.title = 'Volver';
+    a.setAttribute('aria-label', 'Volver');
+    a.innerHTML = icono(ICONO_VOLVER);
+    a.addEventListener('click', function (e) {
+      var deAqui = document.referrer &&
+        document.referrer.indexOf(location.origin + '/') === 0;
+      if (deAqui && history.length > 1) {
+        e.preventDefault();
+        history.back();
+      }
+    });
+    return a;
   }
 
   function mudar() {
