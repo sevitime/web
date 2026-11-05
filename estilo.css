@@ -38,6 +38,17 @@ html {
   --verde-solido: #00796B;
   --dorado: #FCC440;
   --dorado-texto: #FCC440;
+  /* El azul de iOS, solo para la vía del iPhone. No es la marca de nadie:
+     Apple no permite usar su logotipo, la manzana ni el de Safari para
+     anunciar compatibilidad, pero un color no es una marca. Es lo que hace
+     que esa tarjeta se reconozca de un vistazo como «la de iPhone» sin
+     copiar nada. El verde agua sigue siendo la identidad de SeviTime y no se
+     toca en ningún otro sitio.
+     Dos tonos porque el de verdad (#0A84FF) se queda en 4,05:1 sobre la
+     tarjeta y no llega al 4,5:1 de AA: ese se usa para el borde, que es un
+     elemento de interfaz y le basta con 3:1, y el texto va en el claro. */
+  --ios: #0A84FF;
+  --ios-texto: #4DA8FF;
   --fondo: #0F1C1A;
   --superficie: #1A2B29;
   --superficie-alta: #223634;
@@ -92,6 +103,10 @@ html {
        4,5:1 que pide AA para el texto menudo (rótulos, pies, enlaces). */
     --verde-claro: #00796B;
     --dorado-texto: #926702;
+    /* Sobre blanco, el #007AFF se queda en 3,71:1 para texto: el borde lo
+       mantiene y el texto baja a un azul que sí llega. */
+    --ios: #007AFF;
+    --ios-texto: #0062CC;
     --fondo: #F2F7F6;
     --superficie: #FFFFFF;
     --superficie-alta: #FFFFFF;
@@ -199,14 +214,18 @@ img { max-width: 100%; display: block; }
   justify-content: center;
   min-height: 48px;
   padding: 0 20px;
-  border: 1px solid var(--verde);
+  border: 1px solid var(--ios);
   border-radius: var(--r-sm);
-  color: var(--verde-claro);
+  color: var(--ios-texto);
   font-size: var(--t-cuerpo);
   font-weight: 700;
   text-decoration: none;
 }
+/* Gana al `.hero a:not(.badge)` de más arriba, que pinta de verde todo
+   enlace suelto del hero. */
+.hero a.hero-iphone { color: var(--ios-texto); }
 .hero .hero-iphone:hover { text-decoration: none; }
+.hero-iphone:focus-visible { outline: 3px solid var(--ios); outline-offset: 2px; }
 .hero-iphone[hidden], .cierre-iphone[hidden] { display: none; }
 
 .cierre-iphone {
@@ -215,13 +234,24 @@ img { max-width: 100%; display: block; }
   text-align: left;
   background: var(--superficie);
   border: 1px solid var(--borde);
+  /* El filo azul a la izquierda, y nada más: la tarjeta se reconoce como la
+     del iPhone sin dejar de ser una tarjeta de SeviTime. Borde y no sombra,
+     como el resto. */
+  border-left: 3px solid var(--ios);
   border-radius: var(--r-lg);
   padding: 20px 22px;
 }
-.cierre-iphone-titulo {
+/* Dentro de esta tarjeta, lo que hay que tocar se resalta en su azul y no en
+   el verde de la marca: son los pasos de iOS. */
+.cierre-iphone .pasos-iphone strong { color: var(--ios-texto); }
+.cierre-iphone .glifo-compartir { color: var(--ios-texto); }
+/* Con `.cierre-iphone` delante a propósito: `.cierre p` (dos clases) le gana
+   a una sola y dejaba el título en gris apagado. */
+.cierre-iphone .cierre-iphone-titulo {
   font-size: var(--t-item);
   font-weight: 700;
-  color: var(--texto);
+  /* En su azul, como el filo y el botón del hero: los tres dicen «iPhone». */
+  color: var(--ios-texto);
   margin-bottom: 6px;
 }
 /* El icono de Compartir de iOS, dibujado. Va pegado a la palabra, como una
