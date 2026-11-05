@@ -11,10 +11,9 @@
 // emoji, pero allí son doce y aquí son veinticinco en una rejilla: una
 // rejilla de emoji al lado de unos candados no se lee como un pasaporte.
 //
-// **De momento solo enseña, no sella.** Para conseguir un sello hay que estar
-// a menos de 30 metros del sitio y pulsar «Sellar» en su ficha, y eso hoy
-// solo lo hace la app. Se dice en la página en vez de callarlo: un pasaporte
-// que no se puede rellenar y no lo explica parece roto.
+// Sellar también se hace desde la web desde el 5-nov-2026, en la ficha del
+// sitio (`lugar/sellar.js`): menos de 30 metros y a pie, las reglas de la
+// app. Esta página solo enseña la colección.
 (function () {
   'use strict';
 
@@ -108,10 +107,10 @@
       aviso.appendChild(document.createTextNode(
         'Son los mismos que los del móvil: la cuenta es la misma.'));
     } else {
-      aviso.appendChild(el('strong', null, 'Los sellos se consiguen en la app. '));
+      aviso.appendChild(el('strong', null, 'Los sellos se consiguen yendo. '));
       aviso.appendChild(document.createTextNode(
-        'Hay que estar a menos de 30 metros del sitio y pulsar «Sellar» en su ficha, ' +
-        'y eso todavía solo lo hace la app de Android. Aquí puedes ver cómo vas.'));
+        'Abre la ficha de uno de estos sitios estando a menos de 30 metros y pulsa «Sellar». ' +
+        'Vale desde aquí o desde la app: es el mismo pasaporte.'));
     }
   }
 

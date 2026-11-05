@@ -58,6 +58,46 @@ const numero = (t, campo) => {
   return m ? Number(m[1]) : null;
 };
 
+// Los tipos que cuentan como «visitable», que es lo que decide si un sitio
+// puede llevar el sello de un monumento (`PlaceTypes.esVisitable`): los de
+// las cinco familias turísticas. Salen de la misma tabla que ya genera
+// `lugares.js`, así que no hay una tercera copia de los tipos.
+const FAMILIAS_TURISTICAS = ['historia', 'cultura', 'atracciones', 'iglesias', 'parques'];
+const categorias = readFileSync(
+  path.join(repoApp, 'lib', 'models', 'place_categories_data.dart'), 'utf8');
+const visitables = [];
+for (const m of categorias.matchAll(/'([a-z_]+)':\s*InfoTipoLugar\(categoria:\s*'([a-z_]+)'/g)) {
+  if (FAMILIAS_TURISTICAS.includes(m[2])) visitables.push(m[1]);
+}
+if (!visitables.length) {
+  console.error('No he sacado ni un tipo visitable de place_categories_data.dart');
+  process.exit(1);
+}
+
+// Las listas de tipos de los sellos genéricos («la primera vez que…»). En el
+// Dart unas van escritas a mano y otras son `PlaceTypes.tiposCultura` o
+// `tiposHistoria`, así que hay que resolverlas.
+const tipos = readFileSync(
+  path.join(repoApp, 'lib', 'models', 'place_types.dart'), 'utf8');
+function listaDart(nombre) {
+  const m = tipos.match(new RegExp('tipos' + nombre + "\\s*=\\s*<String>\\[([^\\]]*)\\]"));
+  return m ? [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]) : [];
+}
+function resolverTipos(txt) {
+  const m = txt.match(/matchTypes:\s*(\[[^\]]*\]|PlaceTypes\.tipos\w+)/);
+  if (!m) return null;
+  const ref = m[1].match(/PlaceTypes\.tipos(\w+)/);
+  if (ref) {
+    const lista = listaDart(ref[1]);
+    if (!lista.length) {
+      console.error('No he podido resolver PlaceTypes.tipos' + ref[1]);
+      process.exit(1);
+    }
+    return lista;
+  }
+  return [...m[1].matchAll(/'([^']+)'/g)].map((x) => x[1]);
+}
+
 const sellos = [];
 const faltan = [];
 for (const trozo of bloque.split('PassportStamp(').slice(1)) {
@@ -72,11 +112,12 @@ for (const trozo of bloque.split('PassportStamp(').slice(1)) {
     label: texto(trozo, 'label'),
     color: color ? '#' + color[1].toUpperCase() : '#00897B',
     hint: texto(trozo, 'hint'),
-    // `zona` = los de «la primera vez que…», que se consiguen en cualquier
-    // sitio de ese tipo; los demás son un monumento concreto.
-    zona: /matchTypes:/.test(trozo),
+    // `tipos` = los de «la primera vez que…», que se consiguen en cualquier
+    // sitio de ese tipo; los demás son un monumento concreto, con su radio.
+    tipos: resolverTipos(trozo),
     lat: numero(trozo, 'lat'),
     lon: numero(trozo, 'lon'),
+    radio: numero(trozo, 'radioM'),
     d: d || null,
   });
 }
@@ -93,11 +134,14 @@ const cabecera = `// Catálogo de sellos del Pasaporte. **Generado**, no se edit
 
 writeFileSync(
   path.join(raiz, 'pasaporte', 'sellos.js'),
-  cabecera + 'window.sevitimeSellos = ' + JSON.stringify(sellos, null, 1) + ';\n',
+  cabecera +
+    'window.sevitimeSellos = ' + JSON.stringify(sellos, null, 1) + ';\n' +
+    'window.sevitimeTiposVisitables = ' + JSON.stringify(visitables) + ';\n',
   'utf8',
 );
 
-console.log('pasaporte/sellos.js: ' + sellos.length + ' sellos');
+console.log('pasaporte/sellos.js: ' + sellos.length + ' sellos, ' +
+  visitables.length + ' tipos visitables');
 if (faltan.length) {
   console.warn('Sin trazado de icono (saldrán con el de monumento): ' + faltan.join(', '));
 }

@@ -992,12 +992,26 @@ sincroniza la app: un sello conseguido en el móvil sale aquí y al revés.
 - Los conseguidos van **delante** y los que faltan detrás con su candado y su
   pista, como en la app.
 
-**Solo enseña, no sella.** Para conseguir un sello hay que estar a menos de
-30 metros y pulsar «Sellar» en la ficha del sitio, y eso hoy solo lo hace la
-app. La página lo dice en vez de callarlo: un pasaporte que no se puede
-rellenar y no lo explica parece roto. Si algún día lo hace la web, va en
-`/lugar/` y necesita la misma comprobación de distancia y de que no vas en
-vehículo.
+**Sellar se hace en la ficha** (`lugar/sellar.js`), con las reglas de
+`detail_screen.dart` portadas tal cual: menos de **30 m** del sitio, menos de
+**20 km/h** (un sello no se consigue desde el coche; si el navegador no da
+velocidad se toma 0, como la app cuando no hay última posición) y sesión
+iniciada, que un sello sin cuenta se quedaría en ese navegador. Qué sello da
+cada sitio lo decide `stampForPlace` portado: familia turística + dentro del
+radio de un monumento → ese monumento (el más cercano si cae en dos: la
+Giralda y la Catedral están a 61 m); si no, el genérico de su tipo. Solo la
+distancia no vale: la Cervecería Giralda está a cuarenta metros de la
+Giralda y es un bar.
+
+**La diferencia con la app, a propósito:** la app mira tu posición sola al
+abrir la ficha y enseña el botón si estás cerca. La web **no pide la
+ubicación hasta que pulsas**, porque un aviso de permiso que salta solo en
+cada ficha es lo que hace que la gente diga que no para siempre, y entonces
+no funciona ni esto ni «lo que tengo cerca». Un sitio que no da ningún sello
+no pinta la sección.
+
+La tabla tiene `UNIQUE (user_id, stamp_id)` y aquí se hace `upsert`, como la
+app: cada sello, una vez.
 
 ## `/cronologia/` — «Qué pasa» (3-nov-2026)
 
