@@ -299,19 +299,24 @@ window.SeviLlegada = function (contenedor) {
   // arriba, pero con los dos gestos de la app en vez de los de una web: el ☰
   // se cambia por el buzón y el avatar, y el logotipo con enlace a la portada
   // se cambia por la flecha de volver.
-  function soloQuitarHamburguesa() {
+  function soloQuitarHamburguesa(conVuelta) {
     var acciones = document.querySelector('.top-nav .nav-acciones');
     var menu = document.querySelector('.top-nav .nav-enlaces');
     var dentro = document.querySelector('.top-nav-inner');
     if (!acciones || !menu || !dentro) return;
-    dentro.insertBefore(hacerVolver(), dentro.firstChild);
+    // La flecha sustituye a la marca, así que en la portada no va: allí la
+    // marca se queda y no hay nada de donde volver.
+    if (conVuelta) {
+      dentro.insertBefore(hacerVolver(), dentro.firstChild);
+      document.documentElement.classList.add('como-app-barra');
+    }
     // Con `appendChild` y no `insertBefore(..., auth)`: `hacerBotones` monta la
     // hoja, y montarla se lleva `#auth-seccion` dentro. Pedirle luego a la
     // barra que inserte «antes de» un hijo que ya no es suyo lanzaba
     // NotFoundError, y la clase de abajo no llegaba a ponerse: la hamburguesa
     // seguía ahí y los botones nuevos no se veían.
     acciones.appendChild(hacerBotones(leerEnlaces(menu), 'en-barra'));
-    document.documentElement.classList.add('como-app-barra');
+    document.documentElement.classList.add('como-app-acciones');
   }
 
   // El buzón y el avatar, con su hoja detrás. `extra` distingue la cabecera
@@ -390,12 +395,15 @@ window.SeviLlegada = function (contenedor) {
     var menu = document.querySelector('.top-nav .nav-enlaces');
     if (!arriba || !menu) return;
     if (!cabecera) {
-      // La portada y `/mapa/` se quedan intactas: la primera se presenta a
-      // quien aún no nos conoce y la segunda es el mapa a pantalla completa.
-      if (location.pathname === '/' || location.pathname.indexOf('/mapa/') === 0) {
-        return;
-      }
-      soloQuitarHamburguesa();
+      // `/mapa/` se queda intacto: es el mapa a pantalla completa, con su
+      // propia fila flotante y sin barra de abajo.
+      if (location.pathname.indexOf('/mapa/') === 0) return;
+      // La portada conserva su marca —es la página de aterrizaje y se
+      // presenta a quien aún no nos conoce—, pero no la hamburguesa ni la
+      // cápsula de la cuenta: con sesión iniciada, en un móvil, la marca, el
+      // ☰, tu nombre, «Guardados» y «Panel» no caben en una fila. Se veía la
+      // marca tapada por el ☰ y «Panel» saliéndose por la derecha.
+      soloQuitarHamburguesa(location.pathname !== '/');
       return;
     }
 
