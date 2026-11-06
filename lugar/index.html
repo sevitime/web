@@ -67,6 +67,7 @@
     letter-spacing: -0.02em; text-wrap: balance; margin: 0 0 4px;
   }
   .sitio-tipo { color: var(--apagado); font-weight: 600; margin: 0; }
+  .sitio-distancia { color: var(--apagado); margin: 4px 0 0; font-size: var(--t-cuerpo); }
 
   /* Mientras carga la foto diaria no se enseña un nombre inventado: se
      enseña que está cargando. El nombre sale de los datos, no de la URL. */
@@ -368,7 +369,7 @@
   .sitio-corregir:hover { border-color: var(--verde-claro); }
   .sitio-cta-pie {
     text-align: center; color: var(--tenue); margin: 12px 0 0;
-    font-size: var(--t-pequeno, 0.9rem);
+    font-size: var(--t-cuerpo);
   }
 
   .sitio-aviso {
@@ -414,6 +415,7 @@
       <div>
         <h1 id="nombre" class="cargando">Buscando el sitio…</h1>
         <p class="sitio-tipo" id="tipo"></p>
+        <p class="sitio-distancia" id="distancia" hidden></p>
       </div>
     </div>
 
@@ -1067,7 +1069,38 @@
     return li;
   }
 
+  // A qué distancia está, desde donde está quien mira: lo mismo que la
+  // cabecera de la ficha en la app («1,2 km · 14 min andando»).
+  //
+  // Solo con el permiso de ubicación YA dado (en Explorar, el tiempo o el
+  // navegador): abrir la ficha de un sitio no es motivo para pedirlo, y sin
+  // ubicación real no se inventa una distancia desde el centro de Sevilla.
+  // La app tuvo justo ese fallo: enseñaba «10 m» de sitios lejanos.
+  async function pintarDistancia(p) {
+    const caja = document.getElementById('distancia');
+    let concedido = false;
+    try { concedido = localStorage.getItem('sevi-ubicacion-ok') === '1'; } catch (_) {}
+    try {
+      if (!concedido && navigator.permissions && navigator.permissions.query) {
+        concedido = (await navigator.permissions.query({ name: 'geolocation' })).state === 'granted';
+      }
+    } catch (_) {}
+    if (!concedido || !navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      const m = window.sevitimeLugares.metros({ lat: pos.coords.latitude, lon: pos.coords.longitude },
+        { lat: p.lat, lon: p.lon });
+      const km = m / 1000;
+      // Mismos cortes que `Place.tiempoEstimado`: 12 min por km andando y,
+      // desde 1,5 km, mejor en vehículo.
+      const tiempo = km >= 1.5 ? 'Mejor en vehículo'
+        : Math.max(1, Math.round(km * 12)) + ' min andando';
+      caja.textContent = (km >= 1.5 ? '🚗 ' : '🚶 ') + window.sevitimeLugares.formatDist(m) + ' · ' + tiempo;
+      caja.hidden = false;
+    }, function () {}, { timeout: 8000, maximumAge: 300000 });
+  }
+
   function pintar(p) {
+    pintarDistancia(p);
     const nombre = document.getElementById('nombre');
     nombre.textContent = p.nombre;
     pintarFotoSitio(p);
@@ -1164,6 +1197,9 @@
     document.getElementById('tipo').textContent = p.label || '';
 
     const datos = document.getElementById('datos');
+    // La dirección, como en la ficha de la app: calle y número según
+    // OpenStreetMap. Sin calle no se pone nada (ver `direccionDe`).
+    if (p.direccion) datos.appendChild(fila('Dirección', p.direccion));
     if (p.telefono) datos.appendChild(fila('Teléfono', p.telefono, 'tel:' + p.telefono));
     if (p.web) datos.appendChild(fila('Web', p.web, p.web));
     // El horario se enseña como lo que es: lo que dice OpenStreetMap, no lo
