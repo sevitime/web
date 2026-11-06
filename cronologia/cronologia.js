@@ -84,6 +84,9 @@
       .then(function (filas) {
         pintar(Array.isArray(filas) ? filas : []);
       })
+      // Sin red no es el final de la lista: el botón se queda para volver a
+      // intentarlo.
+      .catch(function () {})
       .finally(function () {
         pidiendo = false;
         if (mas) mas.textContent = 'Ver más';

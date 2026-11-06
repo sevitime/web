@@ -224,8 +224,13 @@
         p_desde: desde || 0,
       }),
     })
-      .then(function (r) { return r.ok ? r.json() : []; })
-      .catch(function () { return []; });
+      // Un fallo se propaga, no se disfraza de lista vacía: con `[]` la
+      // página decía «Todavía no hay nada que contar» sin red, y su mensaje
+      // de error no salía nunca. Lo mismo que la app (`ultimasOFallo`).
+      .then(function (r) {
+        if (!r.ok) throw new Error('fn_cronologia ' + r.status);
+        return r.json();
+      });
   }
 
   window.SeviCrono = {

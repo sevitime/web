@@ -76,5 +76,6 @@
         contador = null;
       }
     });
-  });
+  // Sin red, la tira no sale: como cuando no hay nada, pero sin decirlo.
+  }).catch(function () {});
 }());
