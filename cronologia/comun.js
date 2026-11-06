@@ -180,6 +180,35 @@
     return FRASES[item.tipo] || 'ha participado en';
   }
 
+  // El icono de lo que ha pasado, pegado al nombre del sitio. La misma tabla
+  // que `iconoDeCronologia` en la app (`lib/utils/icono_cronologia.dart`): si
+  // cambia una, cambia la otra, o el mismo suceso se dibuja distinto en cada
+  // sitio.
+  //
+  // Aquí son emoji y allí iconos de Material. No es un descuido: la web no
+  // carga una tipografía de iconos solo para esto, y el emoji lo pinta el
+  // sistema sin pedir nada.
+  const ICONOS = {
+    resena: '⭐', resena_foto: '📷', lugar: '📍', dato: '✏️',
+    aviso_cerrado: '⛔', aviso_no_existe: '🚫', aviso_renombrado: '🏷️',
+    ruta: '🧭', comentario_evento: '💬',
+    lugar_nuevo: '📍', lugar_desaparecido: '🚫',
+    lugar_renombrado: '🏷️', lugar_datos: '✏️',
+    evento_nuevo: '📅',
+  };
+
+  function icono(item) {
+    // Un tipo que esta versión no conoce: mejor nada que un icono que diga
+    // algo falso.
+    const e = ICONOS[item.tipo];
+    if (!e) return null;
+    const n = el('span', 'crono-icono', e);
+    // Decorativo: lo que dice ya está en la frase, y un lector de pantalla
+    // leyendo «estrella» en cada línea es ruido.
+    n.setAttribute('aria-hidden', 'true');
+    return n;
+  }
+
   // A dónde lleva la entrada, o null si no lleva a ninguna página.
   //
   // Los eventos van a la lista y no al evento: la web no tiene todavía una
@@ -211,6 +240,9 @@
     } else {
       p.appendChild(document.createTextNode(frase(item) + ' '));
     }
+    const ico = icono(item);
+    if (ico) p.appendChild(ico);
+
     const url = destino(item);
     if (url) {
       const a = el('a', 'crono-sitio', item.sitio);
@@ -325,6 +357,7 @@
     cita: cita,
     detalle: detalle,
     esDeLaCiudad: esDeLaCiudad,
+    icono: icono,
     pedir: pedir,
     leerVisto: leerVisto,
     marcarVisto: marcarVisto,

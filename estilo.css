@@ -1674,6 +1674,9 @@ html.con-barra .tostada {
    un icono. El fondo lo pone el JS (gris en lo que desaparece del mapa, que
    no es una alarma; verde en lo demás). */
 .crono-ciudad { font-size: 18px; font-weight: 400; }
+/* El icono de lo que ha pasado, pegado al nombre del sitio. Algo más pequeño
+   que el texto para que acompañe y no compita. */
+.crono-icono { font-size: 0.85em; margin-right: 0.25em; }
 .crono-quien { min-width: 0; }
 .crono-linea { margin: 0; color: var(--texto); font-size: var(--t-cuerpo); line-height: 1.4; }
 .crono-linea strong { font-weight: 700; }

@@ -53,6 +53,11 @@ const entrada = (extra) => ({
 
 const enlaces = (p) => p.hijos.filter((h) => h.tag === 'a');
 
+// El texto sin el icono, que es decorativo y va en su propio span.
+const texto = (p) => p.hijos
+  .filter((h) => (h.className || '') !== 'crono-icono')
+  .map((h) => h.textContent).join('');
+
 test('el apodo lleva al perfil de quien lo hizo', () => {
   const C = cargar();
   const p = C.linea(entrada({ place_key: '37.39_-5.99' }));
@@ -162,4 +167,26 @@ test('de un sitio de la provincia se dice el pueblo', () => {
 test('un sitio de la capital no dice pueblo', () => {
   const C = cargar();
   assert.equal(C.detalle(deLaCiudad('lugar_nuevo')), null);
+});
+
+test('cada suceso lleva su icono pegado al nombre del sitio', () => {
+  // Lo pidió el usuario: «si añade un lugar, el suceso lleva una chincheta;
+  // si se edita algo, un lápiz». Tiene que ser el mismo que el de la app.
+  const C = cargar();
+  const de = (tipo) => (C.icono({ tipo }) || {}).textContent;
+  assert.equal(de('lugar'), '📍');
+  assert.equal(de('lugar_nuevo'), '📍');
+  assert.equal(de('dato'), '✏️');
+  assert.equal(de('lugar_datos'), '✏️');
+  assert.equal(de('resena'), '⭐');
+  assert.equal(de('ruta'), '🧭');
+  // Un tipo desconocido no inventa icono.
+  assert.equal(C.icono({ tipo: 'loquesea' }), null);
+});
+
+test('el icono es decorativo para un lector de pantalla', () => {
+  // Lo que dice ya está en la frase: leer «estrella» en cada línea es ruido.
+  const C = cargar();
+  const n = C.icono({ tipo: 'resena' });
+  assert.equal(n.className, 'crono-icono');
 });
