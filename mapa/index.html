@@ -388,6 +388,7 @@
   .tarjeta-sitio { display: flex; flex-direction: column; gap: 2px; padding-right: 18px; }
   .tarjeta-sitio-nombre { font-size: var(--t-item); font-weight: 700; color: var(--texto); overflow-wrap: anywhere; }
   .tarjeta-sitio-tipo { font-size: var(--t-etiqueta); color: var(--apagado); }
+  .tarjeta-sitio-dir { font-size: var(--t-etiqueta); color: var(--apagado); }
   .tarjeta-sitio-acciones { display: flex; align-items: center; gap: 8px; margin-top: 12px; }
   .tarjeta-sitio-ficha, .tarjeta-sitio-corregir {
     display: inline-flex; align-items: center; justify-content: center;
@@ -985,6 +986,7 @@ window.addEventListener('DOMContentLoaded', function () {
         nombre: p.nombre, tipo: p.tipo, label: p.label,
         color: p.color, emoji: p.emoji,
         osmType: p.osmType, osmId: p.osmId, lat: p.lat, lon: p.lon,
+        direccion: p.direccion || '',
       },
     }));
     src.setData({ type: 'FeatureCollection', features });
@@ -1462,6 +1464,15 @@ window.addEventListener('DOMContentLoaded', function () {
       tipo.className = 'tarjeta-sitio-tipo';
       tipo.textContent = (p.emoji ? p.emoji + ' ' : '') + p.label;
       caja.appendChild(tipo);
+    }
+
+    // La calle, como en la tarjeta del mapa de la app: tocas un punto y lo
+    // que quieres saber es dónde está antes de ir.
+    if (p.direccion) {
+      const dir = document.createElement('span');
+      dir.className = 'tarjeta-sitio-dir';
+      dir.textContent = p.direccion;
+      caja.appendChild(dir);
     }
 
     const acciones = document.createElement('div');
