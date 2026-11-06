@@ -114,6 +114,9 @@
     // demuestra que haya cerrado, y decirlo de un negocio real que sigue
     // abierto es el fallo que no se perdona.
     lugar_desaparecido: 'Ya no aparece en el mapa:',
+    // El servidor NO manda `evento_nuevo` desde el 6-nov-2026: «Qué pasa» es
+    // el registro de lo que le pasa a los SITIOS, y los eventos tienen
+    // pantalla propia. Se queda escrito por si se decide al revés.
     evento_nuevo: 'Nuevo evento:',
   };
 
