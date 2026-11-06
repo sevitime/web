@@ -50,7 +50,21 @@
     farol: '💡', sol: '☀️', madruga: '🌙', cafe: '☕',
   };
 
+  // El icono que va donde iría el avatar cuando no hay autor. Deja claro de
+  // un vistazo que esto no lo ha puesto una persona.
+  const ICONO_CIUDAD = {
+    lugar_nuevo: '📍', lugar_desaparecido: '🚫', evento_nuevo: '📅',
+  };
+
   function avatar(item) {
+    if (esDeLaCiudad(item)) {
+      const d = el('span', 'crono-avatar crono-inicial crono-ciudad',
+        ICONO_CIUDAD[item.tipo] || '📍');
+      // Gris y no rojo en lo que desaparece: no decimos que haya cerrado, y
+      // el rojo se lee como una alarma.
+      d.style.background = item.tipo === 'lugar_desaparecido' ? '#78909C' : '#00897B';
+      return d;
+    }
     const guardado = item.avatar || '';
     if (guardado.indexOf('preset:') === 0) {
       const id = guardado.slice(7);
@@ -91,7 +105,26 @@
     ruta: 'ha publicado la ruta',
     evento: 'ha propuesto',
     comentario_evento: 'ha comentado en',
+    // De la ciudad: no las ha hecho nadie, así que no llevan apodo delante.
+    // La frase ES el principio de la línea y acaba en dos puntos: «Nuevo en
+    // el mapa: Bar Pepe». Ver docs/sql/cronologia_ciudad.sql en el repo de
+    // la app.
+    lugar_nuevo: 'Nuevo en el mapa:',
+    // NUNCA «ha cerrado»: que un sitio desaparezca de OpenStreetMap no
+    // demuestra que haya cerrado, y decirlo de un negocio real que sigue
+    // abierto es el fallo que no se perdona.
+    lugar_desaparecido: 'Ya no aparece en el mapa:',
+    evento_nuevo: 'Nuevo evento:',
   };
+
+  // Lo que le pasa a la ciudad y no ha hecho nadie. Mismo criterio que
+  // `ItemCronologia.esDeLaCiudad` en la app: por el tipo, no por si falta el
+  // apodo, para que una entrada de la gente mal formada no se cuele
+  // disfrazada de noticia del mapa.
+  const DE_LA_CIUDAD = ['lugar_nuevo', 'lugar_desaparecido', 'evento_nuevo'];
+  function esDeLaCiudad(item) {
+    return DE_LA_CIUDAD.indexOf(item.tipo) >= 0;
+  }
 
   const ARTICULOS = { horario: 'el', 'teléfono': 'el', web: 'la' };
 
@@ -114,6 +147,8 @@
   // `ItemCronologia.cita` en la app: en una aportación `texto` trae el dato
   // («horario»), que ya va en la frase, y en un renombrado el nombre nuevo.
   function cita(item) {
+    // Lo de la ciudad no está en esta lista: su `texto` es el lugar del
+    // evento, no algo que haya dicho nadie.
     const citables = ['resena', 'resena_foto', 'comentario_evento', 'ruta'];
     return citables.indexOf(item.tipo) >= 0 ? (item.texto || null) : null;
   }
@@ -124,6 +159,8 @@
     if (item.tipo === 'aviso_renombrado' && item.texto) {
       return 'Ahora se llama ' + item.texto;
     }
+    // Dónde es el evento: `texto` trae el lugar tal como lo da la fuente.
+    if (item.tipo === 'evento_nuevo' && item.texto) return 'En ' + item.texto;
     return null;
   }
 
@@ -152,11 +189,19 @@
     // Cada nombre lleva a lo que nombra: el apodo al perfil de quien lo hizo
     // y el sitio a su ficha. Antes el apodo era solo texto en negrita, así
     // que de la persona no se podía llegar a ninguna parte.
-    const quien = el('a', 'crono-apodo', item.apodo);
-    quien.href = '/perfil/?n=' + encodeURIComponent(item.apodo);
-    p.appendChild(quien);
-
-    p.appendChild(document.createTextNode(' ' + frase(item) + ' '));
+    //
+    // Sin apodo (lo de la ciudad) no hay perfil al que ir: la línea empieza
+    // por la frase, que ya acaba en dos puntos. Antes esto pintaba un enlace
+    // vacío a /perfil/?n= y daba una página de perfil inexistente.
+    const apodo = (item.apodo || '').trim();
+    if (apodo) {
+      const quien = el('a', 'crono-apodo', apodo);
+      quien.href = '/perfil/?n=' + encodeURIComponent(apodo);
+      p.appendChild(quien);
+      p.appendChild(document.createTextNode(' ' + frase(item) + ' '));
+    } else {
+      p.appendChild(document.createTextNode(frase(item) + ' '));
+    }
     const url = destino(item);
     if (url) {
       const a = el('a', 'crono-sitio', item.sitio);
@@ -270,6 +315,7 @@
     frase: frase,
     cita: cita,
     detalle: detalle,
+    esDeLaCiudad: esDeLaCiudad,
     pedir: pedir,
     leerVisto: leerVisto,
     marcarVisto: marcarVisto,

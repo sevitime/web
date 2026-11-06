@@ -57,7 +57,7 @@
       enlace.target = '_blank';
       enlace.rel = 'noopener';
       enlace.setAttribute('aria-label',
-        'Ver la foto que puso ' + item.apodo + ' en ' + item.sitio);
+        'Ver la foto que puso ' + (item.apodo || 'alguien') + ' en ' + item.sitio);
       const img = document.createElement('img');
       img.className = 'crono-foto';
       img.src = item.foto_url;

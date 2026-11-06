@@ -82,3 +82,71 @@ test('sin sitio al que ir, el apodo sigue llevando al perfil', () => {
   assert.equal(puestos.length, 1);
   assert.equal(puestos[0].href, '/perfil/?n=Ana');
 });
+
+// --- Lo que le pasa a la ciudad y no lo ha hecho nadie ----------------------
+//
+// Entró el 6-nov-2026: «Qué pasa», contando solo lo de la gente, estuvo
+// vacía 19 de los 30 días anteriores. Estas entradas no tienen autor, así
+// que no hay apodo ni perfil al que ir. Tiene que decir lo mismo que la app
+// (`ItemCronologia`), o la web y la app dejan de contar lo mismo.
+
+const DE_LA_CIUDAD = ['lugar_nuevo', 'lugar_desaparecido', 'evento_nuevo'];
+
+const deLaCiudad = (tipo, extra) => ({
+  tipo,
+  apodo: null,
+  sitio: 'Bar Pepe',
+  cuando: '2026-11-06T05:17:00Z',
+  ...extra,
+});
+
+test('sin autor no se pinta un enlace a un perfil que no existe', () => {
+  const C = cargar();
+  for (const tipo of DE_LA_CIUDAD) {
+    const p = C.linea(deLaCiudad(tipo, { place_key: '37.39_-5.99' }));
+    const perfiles = enlaces(p).filter((a) => a.href.startsWith('/perfil/'));
+    assert.equal(perfiles.length, 0, tipo);
+  }
+});
+
+test('la línea empieza por la frase y acaba en el nombre del sitio', () => {
+  const C = cargar();
+  assert.equal(C.frase(deLaCiudad('lugar_nuevo')), 'Nuevo en el mapa:');
+  assert.equal(C.frase(deLaCiudad('evento_nuevo')), 'Nuevo evento:');
+  const p = C.linea(deLaCiudad('lugar_nuevo', { place_key: '37.39_-5.99' }));
+  const sitio = enlaces(p).find((a) => a.textContent === 'Bar Pepe');
+  assert.ok(sitio, 'el sitio sigue llevando a su ficha');
+});
+
+test('de un sitio que desaparece NUNCA se dice que ha cerrado', () => {
+  // Que no esté en OpenStreetMap no demuestra que haya cerrado: puede ser un
+  // editor que borró el nodo o un espejo que contestó a medias. Afirmar un
+  // cierre falso de un negocio real es el fallo que no se perdona.
+  const C = cargar();
+  const texto = C.frase(deLaCiudad('lugar_desaparecido')).toLowerCase();
+  assert.ok(texto.includes('ya no aparece en el mapa'), texto);
+  assert.ok(!texto.includes('cerrad'), texto);
+});
+
+test('nada de la ciudad se enseña entre comillas como si lo hubiera dicho alguien', () => {
+  const C = cargar();
+  for (const tipo of DE_LA_CIUDAD) {
+    assert.equal(C.cita(deLaCiudad(tipo, { texto: 'algo' })), null, tipo);
+  }
+});
+
+test('de un evento nuevo se dice dónde es', () => {
+  const C = cargar();
+  assert.equal(
+    C.detalle(deLaCiudad('evento_nuevo', { texto: 'Teatro Lope de Vega' })),
+    'En Teatro Lope de Vega',
+  );
+});
+
+test('lo de la gente no se confunde con lo de la ciudad', () => {
+  const C = cargar();
+  assert.equal(C.esDeLaCiudad(entrada()), false);
+  for (const tipo of DE_LA_CIUDAD) {
+    assert.equal(C.esDeLaCiudad(deLaCiudad(tipo)), true, tipo);
+  }
+});
