@@ -18,6 +18,8 @@
   if (!lista) return;
 
   const C = window.SeviCrono;
+  // La última visita de ANTES de entrar: entrar ya lo marca todo como visto.
+  const vistoAlEntrar = C.leerVisto();
 
   function fila(item) {
     const el = C.el;
@@ -27,7 +29,13 @@
     cabecera.appendChild(C.avatar(item));
     const quien = C.el('div', 'crono-quien');
     quien.appendChild(C.linea(item));
-    quien.appendChild(C.el('span', 'crono-cuando', C.haceCuanto(item.cuando)));
+    const cuando = C.el('span', 'crono-cuando', C.haceCuanto(item.cuando));
+    // Publicada desde la última visita: con la lista por la hora real, lo
+    // aprobado tarde cae más abajo, y la marca es lo que lo hace encontrable.
+    if (C.esNueva(item, vistoAlEntrar)) {
+      cuando.appendChild(C.el('span', 'crono-nueva', 'Nueva'));
+    }
+    quien.appendChild(cuando);
     cabecera.appendChild(quien);
     li.appendChild(cabecera);
 
@@ -104,7 +112,7 @@
       }
       // Entrar aquí es haber visto la cronología: al volver a Explorar, el
       // contador de novedades de la tira se apaga.
-      C.marcarVisto(filas[0].cuando);
+      C.marcarVisto(C.ultimaPublicacion(filas));
       estado.hidden = true;
       pintar(filas);
     })

@@ -192,19 +192,47 @@
     } catch (_) { /* almacenamiento lleno o bloqueado: sin contador */ }
   }
 
-  // La primera vez se siembra con la entrada más reciente, para no enseñar
+  // Dos horas por entrada (6-nov-2026, igual que la app): `cuando` es cuándo
+  // lo hizo la persona —lo que se enseña y lo que ordena la lista— y
+  // `publicado`, cuándo se aprobó. Lo nuevo se decide por `publicado`: algo
+  // aprobado hoy pero hecho hace dos días cae dos días más abajo, y sin esto
+  // nadie se enteraría de que acaba de salir. Sin `publicado` (servidor
+  // antiguo) vale `cuando`.
+  function publicado(f) {
+    return new Date(f.publicado || f.cuando).getTime();
+  }
+
+  // Lo último publicado de la lista, que con la lista por hora real no tiene
+  // por qué ser lo primero.
+  function ultimaPublicacion(filas) {
+    if (!Array.isArray(filas)) return null;
+    let max = NaN;
+    filas.forEach(function (f) {
+      const t = publicado(f);
+      if (!isNaN(t) && (isNaN(max) || t > max)) max = t;
+    });
+    return isNaN(max) ? null : new Date(max).toISOString();
+  }
+
+  function esNueva(f, visto) {
+    const desde = new Date(visto || '').getTime();
+    const t = publicado(f);
+    return !isNaN(desde) && !isNaN(t) && t > desde;
+  }
+
+  // La primera vez se siembra con lo último publicado, para no enseñar
   // como nuevas las que ya estaban antes de que nadie abriera la página.
   function inicializarVisto(filas) {
     if (leerVisto()) return;
-    if (Array.isArray(filas) && filas.length) marcarVisto(filas[0].cuando);
+    const ultima = ultimaPublicacion(filas);
+    if (ultima) marcarVisto(ultima);
   }
 
   function nuevas(filas) {
-    const desde = new Date(leerVisto() || '').getTime();
-    if (isNaN(desde) || !Array.isArray(filas)) return 0;
+    const visto = leerVisto();
+    if (!visto || !Array.isArray(filas)) return 0;
     return filas.reduce(function (total, f) {
-      const t = new Date(f.cuando).getTime();
-      return !isNaN(t) && t > desde ? total + 1 : total;
+      return esNueva(f, visto) ? total + 1 : total;
     }, 0);
   }
 
@@ -246,6 +274,8 @@
     leerVisto: leerVisto,
     marcarVisto: marcarVisto,
     inicializarVisto: inicializarVisto,
+    ultimaPublicacion: ultimaPublicacion,
+    esNueva: esNueva,
     nuevas: nuevas,
   };
 }());
