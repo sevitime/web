@@ -150,3 +150,16 @@ test('lo de la gente no se confunde con lo de la ciudad', () => {
     assert.equal(C.esDeLaCiudad(deLaCiudad(tipo)), true, tipo);
   }
 });
+
+test('de un sitio de la provincia se dice el pueblo', () => {
+  // Sin esto, «Nuevo en el mapa: Bar La Paz» hace creer que está en tu barrio
+  // cuando está en Écija, a 76 km. Igual que en la app.
+  const C = cargar();
+  assert.equal(C.detalle(deLaCiudad('lugar_nuevo', { texto: 'Écija' })), 'En Écija');
+  assert.equal(C.detalle(deLaCiudad('lugar_desaparecido', { texto: 'Utrera' })), 'En Utrera');
+});
+
+test('un sitio de la capital no dice pueblo', () => {
+  const C = cargar();
+  assert.equal(C.detalle(deLaCiudad('lugar_nuevo')), null);
+});

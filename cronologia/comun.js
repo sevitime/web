@@ -161,6 +161,12 @@
     }
     // Dónde es el evento: `texto` trae el lugar tal como lo da la fuente.
     if (item.tipo === 'evento_nuevo' && item.texto) return 'En ' + item.texto;
+    // El pueblo, en los sitios de la provincia. La capital no lo lleva: el
+    // servidor manda `texto` solo cuando NO es Sevilla.
+    if ((item.tipo === 'lugar_nuevo' || item.tipo === 'lugar_desaparecido')
+        && item.texto) {
+      return 'En ' + item.texto;
+    }
     return null;
   }
 
