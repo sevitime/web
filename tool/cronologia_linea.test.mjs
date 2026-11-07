@@ -190,3 +190,46 @@ test('el icono es decorativo para un lector de pantalla', () => {
   const n = C.icono({ tipo: 'resena' });
   assert.equal(n.className, 'crono-icono');
 });
+
+test('los cambios del mapa se cuentan con sus palabras, no «ha participado»', () => {
+  // Los iconos de los cambios del mapa se añadieron el 6-nov-2026 y las
+  // frases no: en la web un cambio de nombre se leía «ha participado en Bar
+  // Pepe» y encima no contaba como noticia de la ciudad. La app lo decía bien
+  // desde el primer día; esto es la paridad que falta.
+  const C = cargar();
+  assert.equal(C.frase(deLaCiudad('lugar_renombrado', { texto: 'Taberna Pepe' })),
+    'Ha cambiado de nombre:');
+  assert.equal(C.detalle(deLaCiudad('lugar_renombrado', { texto: 'Taberna Pepe' })),
+    'Ahora se llama Taberna Pepe');
+  assert.ok(C.esDeLaCiudad({ tipo: 'lugar_renombrado' }));
+  assert.ok(C.esDeLaCiudad({ tipo: 'lugar_datos' }));
+});
+
+test('lo que gana un sitio en el mapa se dice igual que en la app', () => {
+  // Las mismas frases que `ItemCronologia._fraseDeLoQueGano`: si se cambia
+  // una, se cambia la otra.
+  const C = cargar();
+  const frase = (texto) => C.frase(deLaCiudad('lugar_datos', { texto }));
+  assert.equal(frase('horario'), 'Ya tiene horario:');
+  assert.equal(frase('horario,telefono,web'), 'Ya tiene horario, teléfono y web:');
+  assert.equal(frase('terraza'), 'Ya se sabe que tiene terraza:');
+  assert.equal(frase('accesibilidad'), 'Ya se sabe que es accesible:');
+  assert.equal(frase('cocina'), 'Ya se sabe qué se come allí:');
+  assert.equal(frase('historia'), 'Ya se puede leer su historia:');
+  assert.equal(frase(null), 'Hay más datos en el mapa:');
+});
+
+test('delante de «historia» la conjunción es «e», no «y»', () => {
+  const C = cargar();
+  const frase = (texto) => C.frase(deLaCiudad('lugar_datos', { texto }));
+  assert.equal(frase('horario,historia'), 'Ya tiene horario e historia:');
+  assert.equal(frase('horario,web,historia'), 'Ya tiene horario, web e historia:');
+  assert.equal(frase('historia,web'), 'Ya tiene historia y web:');
+});
+
+test('un cambio del mapa no se enseña como cita de nadie', () => {
+  // `texto` trae la lista de campos, que ya va dentro de la frase.
+  const C = cargar();
+  assert.equal(C.cita(deLaCiudad('lugar_datos', { texto: 'horario' })), null);
+  assert.equal(C.cita(deLaCiudad('lugar_renombrado', { texto: 'Otro' })), null);
+});

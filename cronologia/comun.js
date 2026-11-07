@@ -114,6 +114,10 @@
     // demuestra que haya cerrado, y decirlo de un negocio real que sigue
     // abierto es el fallo que no se perdona.
     lugar_desaparecido: 'Ya no aparece en el mapa:',
+    // El sitio ha cambiado de nombre en el mapa: el negocio ha cambiado de
+    // manos. `sitio` es el nombre VIEJO, que es el que la gente reconoce; el
+    // nuevo va en el detalle.
+    lugar_renombrado: 'Ha cambiado de nombre:',
     // El servidor NO manda `evento_nuevo` desde el 6-nov-2026: «Qué pasa» es
     // el registro de lo que le pasa a los SITIOS, y los eventos tienen
     // pantalla propia. Se queda escrito por si se decide al revés.
@@ -124,26 +128,82 @@
   // `ItemCronologia.esDeLaCiudad` en la app: por el tipo, no por si falta el
   // apodo, para que una entrada de la gente mal formada no se cuele
   // disfrazada de noticia del mapa.
-  const DE_LA_CIUDAD = ['lugar_nuevo', 'lugar_desaparecido', 'evento_nuevo'];
+  //
+  // `lugar_renombrado` y `lugar_datos` faltaban aquí y en FRASES: los iconos
+  // sí se añadieron el 6-nov-2026 y las frases no, así que un cambio del mapa
+  // se leía en la web como «ha participado en Bar Pepe» y encima no contaba
+  // como noticia de la ciudad. La app lo decía bien desde el primer día.
+  const DE_LA_CIUDAD = [
+    'lugar_nuevo', 'lugar_desaparecido', 'lugar_renombrado', 'lugar_datos',
+    'evento_nuevo',
+  ];
   function esDeLaCiudad(item) {
     return DE_LA_CIUDAD.indexOf(item.tipo) >= 0;
   }
 
   const ARTICULOS = { horario: 'el', 'teléfono': 'el', web: 'la' };
 
+  // La conjunción que toca delante de una palabra: la «y» se convierte en «e»
+  // ante sonido /i/ («horario e historia»), salvo `hie-`, que suena /je/ y
+  // mantiene la «y» («agua y hielo»). Igual que `ItemCronologia._conjuncion`.
+  function conjuncion(palabra) {
+    const p = String(palabra || '').toLowerCase();
+    if (p.indexOf('i') === 0 || p.indexOf('í') === 0) return 'e';
+    if (p.indexOf('hi') === 0 && p.indexOf('hie') !== 0) return 'e';
+    return 'y';
+  }
+
+  // «horario, teléfono e historia».
+  function enumerar(cosas) {
+    if (!cosas.length) return '';
+    const partes = cosas.slice();
+    const ultimo = partes.pop();
+    if (!partes.length) return ultimo;
+    return partes.join(', ') + ' ' + conjuncion(ultimo) + ' ' + ultimo;
+  }
+
+  function trozos(texto) {
+    return String(texto || '')
+      .split(',')
+      .map(function (d) { return d.trim(); })
+      .filter(function (d) { return d; });
+  }
+
   // «ha añadido el horario y el teléfono de». `texto` trae lo aportado
   // separado por comas, tal como lo monta `fn_cronologia`.
   function fraseDelDato(texto) {
-    const datos = String(texto || '')
-      .split(',')
-      .map(function (d) { return d.trim(); })
-      .filter(function (d) { return d; })
-      .map(function (d) { return (ARTICULOS[d] || 'el') + ' ' + d; });
+    const datos = trozos(texto).map(function (d) {
+      return (ARTICULOS[d] || 'el') + ' ' + d;
+    });
 
     if (!datos.length) return 'ha completado la ficha de';
-    const ultimo = datos.pop();
-    const lista = datos.length ? datos.join(', ') + ' y ' + ultimo : ultimo;
-    return 'ha añadido ' + lista + ' de';
+    return 'ha añadido ' + enumerar(datos) + ' de';
+  }
+
+  // Cómo se escribe cada campo del mapa: `texto` trae las claves tal cual las
+  // manda el servidor (CAMPOS en osm-novedades/parseo.ts), y esas claves son
+  // identificadores, sin tilde. Igual que `ItemCronologia._comoSeEscribe`.
+  const COMO_SE_ESCRIBE = { telefono: 'teléfono' };
+
+  // «Ya tiene horario y teléfono:», con lo que el sitio ha ganado en el mapa.
+  // Igual que `ItemCronologia._fraseDeLoQueGano`.
+  function fraseDeLoQueGano(texto) {
+    const cosas = trozos(texto);
+    if (!cosas.length) return 'Hay más datos en el mapa:';
+    // Estas no se «tienen» de repente: se saben. El sitio ya era así; lo que
+    // ha cambiado es que ahora consta.
+    if (cosas.length === 1) {
+      const sueltas = {
+        terraza: 'Ya se sabe que tiene terraza:',
+        accesibilidad: 'Ya se sabe que es accesible:',
+        cocina: 'Ya se sabe qué se come allí:',
+        historia: 'Ya se puede leer su historia:',
+      };
+      if (sueltas[cosas[0]]) return sueltas[cosas[0]];
+    }
+    return 'Ya tiene ' + enumerar(cosas.map(function (c) {
+      return COMO_SE_ESCRIBE[c] || c;
+    })) + ':';
   }
 
   // Lo que dijo esta persona, para enseñarlo entre comillas. Igual que
@@ -170,11 +230,16 @@
         && item.texto) {
       return 'En ' + item.texto;
     }
+    // El nombre nuevo de un sitio renombrado en el mapa: `sitio` es el viejo.
+    if (item.tipo === 'lugar_renombrado' && item.texto) {
+      return 'Ahora se llama ' + item.texto;
+    }
     return null;
   }
 
   function frase(item) {
     if (item.tipo === 'dato') return fraseDelDato(item.texto);
+    if (item.tipo === 'lugar_datos') return fraseDeLoQueGano(item.texto);
     // Un tipo que esta versión de la web no conoce: mejor decir poco que
     // llamar reseña a un aviso de cierre.
     return FRASES[item.tipo] || 'ha participado en';
