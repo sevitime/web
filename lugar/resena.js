@@ -328,8 +328,12 @@
             guardar.disabled = false;
           } else {
             guardar.disabled = true;
+            // Los mismos textos que la app (`mensajeEstadoNombre` en
+            // lib/utils/nombre_publico.dart): el apodo se elige desde las dos
+            // y no puede decir cosas distintas según por dónde entres.
             estado.textContent = data === 'ocupado' ? 'Ya lo está usando otra persona'
               : data === 'reservado' ? 'Ese apodo está reservado, elige otro'
+              : data === 'ofensivo' ? 'Ese apodo no se puede usar, elige otro'
               : data === 'espera' ? 'Ya lo cambiaste hace poco; podrás volver a cambiarlo más adelante'
               : 'Ese apodo no vale, prueba otro';
           }
@@ -352,6 +356,7 @@
         if (data !== 'ok') {
           estado.textContent = data === 'ocupado' ? 'Ya lo está usando otra persona'
             : data === 'reservado' ? 'Ese apodo está reservado, elige otro'
+            : data === 'ofensivo' ? 'Ese apodo no se puede usar, elige otro'
             : 'No se ha podido guardar ese apodo.';
           guardar.disabled = false;
           return;
