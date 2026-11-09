@@ -185,8 +185,16 @@
   // identificadores, sin tilde. Igual que `ItemCronologia._comoSeEscribe`.
   const COMO_SE_ESCRIBE = { telefono: 'teléfono' };
 
-  // «Ya tiene horario y teléfono:», con lo que el sitio ha ganado en el mapa.
-  // Igual que `ItemCronologia._fraseDeLoQueGano`.
+  // Suma UTF-16, igual que `ItemCronologia._varianteDe` en la app.
+  function varianteDe(sitio, campo, cantidad) {
+    const semilla = sitio + ':' + campo;
+    let suma = 0;
+    for (let i = 0; i < semilla.length; i++) suma += (i + 1) * semilla.charCodeAt(i);
+    return suma % cantidad;
+  }
+
+  // Describe los datos nuevos del mapa. Igual que
+  // `ItemCronologia._fraseDeLoQueGano`.
   function fraseDeLoQueGano(texto, sitio) {
     const cosas = trozos(texto);
     if (!cosas.length) return 'Hay más datos en el mapa:';
@@ -203,13 +211,47 @@
         ][suma % 3];
       }
       const sueltas = {
-        accesibilidad: 'Ya se sabe que es accesible:',
-        cocina: 'Ya se sabe qué se come allí:',
-        historia: 'Ya se puede leer su historia:',
+        accesibilidad: [
+          'Ahora consta en el mapa que es accesible:',
+          'Se ha añadido el dato de accesibilidad:',
+          'El mapa ya indica que es accesible:',
+        ],
+        cocina: [
+          'Ahora consta en el mapa qué cocina ofrece:',
+          'Se ha añadido al mapa el tipo de cocina:',
+          'El mapa ya indica qué cocina ofrece:',
+        ],
+        historia: [
+          'Ahora se puede consultar su historia:',
+          'Se ha añadido al mapa su referencia histórica:',
+          'El mapa ya permite leer sobre su historia:',
+        ],
+        horario: [
+          'Ahora consta su horario en el mapa:',
+          'Se ha añadido el horario al mapa:',
+          'El mapa ya recoge su horario:',
+        ],
+        telefono: [
+          'Ahora consta su teléfono en el mapa:',
+          'Se ha añadido el teléfono al mapa:',
+          'El mapa ya recoge su teléfono:',
+        ],
+        web: [
+          'Ahora consta su web en el mapa:',
+          'Se ha añadido la web al mapa:',
+          'El mapa ya recoge su web:',
+        ],
       };
-      if (sueltas[cosas[0]]) return sueltas[cosas[0]];
+      if (sueltas[cosas[0]]) {
+        return sueltas[cosas[0]][varianteDe(sitio, cosas[0], 3)];
+      }
     }
-    return 'Ya tiene ' + enumerar(cosas.map(function (c) {
+    const varias = [
+      'Se han añadido al mapa estos datos:',
+      'Ahora constan en el mapa estos datos:',
+      'El mapa ya recoge estos datos:',
+    ][varianteDe(sitio, cosas.join(','), 3)];
+    return varias + ' ' + enumerar(cosas.map(function (c) {
       return COMO_SE_ESCRIBE[c] || c;
     })) + ':';
   }
