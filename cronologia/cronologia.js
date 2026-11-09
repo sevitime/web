@@ -29,7 +29,12 @@
     cabecera.appendChild(C.avatar(item));
     const quien = C.el('div', 'crono-quien');
     quien.appendChild(C.linea(item));
-    const cuando = C.el('span', 'crono-cuando', C.haceCuanto(item.cuando));
+    // «hace 2 días · Guillena»: el municipio, de un vistazo. Lo resuelve el
+    // servidor por coordenadas, así que lo traen todas las entradas del mapa
+    // aunque OSM no tenga `addr:city`.
+    const cuando = C.el('span', 'crono-cuando',
+      C.haceCuanto(item.cuando) +
+      (item.municipio ? ' · ' + item.municipio : ''));
     // Publicada desde la última visita: con la lista por la hora real, lo
     // aprobado tarde cae más abajo, y la marca es lo que lo hace encontrable.
     if (C.esNueva(item, vistoAlEntrar)) {
