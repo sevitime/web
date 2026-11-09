@@ -212,7 +212,11 @@ test('lo que gana un sitio en el mapa se dice igual que en la app', () => {
   const frase = (texto) => C.frase(deLaCiudad('lugar_datos', { texto }));
   assert.equal(frase('horario'), 'Ya tiene horario:');
   assert.equal(frase('horario,telefono,web'), 'Ya tiene horario, teléfono y web:');
-  assert.equal(frase('terraza'), 'Ya se sabe que tiene terraza:');
+  assert.equal(frase('terraza'), 'Se ha añadido el dato de la terraza:');
+  assert.equal(C.frase(deLaCiudad('lugar_datos', { texto: 'terraza', sitio: 'Albarama' })),
+    'Ahora consta en el mapa que tiene terraza:');
+  assert.equal(C.frase(deLaCiudad('lugar_datos', { texto: 'terraza', sitio: 'Boston' })),
+    'Ya figura con terraza en el mapa:');
   assert.equal(frase('accesibilidad'), 'Ya se sabe que es accesible:');
   assert.equal(frase('cocina'), 'Ya se sabe qué se come allí:');
   assert.equal(frase('historia'), 'Ya se puede leer su historia:');

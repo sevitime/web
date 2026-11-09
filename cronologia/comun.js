@@ -187,14 +187,22 @@
 
   // «Ya tiene horario y teléfono:», con lo que el sitio ha ganado en el mapa.
   // Igual que `ItemCronologia._fraseDeLoQueGano`.
-  function fraseDeLoQueGano(texto) {
+  function fraseDeLoQueGano(texto, sitio) {
     const cosas = trozos(texto);
     if (!cosas.length) return 'Hay más datos en el mapa:';
     // Estas no se «tienen» de repente: se saben. El sitio ya era así; lo que
     // ha cambiado es que ahora consta.
     if (cosas.length === 1) {
+      if (cosas[0] === 'terraza') {
+        let suma = 0;
+        for (let i = 0; i < sitio.length; i++) suma += (i + 1) * sitio.charCodeAt(i);
+        return [
+          'Ahora consta en el mapa que tiene terraza:',
+          'Se ha añadido el dato de la terraza:',
+          'Ya figura con terraza en el mapa:',
+        ][suma % 3];
+      }
       const sueltas = {
-        terraza: 'Ya se sabe que tiene terraza:',
         accesibilidad: 'Ya se sabe que es accesible:',
         cocina: 'Ya se sabe qué se come allí:',
         historia: 'Ya se puede leer su historia:',
@@ -239,7 +247,7 @@
 
   function frase(item) {
     if (item.tipo === 'dato') return fraseDelDato(item.texto);
-    if (item.tipo === 'lugar_datos') return fraseDeLoQueGano(item.texto);
+    if (item.tipo === 'lugar_datos') return fraseDeLoQueGano(item.texto, item.sitio || '');
     // Un tipo que esta versión de la web no conoce: mejor decir poco que
     // llamar reseña a un aviso de cierre.
     return FRASES[item.tipo] || 'ha participado en';
