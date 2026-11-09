@@ -39,7 +39,10 @@
 <script defer src="/libs/maplibre-gl.js"></script>
 <script defer src="/libs/pmtiles.js"></script>
 <script defer src="/mapa/estilo-mapa.js?v=55fd2f52"></script>
-<script defer src="/lugares.js?v=5de45e37"></script>
+<script defer src="/lugares.js?v=0288567c"></script>
+<!-- Las frases de «Qué pasa», para que la historia del sitio se cuente igual
+     que allí (`ItemCronologia.frase` en la app). -->
+<script defer src="/cronologia/comun.js?v=3b5cf004"></script>
 <!-- Para valorar y reseñar hace falta sesión. La librería de Supabase NO se
      carga aquí a propósito: `auth.js` la trae sola si ya había sesión en este
      navegador, o al pulsar «Entrar». Quien llega de un enlace compartido y
@@ -108,6 +111,18 @@
   .extra-lista li { padding: 12px 0; border-bottom: 1px solid var(--borde); }
   .extra-lista li:last-child { border-bottom: 0; }
   .extra-lista a { color: var(--verde-claro); font-weight: 650; }
+
+  /* «Su historia en el mapa»: una línea por cambio, con la fecha delante. */
+  .historial-intro { color: var(--apagado); font-size: var(--t-etiqueta); margin: 0 0 10px; }
+  .historial-lista { list-style: none; padding: 0; margin: 0; }
+  .historial-lista li {
+    display: grid; grid-template-columns: max-content 1fr; gap: 2px 12px;
+    padding: 10px 0; border-bottom: 1px solid var(--borde);
+  }
+  .historial-lista li:last-child { border-bottom: 0; }
+  .historial-fecha { color: var(--apagado); font-size: var(--t-etiqueta); }
+  .historial-que { color: var(--texto); font-size: var(--t-cuerpo); }
+  .historial-detalle { grid-column: 2; color: var(--apagado); font-size: var(--t-etiqueta); }
   .extra-nota { color: var(--apagado); margin: 4px 0 0; }
 
   /* ---- Lo que dice la gente ---- */
@@ -427,6 +442,14 @@
     </div>
 
     <ul class="sitio-datos" id="datos"></ul>
+
+    <!-- «Su historia en el mapa»: los cambios del sitio en OSM. La pinta el
+         script de esta página con `fn_cambios_de_sitio`; vacía si no hay. -->
+    <section class="sitio-extra" id="historial-sitio" aria-labelledby="historial-titulo" hidden>
+      <h2 id="historial-titulo">Su historia en el mapa</h2>
+      <p class="historial-intro">Lo que ha cambiado este sitio en OpenStreetMap.</p>
+      <ol class="historial-lista" id="historial-lista"></ol>
+    </section>
 
     <!-- `lugar/abierto.js`: «¿Está abierto?», lo dice quien está delante. -->
     <div id="hueco-abierto"></div>
@@ -1099,6 +1122,56 @@
     }, function () {}, { timeout: 8000, maximumAge: 300000 });
   }
 
+  function pintarHistorial(p) {
+    const seccion = document.getElementById('historial-sitio');
+    const lista = document.getElementById('historial-lista');
+    const C = window.SeviCrono;
+    if (!seccion || !lista || !C || !window.sevitimeLugares) return;
+
+    window.sevitimeLugares.cambiosDeSitio(p).then(function (filas) {
+      if (!filas || !filas.length) return;
+      const fecha = new Intl.DateTimeFormat('es-ES', {
+        day: 'numeric', month: 'short', year: 'numeric',
+      });
+      filas.forEach(function (f) {
+        const item = {
+          tipo: f.tipo, texto: f.texto, valor: f.valor, sitio: p.nombre,
+        };
+        const li = document.createElement('li');
+
+        const cuando = document.createElement('time');
+        cuando.className = 'historial-fecha';
+        cuando.dateTime = f.cuando;
+        // «6 nov 2026»: en es-ES el mes corto sale «nov.» y sobra el punto.
+        cuando.textContent =
+          fecha.format(new Date(f.cuando)).replace(/\./g, '');
+        li.appendChild(cuando);
+
+        const que = document.createElement('span');
+        que.className = 'historial-que';
+        let phrase = C.frase(item);
+        // En la ficha no va el nombre del sitio detrás, así que el «:» sobra.
+        if (phrase.endsWith(':')) phrase = phrase.slice(0, -1);
+        que.textContent = phrase;
+        li.appendChild(que);
+
+        // El nombre nuevo o la dirección nueva, debajo y sin comillas: no lo
+        // dijo nadie, es un dato. Igual que en la app.
+        if (f.tipo === 'lugar_renombrado' || f.tipo === 'lugar_datos') {
+          const detalle = C.detalle(item);
+          if (detalle) {
+            const d = document.createElement('span');
+            d.className = 'historial-detalle';
+            d.textContent = detalle;
+            li.appendChild(d);
+          }
+        }
+        lista.appendChild(li);
+      });
+      seccion.hidden = false;
+    }).catch(function () {});
+  }
+
   function pintar(p) {
     pintarDistancia(p);
     const nombre = document.getElementById('nombre');
@@ -1130,6 +1203,7 @@
 
     pintarOpiniones();
     pintarExtras(p);
+    pintarHistorial(p);
 
     // Valorar y reseñar. Va justo debajo de lo que dice la gente y encima de
     // los botones del final: primero se lee y después se opina.

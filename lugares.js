@@ -1227,6 +1227,22 @@ const CATEGORIAS_LUGARES = {
     return snap;
   }
 
+  // «Su historia en el mapa» de una ficha: los cambios que ha tenido el sitio
+  // en OSM. Se busca por el elemento (exacto) y, si es un alta manual que aún
+  // no está en OSM, por la clave. Lectura pública: la función no devuelve
+  // nada sin publicar, ni bajas pendientes.
+  function cambiosDeSitio(p) {
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/fn_cambios_de_sitio', {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        p_osm_type: p.osmType || null,
+        p_osm_id: p.osmId || null,
+        p_place_key: claveDe(p.lat, p.lon),
+      }),
+    }).then(function (r) { return r.ok ? r.json() : []; });
+  }
+
   // Devuelve una promesa con el array de lugares ya convertidos y sin nulos:
   // la foto diaria de OSM (la misma que lee la app) **más las altas manuales**
   // y **menos los ocultos**, en el mismo orden que la app.
@@ -1262,7 +1278,7 @@ const CATEGORIAS_LUGARES = {
     FILTROS_EXPLORAR, TIPOS_DE_TODO,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
-    fusiones,
+    fusiones, cambiosDeSitio,
     cargarCurado, completarConDatosPropios,
   };
 })();
