@@ -214,7 +214,18 @@ test('lo que gana un sitio en el mapa se dice igual que en la app', () => {
   assert.equal(frase('horario,telefono,web'),
     'El mapa ya recoge estos datos: horario, teléfono y web:');
   assert.equal(C.frase(deLaCiudad('lugar_datos', { texto: 'direccion', sitio: 'Bar Pepe' })),
-    'OpenStreetMap ya recoge la dirección del sitio:');
+    'Se ha añadido o corregido la dirección:');
+  assert.equal(C.frase(deLaCiudad('lugar_datos', { texto: 'direccion', sitio: 'Albarama' })),
+    'Ahora consta su dirección en el mapa:');
+  assert.equal(C.frase(deLaCiudad('lugar_datos', { texto: 'direccion', sitio: 'Boston' })),
+    'El mapa ya recoge su dirección:');
+  // La calle va debajo, en la segunda línea: `texto` dice qué cambió y
+  // `valor`, cuál es. Igual que `ItemCronologia.detalle` en la app.
+  assert.equal(
+    C.detalle(deLaCiudad('lugar_datos',
+      { texto: 'direccion', valor: 'Calle Betis, 12' })),
+    'En Calle Betis, 12');
+  assert.equal(C.detalle(deLaCiudad('lugar_datos', { texto: 'direccion' })), null);
   assert.equal(frase('terraza'), 'Se ha añadido el dato de la terraza:');
   assert.equal(C.frase(deLaCiudad('lugar_datos', { texto: 'terraza', sitio: 'Albarama' })),
     'Ahora consta en el mapa que tiene terraza:');

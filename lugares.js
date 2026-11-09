@@ -77,6 +77,12 @@ const CATEGORIAS_LUGARES = {
       "emoji": "🍨",
       "color": "#6D4C41"
     },
+    "nightclub": {
+      "categoria": "otros",
+      "etiqueta": "Discoteca",
+      "emoji": "🪩",
+      "color": "#6A1B9A"
+    },
     "parking": {
       "categoria": "servicios",
       "etiqueta": "Parking",
@@ -351,6 +357,14 @@ const CATEGORIAS_LUGARES = {
       "tipos": [
         "cafe",
         "ice_cream"
+      ]
+    },
+    {
+      "id": "discotecas",
+      "etiqueta": "Discotecas",
+      "emoji": "🪩",
+      "tipos": [
+        "nightclub"
       ]
     },
     {
@@ -1043,6 +1057,7 @@ const CATEGORIAS_LUGARES = {
     'edificio histórico': 'building', 'edificio historico': 'building',
     'yacimiento': 'archaeological_site', 'aparcamiento': 'parking',
     'farmacia': 'pharmacy', 'cajero': 'atm', 'banco': 'bank',
+    'discoteca': 'nightclub',
   };
 
   function normalizarTipo(t) {
