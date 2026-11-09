@@ -183,7 +183,7 @@
   // Cómo se escribe cada campo del mapa: `texto` trae las claves tal cual las
   // manda el servidor (CAMPOS en osm-novedades/parseo.ts), y esas claves son
   // identificadores, sin tilde. Igual que `ItemCronologia._comoSeEscribe`.
-  const COMO_SE_ESCRIBE = { telefono: 'teléfono' };
+  const COMO_SE_ESCRIBE = { telefono: 'teléfono', direccion: 'dirección' };
 
   // Suma UTF-16, igual que `ItemCronologia._varianteDe` en la app.
   function varianteDe(sitio, campo, cantidad) {
@@ -235,6 +235,11 @@
           'Ahora consta su teléfono en el mapa:',
           'Se ha añadido el teléfono al mapa:',
           'El mapa ya recoge su teléfono:',
+        ],
+        direccion: [
+          'Se ha actualizado la dirección en OpenStreetMap:',
+          'OpenStreetMap ya recoge la dirección del sitio:',
+          'El mapa ya muestra la dirección actualizada:',
         ],
         web: [
           'Ahora consta su web en el mapa:',
