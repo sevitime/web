@@ -237,9 +237,9 @@
           'El mapa ya recoge su teléfono:',
         ],
         direccion: [
-          'Se ha actualizado la dirección en OpenStreetMap:',
-          'OpenStreetMap ya recoge la dirección del sitio:',
-          'El mapa ya muestra la dirección actualizada:',
+          'Ahora consta su dirección en el mapa:',
+          'Se ha añadido o corregido la dirección:',
+          'El mapa ya recoge su dirección:',
         ],
         web: [
           'Ahora consta su web en el mapa:',
@@ -288,6 +288,13 @@
     // El nombre nuevo de un sitio renombrado en el mapa: `sitio` es el viejo.
     if (item.tipo === 'lugar_renombrado' && item.texto) {
       return 'Ahora se llama ' + item.texto;
+    }
+    // La dirección nueva: `texto` dice QUÉ cambió («direccion») y `valor`,
+    // cuál es la calle. Sin el valor, la línea obligaba a abrir la ficha para
+    // saber qué dirección es. Igual que `ItemCronologia.detalle` en la app.
+    if (item.tipo === 'lugar_datos' && item.valor
+        && trozos(item.texto).indexOf('direccion') >= 0) {
+      return 'En ' + item.valor;
     }
     return null;
   }
