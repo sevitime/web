@@ -1243,6 +1243,74 @@ const CATEGORIAS_LUGARES = {
     }).then(function (r) { return r.ok ? r.json() : []; });
   }
 
+  // --- Un sitio que aún no está en la foto --------------------------------
+  //
+  // La foto es de la madrugada. Un sitio que acaba de aparecer en OSM sale en
+  // «Qué pasa» a los 30 minutos, pero aquí no está hasta el día siguiente.
+  // Antes el enlace daba «no encontrado»; ahora se pregunta a Overpass una
+  // vez, en 50 m y solo cuando la foto falla, igual que hace la app.
+  //
+  // Los espejos son los mismos que usa la app en vivo. El ruso no está: no
+  // resolvía el DNS. La consulta no filtra por tipo a propósito: se queda con
+  // el elemento que cae exactamente en la clave, y las entradas de «Qué pasa»
+  // ya son solo de los tipos que se cuentan.
+  // El francés no está: a un navegador le contesta 403 («only available to
+  // white-listed usages»). La app sí puede usarlo porque manda su propio
+  // User-Agent; un navegador no puede cambiarlo.
+  const OVERPASS = [
+    'https://overpass-api.de/api/interpreter',
+    'https://lz4.overpass-api.de/api/interpreter',
+    'https://maps.mail.ru/osm/tools/overpass/api/interpreter',
+  ];
+
+  function puntoDeClave(clave) {
+    const partes = String(clave || '').split('_');
+    if (partes.length !== 2) return null;
+    const lat = Number(partes[0]);
+    const lon = Number(partes[1]);
+    if (!Number.isFinite(lat) || !Number.isFinite(lon) ||
+        lat < -90 || lat > 90 || lon < -180 || lon > 180) return null;
+    return { lat: lat, lon: lon };
+  }
+
+  async function buscarPorClave(clave) {
+    const punto = puntoDeClave(clave);
+    if (!punto) return null;
+
+    const consulta = '[out:json][timeout:8];\n' +
+      'nwr(around:50,' + punto.lat + ',' + punto.lon + ')["name"];\n' +
+      'out center 50;';
+
+    for (const espejo of OVERPASS) {
+      // Sin tope, un espejo que no contesta deja la ficha en «Buscando…» para
+      // siempre. Ocho segundos y se pasa al siguiente.
+      const control = new AbortController();
+      const reloj = setTimeout(function () { control.abort(); }, 8000);
+      try {
+        const r = await fetch(espejo, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: consulta,
+          signal: control.signal,
+        });
+        if (!r.ok) continue;
+        const datos = await r.json();
+        const elemento = (datos.elements || []).find(function (e) {
+          const lat = e.lat != null ? e.lat : (e.center && e.center.lat);
+          const lon = e.lon != null ? e.lon : (e.center && e.center.lon);
+          return lat != null && lon != null && claveDe(lat, lon) === clave;
+        });
+        // Si el espejo contestó y no está, no se insiste: no es un fallo.
+        return elemento ? aLugar(elemento) : null;
+      } catch (e) {
+        // Se prueba el siguiente espejo.
+      } finally {
+        clearTimeout(reloj);
+      }
+    }
+    return null;
+  }
+
   // Devuelve una promesa con el array de lugares ya convertidos y sin nulos:
   // la foto diaria de OSM (la misma que lee la app) **más las altas manuales**
   // y **menos los ocultos**, en el mismo orden que la app.
@@ -1278,7 +1346,7 @@ const CATEGORIAS_LUGARES = {
     FILTROS_EXPLORAR, TIPOS_DE_TODO,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
-    fusiones, cambiosDeSitio,
+    fusiones, cambiosDeSitio, buscarPorClave,
     cargarCurado, completarConDatosPropios,
   };
 })();

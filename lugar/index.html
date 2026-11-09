@@ -39,7 +39,7 @@
 <script defer src="/libs/maplibre-gl.js"></script>
 <script defer src="/libs/pmtiles.js"></script>
 <script defer src="/mapa/estilo-mapa.js?v=55fd2f52"></script>
-<script defer src="/lugares.js?v=0288567c"></script>
+<script defer src="/lugares.js?v=707bb5f6"></script>
 <!-- Las frases de «Qué pasa», para que la historia del sitio se cuente igual
      que allí (`ItemCronologia.frase` en la app). -->
 <script defer src="/cronologia/comun.js?v=3b5cf004"></script>
@@ -1329,8 +1329,13 @@
       const p = lugares.find(function (x) {
         return window.sevitimeLugares.claveDe(x.lat, x.lon) === clave;
       });
-      if (!p) { noEncontrado(); return; }
-      pintar(p);
+      if (p) { pintar(p); return; }
+      // La foto es de la madrugada: un sitio que acaba de aparecer en OSM
+      // puede no estar. Se pregunta a Overpass una vez antes de dar el enlace
+      // por roto, igual que hace la app.
+      return window.sevitimeLugares.buscarPorClave(clave).then(function (nuevo) {
+        if (nuevo) pintar(nuevo); else noEncontrado();
+      });
     }).catch(noEncontrado);
   });
 })();
