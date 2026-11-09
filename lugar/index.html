@@ -443,14 +443,6 @@
 
     <ul class="sitio-datos" id="datos"></ul>
 
-    <!-- «Su historia en el mapa»: los cambios del sitio en OSM. La pinta el
-         script de esta página con `fn_cambios_de_sitio`; vacía si no hay. -->
-    <section class="sitio-extra" id="historial-sitio" aria-labelledby="historial-titulo" hidden>
-      <h2 id="historial-titulo">Su historia en el mapa</h2>
-      <p class="historial-intro">Lo que ha cambiado este sitio en OpenStreetMap.</p>
-      <ol class="historial-lista" id="historial-lista"></ol>
-    </section>
-
     <!-- `lugar/abierto.js`: «¿Está abierto?», lo dice quien está delante. -->
     <div id="hueco-abierto"></div>
 
@@ -494,6 +486,16 @@
     <!-- `lugar/sellar.js`: el botón del Pasaporte, solo si este sitio da
          algún sello. Si no, aquí no se pinta nada. -->
     <div id="hueco-sellar"></div>
+
+    <!-- «Su historia en el mapa»: los cambios del sitio en OSM. Va al final,
+         después de lo que dice la gente, igual que en la app: es un extra de
+         la ficha y no debe empujar lo que se viene a ver. La pinta el script
+         con `fn_cambios_de_sitio`; vacía si no hay. -->
+    <section class="sitio-extra" id="historial-sitio" aria-labelledby="historial-titulo" hidden>
+      <h2 id="historial-titulo">Su historia en el mapa</h2>
+      <p class="historial-intro">Lo que ha cambiado este sitio en OpenStreetMap.</p>
+      <ol class="historial-lista" id="historial-lista"></ol>
+    </section>
 
     <div class="sitio-acciones">
       <a class="sitio-cta" id="cta" href="https://play.google.com/store/apps/details?id=com.selu.sevitime">
