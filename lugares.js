@@ -465,6 +465,9 @@ const CATEGORIAS_LUGARES = {
     ...tiposDeCategoria('historia'),
     ...tiposDeCategoria('parques'),
     ...tiposDeCategoria('iglesias'),
+    // Las discotecas están en "otros", que "Todos" deja fuera; sin esto no
+    // salían en ninguna lista de Explorar, solo en la lupa.
+    'nightclub',
     'attraction',
     'viewpoint',
     'marketplace',
@@ -488,6 +491,7 @@ const CATEGORIAS_LUGARES = {
   const FILTROS_EXPLORAR = [
     { id: 'todos', etiqueta: 'Todos', emoji: '📍', tipos: null },
     { id: 'hosteleria', etiqueta: 'Hostelería', emoji: '🍻', tipos: tiposDeCategoria('hosteleria') },
+    { id: 'discotecas', etiqueta: 'Discotecas', emoji: '🪩', tipos: ['nightclub'] },
     { id: 'parking', etiqueta: 'Parking', emoji: '🅿️', tipos: ['parking'] },
     { id: 'farmacia', etiqueta: 'Farmacia', emoji: '💊', tipos: ['pharmacy'] },
     { id: 'atm', etiqueta: 'Cajeros', emoji: '🏧', tipos: ['atm', 'bank'] },
