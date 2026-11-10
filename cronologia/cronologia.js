@@ -35,6 +35,9 @@
     const cuando = C.el('span', 'crono-cuando',
       C.haceCuanto(item.cuando) +
       (item.municipio ? ' · ' + item.municipio : ''));
+    // `municipio` llega resuelto del servidor (`fn_cronologia`), no de
+    // `addr:city`: así lo llevan también los pueblos que no lo etiquetan. La
+    // app lo pinta igual, en la misma línea de la hora.
     // Publicada desde la última visita: con la lista por la hora real, lo
     // aprobado tarde cae más abajo, y la marca es lo que lo hace encontrable.
     if (C.esNueva(item, vistoAlEntrar)) {
