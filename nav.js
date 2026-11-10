@@ -235,13 +235,23 @@ window.SeviLlegada = function (contenedor) {
     caja = boton = panel = null;
   }
 
+  // En el mapa la cabecera se pliega antes que en el resto (hasta 1400 px,
+  // ver mapa/index.html). Ahí manda su hamburguesa y este «Más» sobra: el
+  // menú ya lleva todos los destinos. Se pregunta por lo que se ve, no por
+  // el ancho, para no repetir dos listas de puntos de corte.
+  function hayHamburguesa() {
+    var t = document.querySelector('.nav-menu-toggle');
+    return !!t && window.getComputedStyle(t).display !== 'none';
+  }
+
   function aplicar() {
-    if (ESCRITORIO.matches) montar();
+    if (ESCRITORIO.matches && !hayHamburguesa()) montar();
     else desmontar();
   }
 
   if (ESCRITORIO.addEventListener) ESCRITORIO.addEventListener('change', aplicar);
   else ESCRITORIO.addListener(aplicar);
+  window.addEventListener('resize', aplicar);
   aplicar();
 }());
 

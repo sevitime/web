@@ -48,7 +48,7 @@
      ejecuta antes que los diferidos; necesita `SeviSugerir` ya disponible. -->
 <script src="/sugerir.js?v=fbf31424"></script>
 <script defer src="/lugares.js?v=571ca4ee"></script>
-<script defer src="/nav.js?v=cbdc46aa"></script>
+<script defer src="/nav.js?v=cb440bc2"></script>
 <style>
   /* La paleta y la tipografía vienen de /estilo.css, el mismo que usan la
      portada y el cuadro de honor. Así el mapa también cambia a tema oscuro y
@@ -311,6 +311,26 @@
       min-height: 44px; width: 100%; justify-content: flex-start;
       height: auto; border-radius: var(--r-sm);
     }
+  }
+
+  /* Escritorio ancho: el buscador y «Añadir o corregir» dejan la fila y
+     FLOTAN sobre el mapa, como en la app. Dentro de la barra no caben con el
+     logotipo, los destinos y la cuenta —se pisaban entre ellos—, y sobre el
+     mapa además están donde se usan. Por debajo de 1401 px manda la
+     hamburguesa y las herramientas se quedan en su fila, que ahí sí cabe. */
+  @media (min-width: 1401px) {
+    #barra .mapa-herramientas {
+      position: absolute;
+      top: calc(100% + 10px);
+      left: 20px;
+      z-index: 25;
+    }
+    .mapa-herramientas .buscar-caja input,
+    .btn-anadir { box-shadow: var(--sombra-2); }
+    .mapa-herramientas .buscar-caja { flex: 0 0 280px; }
+    /* El mismo destino, dos veces en pantalla: el enlace de la barra y el
+       botón flotante. Se queda el botón, que está donde se usa. */
+    #barra .nav-enlaces a[href^="/mapa/?modo=colaborar"] { display: none; }
   }
 
   /* Pantallas que no dan para la barra entera: los enlaces y las herramientas
