@@ -20,7 +20,6 @@
     bar: { emoji: '🍻', etiqueta: 'Bar / Pub' },
     restaurant: { emoji: '🍽️', etiqueta: 'Restaurante' },
     cafe: { emoji: '☕', etiqueta: 'Café' },
-    nightclub: { emoji: '🪩', etiqueta: 'Discoteca' },
     fast_food: { emoji: '🍔', etiqueta: 'Comida rápida' },
     attraction: { emoji: '🎡', etiqueta: 'Atracción / Mirador' },
     museum: { emoji: '🖼️', etiqueta: 'Museo / Galería' },

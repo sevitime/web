@@ -78,7 +78,7 @@ const CATEGORIAS_LUGARES = {
       "color": "#6D4C41"
     },
     "nightclub": {
-      "categoria": "otros",
+      "categoria": "hosteleria",
       "etiqueta": "Discoteca",
       "emoji": "🪩",
       "color": "#6A1B9A"
@@ -360,14 +360,6 @@ const CATEGORIAS_LUGARES = {
       ]
     },
     {
-      "id": "discotecas",
-      "etiqueta": "Discotecas",
-      "emoji": "🪩",
-      "tipos": [
-        "nightclub"
-      ]
-    },
-    {
       "id": "monumentos",
       "etiqueta": "Monumentos",
       "emoji": "🏛️",
@@ -465,9 +457,6 @@ const CATEGORIAS_LUGARES = {
     ...tiposDeCategoria('historia'),
     ...tiposDeCategoria('parques'),
     ...tiposDeCategoria('iglesias'),
-    // Las discotecas están en "otros", que "Todos" deja fuera; sin esto no
-    // salían en ninguna lista de Explorar, solo en la lupa.
-    'nightclub',
     'attraction',
     'viewpoint',
     'marketplace',
@@ -491,7 +480,6 @@ const CATEGORIAS_LUGARES = {
   const FILTROS_EXPLORAR = [
     { id: 'todos', etiqueta: 'Todos', emoji: '📍', tipos: null },
     { id: 'hosteleria', etiqueta: 'Hostelería', emoji: '🍻', tipos: tiposDeCategoria('hosteleria') },
-    { id: 'discotecas', etiqueta: 'Discotecas', emoji: '🪩', tipos: ['nightclub'] },
     { id: 'parking', etiqueta: 'Parking', emoji: '🅿️', tipos: ['parking'] },
     { id: 'farmacia', etiqueta: 'Farmacia', emoji: '💊', tipos: ['pharmacy'] },
     { id: 'atm', etiqueta: 'Cajeros', emoji: '🏧', tipos: ['atm', 'bank'] },
@@ -1061,7 +1049,6 @@ const CATEGORIAS_LUGARES = {
     'edificio histórico': 'building', 'edificio historico': 'building',
     'yacimiento': 'archaeological_site', 'aparcamiento': 'parking',
     'farmacia': 'pharmacy', 'cajero': 'atm', 'banco': 'bank',
-    'discoteca': 'nightclub',
   };
 
   function normalizarTipo(t) {
