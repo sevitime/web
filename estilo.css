@@ -473,6 +473,7 @@ footer span { margin: 0 8px; }
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 24px;
 }
 .nav-marca {
   display: inline-flex;
@@ -594,6 +595,47 @@ footer span { margin: 0 8px; }
   transition: color 0.15s ease;
 }
 .nav-link:hover { color: var(--texto); }
+
+/* ---------- «Más»: lo que no cabe en la barra de escritorio ----------
+
+   Con sesión abierta la barra lleva trece destinos, el logotipo y la cuenta:
+   no cabe, y antes flex la encogía hasta partir los rótulos en tres líneas
+   («Cuadro de honor») y montar el logotipo sobre «Explorar». Desde 1000 px
+   se quedan seis destinos a la vista y el resto entra aquí (lo monta
+   `nav.js`). Por debajo de 1000 manda la hamburguesa de siempre. */
+.nav-marca { flex: 0 0 auto; }
+.nav-link { white-space: nowrap; }
+
+/* Entre 1000 y 1199 la cuenta todavía ocupa mucho: el nombre y los XP se
+   quedan para pantallas de verdad. Con ellos, a 1024 la barra desbordaba y
+   «Salir» se salía por la derecha. */
+@media (min-width: 1000px) and (max-width: 1199px) {
+  .auth-nombre, .auth-xp { display: none; }
+}
+
+.nav-mas { position: relative; display: flex; align-items: center; }
+.nav-mas-toggle {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; font-size: var(--t-cuerpo); font-weight: 600;
+  color: var(--apagado);
+}
+.nav-mas-toggle:hover,
+.nav-mas-toggle[aria-expanded="true"] { color: var(--texto); }
+.nav-mas-toggle:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 3px; border-radius: var(--r-sm); }
+.nav-mas-panel {
+  position: absolute; z-index: 20; top: calc(100% + 14px); right: 0;
+  min-width: 210px; padding: 8px;
+  display: grid; gap: 2px;
+  background: var(--superficie); border: 1px solid var(--borde);
+  border-radius: var(--r-lg); box-shadow: var(--sombra-2);
+}
+.nav-mas-panel[hidden] { display: none; }
+.nav-mas-panel .nav-link {
+  display: flex; align-items: center; min-height: 40px; padding: 0 12px;
+  border-radius: var(--r-sm);
+}
+.nav-mas-panel .nav-link:hover { background: var(--superficie-alta); }
 /* Explorar y el antiguo «Mapa y editor» son ahora la misma pantalla. */
 .nav-btn-mapa { display: none !important; }
 .nav-btn-mapa {
@@ -652,10 +694,13 @@ footer span { margin: 0 8px; }
 
 /* ---------- pantallas grandes ---------- */
 
-@media (max-width: 719px) {
-  /* En móvil, las secciones se pliegan: antes la cabecera llegaba a ocupar
-     tres filas y alejaba el mapa y el buscador de la parte visible. Marca y
-     acceso siguen a la vista; el menú conserva todos los destinos. */
+/* La cabecera se pliega hasta 999 px, no hasta 719: con trece destinos y la
+   cuenta, la fila de enlaces no cabe entera hasta ahí. Arriba de 1000 manda
+   la barra de escritorio con el menú «Más» (nav.js). */
+@media (max-width: 999px) {
+  /* Antes la cabecera llegaba a ocupar tres filas y alejaba el mapa y el
+     buscador de la parte visible. Marca y acceso siguen a la vista; el menú
+     conserva todos los destinos. */
   .top-nav { position: relative; padding: 10px 16px; }
   .top-nav-inner { gap: 8px; }
   .nav-acciones { position: relative; margin-left: auto; gap: 8px; }
@@ -690,7 +735,9 @@ footer span { margin: 0 8px; }
   .auth-nombre { max-width: 62px; }
   .auth-xp { display: none; }
   .auth-info { padding-right: 7px; }
+}
 
+@media (max-width: 719px) {
   .hero { padding: 26px 24px 44px; }
 
   /* ---------- la barra de abajo, como en la app ----------

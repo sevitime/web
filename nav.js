@@ -138,6 +138,113 @@ window.SeviLlegada = function (contenedor) {
   });
 }());
 
+// ── «Más»: los destinos que no caben en la barra de escritorio ────────────
+//
+// Trece destinos más el logotipo y la cuenta no caben en una fila: flex los
+// encogía y los rótulos se partían en dos y tres líneas («Cuadro de honor»),
+// con el logotipo montándose sobre «Explorar».
+//
+// Desde 1000 px se quedan seis a la vista —los que se usan para ir a ver
+// cosas— y el resto entra en «Más». Por debajo de 1000 la cabecera ya se
+// pliega en la hamburguesa (estilo.css), así que aquí no se toca nada.
+//
+// Se hace moviendo los enlaces de verdad, no duplicándolos: una sola lista,
+// un solo sitio, y los lectores de pantalla no ven el menú dos veces.
+(function () {
+  var menu = document.querySelector('.nav-enlaces');
+  if (!menu || !window.matchMedia) return;
+
+  var PRINCIPALES = ['/explorar/', '/mapa/', '/eventos/', '/cronologia/',
+                     '/ranking/', '/rutas/'];
+  var ESCRITORIO = window.matchMedia('(min-width: 1000px)');
+  var enlaces = Array.prototype.slice.call(menu.querySelectorAll('a.nav-link'));
+  var caja = null;
+  var boton = null;
+  var panel = null;
+
+  function esPrincipal(href) {
+    for (var i = 0; i < PRINCIPALES.length; i++) {
+      if (href === PRINCIPALES[i] || href.indexOf(PRINCIPALES[i]) === 0) return true;
+    }
+    return false;
+  }
+
+  function cerrar() {
+    if (!panel) return;
+    panel.hidden = true;
+    boton.setAttribute('aria-expanded', 'false');
+  }
+
+  function montar() {
+    if (caja) return;
+    caja = document.createElement('div');
+    caja.className = 'nav-mas';
+
+    boton = document.createElement('button');
+    boton.type = 'button';
+    boton.className = 'nav-mas-toggle';
+    boton.setAttribute('aria-haspopup', 'true');
+    boton.setAttribute('aria-expanded', 'false');
+    boton.setAttribute('aria-controls', 'nav-mas-panel');
+    boton.innerHTML = 'M\u00e1s <svg width="12" height="12" viewBox="0 0 24 24" ' +
+      'fill="currentColor" aria-hidden="true"><path d="M7 10l5 5 5-5z"/></svg>';
+
+    panel = document.createElement('div');
+    panel.className = 'nav-mas-panel';
+    panel.id = 'nav-mas-panel';
+    panel.hidden = true;
+
+    enlaces.forEach(function (enlace) {
+      if (!esPrincipal(enlace.getAttribute('href') || '')) panel.appendChild(enlace);
+    });
+
+    caja.append(boton, panel);
+    menu.appendChild(caja);
+
+    boton.addEventListener('click', function () {
+      var abierto = panel.hidden;
+      panel.hidden = !abierto;
+      boton.setAttribute('aria-expanded', String(abierto));
+      if (abierto) {
+        var primero = panel.querySelector('a');
+        if (primero) primero.focus();
+      }
+    });
+
+    panel.addEventListener('click', function (evento) {
+      if (evento.target.closest('a')) cerrar();
+    });
+
+    document.addEventListener('keydown', function (evento) {
+      if (evento.key === 'Escape' && !panel.hidden) {
+        cerrar();
+        boton.focus();
+      }
+    });
+
+    document.addEventListener('click', function (evento) {
+      if (!panel.hidden && !caja.contains(evento.target)) cerrar();
+    });
+  }
+
+  function desmontar() {
+    if (!caja) return;
+    // Vuelven a su sitio en el mismo orden en que estaban.
+    enlaces.forEach(function (enlace) { menu.appendChild(enlace); });
+    caja.remove();
+    caja = boton = panel = null;
+  }
+
+  function aplicar() {
+    if (ESCRITORIO.matches) montar();
+    else desmontar();
+  }
+
+  if (ESCRITORIO.addEventListener) ESCRITORIO.addEventListener('change', aplicar);
+  else ESCRITORIO.addListener(aplicar);
+  aplicar();
+}());
+
 // Una sola cabecera en el móvil, y sin hamburguesa: la de la app.
 //
 // Dos cosas que delataban a la web, arregladas aquí:
