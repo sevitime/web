@@ -1184,18 +1184,49 @@
     const RADIO = 80;
     const dLat = RADIO / 111000;
     const dLon = RADIO / (111000 * Math.abs(Math.cos(p.lat * Math.PI / 180)));
-    cliente.from('eventos').select()
+    const ahora = new Date();
+
+    // Dos fuentes, y las dos hacen falta. La TABLA trae lo que se añade a
+    // mano o por `sync-*`, al minuto. La FOTO diaria —la misma que lee
+    // /eventos/— trae todo lo demás, que es casi todo el género: el
+    // 11-nov-2026 tenía 152 eventos y 143 con coordenadas, de los cuales 69
+    // eran del Teatro de la Maestranza, que no escribe en la tabla. Mirando
+    // solo la tabla, la ficha del Maestranza no enseñaba ni una función.
+    const dePromesa = (pr) => pr.catch(function () { return []; });
+
+    const tabla = dePromesa(cliente.from('eventos').select()
       .gte('lat', p.lat - dLat).lte('lat', p.lat + dLat)
       .gte('lon', p.lon - dLon).lte('lon', p.lon + dLon)
-      .gte('inicio', new Date().toISOString())
+      .gte('inicio', ahora.toISOString())
       .order('inicio').limit(20)
-      .then(function (r) {
-        const filas = (r && r.data) || [];
-        const cerca = filas.filter(function (f) {
-          if (typeof f.lat !== 'number' || typeof f.lon !== 'number') return false;
-          return window.sevitimeLugares.metros(
-            { lat: p.lat, lon: p.lon }, { lat: f.lat, lon: f.lon }) <= RADIO;
-        }).slice(0, 3);
+      .then(function (r) { return (r && r.data) || []; }));
+
+    const foto = dePromesa(fetch(
+      'https://kdqiwhvtovafugpcrumf.supabase.co/storage/v1/object/public/snapshots/eventos-sevilla.json')
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (d) { return (d && d.events) || []; }));
+
+    Promise.all([tabla, foto])
+      .then(function (dos) {
+        const vistos = {};
+        const cerca = [];
+        dos[0].concat(dos[1]).forEach(function (f) {
+          if (typeof f.lat !== 'number' || typeof f.lon !== 'number') return;
+          if (window.sevitimeLugares.metros(
+            { lat: p.lat, lon: p.lon }, { lat: f.lat, lon: f.lon }) > RADIO) return;
+          const cuando = new Date(f.inicio);
+          // La foto es de esta madrugada: puede traer lo de hace unas horas.
+          if (!(cuando > ahora)) return;
+          // La foto incluye lo de la tabla, así que se cuenta una vez. Al
+          // minuto, que es lo que las dos vías tienen en común.
+          const clave = String(f.nombre || '').trim().toLowerCase()
+            + '@' + cuando.toISOString().slice(0, 16);
+          if (vistos[clave]) return;
+          vistos[clave] = true;
+          cerca.push(f);
+        });
+        cerca.sort(function (a, b) { return new Date(a.inicio) - new Date(b.inicio); });
+        cerca.splice(3);
         if (!cerca.length) return;
 
         const dia = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long' });
