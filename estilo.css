@@ -1950,3 +1950,14 @@ dialog.aceptacion-fotos::backdrop { background: rgba(0, 0, 0, 0.55); }
   font-size: var(--t-cuerpo);
   resize: vertical;
 }
+
+/* «Ver este sitio» detrás del plan del día (diario.js). Discreto y en la
+   misma línea: el plan ya es una frase corta y un botón aparte pesaría más
+   que el plan. */
+.diario-plan-sitio {
+  white-space: nowrap;
+  color: var(--verde-claro);
+  font-weight: 600;
+  text-decoration: underline;
+}
+.diario-plan-sitio:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }

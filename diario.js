@@ -321,7 +321,7 @@
     // El plan del día va por su cuenta y nunca tumba al resto: si Open-Meteo
     // no contesta, la curiosidad y el sitio salen igual, sin frase.
     var plan = Promise.all([
-      pedir('planes_clima?select=condicion,texto&order=id.asc'),
+      pedir('planes_clima?select=condicion,texto,place_key&order=id.asc'),
       fetch('https://api.open-meteo.com/v1/forecast?latitude=' + SEVILLA.lat +
         '&longitude=' + SEVILLA.lon +
         '&current=temperature_2m,apparent_temperature,weather_code,precipitation' +
@@ -331,14 +331,20 @@
     ]).then(function (res) {
       var filas = Array.isArray(res[0]) ? res[0] : [];
       var tiempo = res[1];
-      if (!filas.length || !tiempo || !tiempo.current) return '';
+      if (!filas.length || !tiempo || !tiempo.current) return null;
       var porCondicion = {};
+      // La ficha de cada frase, por su texto: 47 de las 164 nombran un sitio
+      // que está en el catálogo. Igual que `fichaDelPlan` en la app.
+      var fichas = {};
       filas.forEach(function (f) {
         (porCondicion[f.condicion] = porCondicion[f.condicion] || []).push(f.texto);
+        if (f.place_key) fichas[f.texto] = f.place_key;
       });
       var hora = horaEnSevilla();
-      return planDelDia(porCondicion[condicionDelTiempo(tiempo.current, hora)], h, hora);
-    }).catch(function () { return ''; });
+      var texto = planDelDia(
+        porCondicion[condicionDelTiempo(tiempo.current, hora)], h, hora);
+      return texto ? { texto: texto, clave: fichas[texto] || null } : null;
+    }).catch(function () { return null; });
 
     var contenido = Promise.all([
       pedir('efemerides?select=year,text,wiki_title,imagen_url,foto_credito' +
@@ -378,7 +384,7 @@
 
     // Se pinta una sola vez, con todo lo que haya llegado.
     Promise.all([plan, contenido]).then(function (res) {
-      var frase = res[0] || '';
+      var frase = res[0] || null;
       var c = res[1];
       if (!frase && (!c || (!c.efemeride && !c.destacado))) return;
       pintar(hueco, frase, c || {}, h);
@@ -396,10 +402,20 @@
     // frase suelta y no la consecuencia de que esté nublado. Si esa página
     // no tiene ese hueco, se queda donde estaba, encabezando las tarjetas.
     var huecoPlan = document.getElementById('hueco-plan');
-    if (frase && huecoPlan) {
-      huecoPlan.appendChild(el('p', 'diario-plan suelto', frase));
-    } else if (frase) {
-      sec.appendChild(el('p', 'diario-plan', frase));
+    if (frase) {
+      var p = el('p', huecoPlan ? 'diario-plan suelto' : 'diario-plan',
+        frase.texto);
+      // El sitio que nombra la frase, cuando está en el catálogo (desde el
+      // 12-nov-2026). Debajo y discreto, igual que en la app: en la app el
+      // botón sale al desplegar la frase, y aquí no hay nada que desplegar
+      // porque cabe entera.
+      if (frase.clave) {
+        var ver = el('a', 'diario-plan-sitio', 'Ver este sitio');
+        ver.href = '/lugar/?k=' + encodeURIComponent(frase.clave);
+        p.appendChild(document.createTextNode(' '));
+        p.appendChild(ver);
+      }
+      (huecoPlan || sec).appendChild(p);
     }
     var caja = el('div', 'diario-tarjetas');
     if (c.efemeride) caja.appendChild(tarjetaEfemeride(c.efemeride, c.videosE || []));
