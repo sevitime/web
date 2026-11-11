@@ -1885,3 +1885,45 @@ dialog.aceptacion-fotos::backdrop { background: rgba(0, 0, 0, 0.55); }
   outline: 3px solid var(--verde-claro);
   outline-offset: 2px;
 }
+
+/* Denunciar un perfil (perfil/denunciar.js). Discreto y debajo del botón de
+   seguir: tiene que estar siempre a mano y no competir con lo que se hace a
+   diario. */
+.perfil-denunciar {
+  min-height: 36px;
+  padding: 0 8px;
+  border: 0;
+  background: transparent;
+  color: var(--apagado);
+  font: inherit;
+  font-size: var(--t-nota);
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.perfil-denunciar:focus-visible {
+  outline: 3px solid var(--verde-claro);
+  outline-offset: 2px;
+}
+.denuncia-perfil .denuncia-motivo {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  min-height: 40px;
+  padding: 6px 0;
+  font-size: var(--t-cuerpo);
+  line-height: 1.4;
+  cursor: pointer;
+}
+.denuncia-perfil .denuncia-notas {
+  width: 100%;
+  margin-top: 10px;
+  padding: 10px;
+  border: 1px solid var(--borde);
+  border-radius: var(--r-md);
+  background: var(--fondo);
+  color: var(--texto);
+  font: inherit;
+  font-size: var(--t-cuerpo);
+  resize: vertical;
+}

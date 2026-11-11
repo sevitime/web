@@ -139,6 +139,12 @@
         document.getElementById('hueco-seguir')
       );
     }
+    if (window.SeviDenunciar) {
+      window.SeviDenunciar.iniciar(
+        { nombre: perfil.nombre_publico },
+        document.getElementById('hueco-denunciar')
+      );
+    }
 
     estado.hidden = true;
     datos.hidden = false;
