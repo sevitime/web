@@ -1206,6 +1206,29 @@
       .then(function (r) { return r.ok ? r.json() : null; })
       .then(function (d) { return (d && d.events) || []; }));
 
+    // LA CERCANÍA NO BASTA. Hay eventos cuyo «lugar» es la ciudad entera y su
+    // coordenada cae encima de lo que haya: medido el 11-nov-2026, «Toda la
+    // ciudad» caía a 22 m de la Catedral y «Centro histórico de Sevilla» a
+    // 14 m de una farmacia. Anunciar la Bienal en la ficha de una farmacia es
+    // peor que no anunciarla, así que además del radio se pide que el nombre
+    // del local sea el del sitio. Misma regla que `_mismoLocal` en la app.
+    function limpio(v) {
+      return String(v || '').toLowerCase().trim()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+    }
+    function mismoLocal(lugarEvento, nombreSitio) {
+      const a = limpio(lugarEvento);
+      const b = limpio(nombreSitio);
+      if (!a || !b) return false;
+      if (a === b) return true;
+      const corto = a.length <= b.length ? a : b;
+      const largo = a.length <= b.length ? b : a;
+      // Ocho letras mínimo: si no, un evento cuyo lugar es «Sevilla» entra en
+      // cualquier sitio que lleve «Sevilla» en el nombre.
+      return corto.length >= 8 && largo.indexOf(corto) !== -1;
+    }
+
     Promise.all([tabla, foto])
       .then(function (dos) {
         const vistos = {};
@@ -1214,6 +1237,7 @@
           if (typeof f.lat !== 'number' || typeof f.lon !== 'number') return;
           if (window.sevitimeLugares.metros(
             { lat: p.lat, lon: p.lon }, { lat: f.lat, lon: f.lon }) > RADIO) return;
+          if (!mismoLocal(f.lugar, p.nombre)) return;
           const cuando = new Date(f.inicio);
           // La foto es de esta madrugada: puede traer lo de hace unas horas.
           if (!(cuando > ahora)) return;
