@@ -367,7 +367,10 @@
     } else {
       p.appendChild(document.createTextNode(frase(item) + ' '));
     }
-    const ico = icono(item);
+    // El icono NO va en las entradas del mapa: ahí, donde iría el avatar, va
+    // la marca de la ciudad, que pinta ESE MISMO emoji. Salía dos veces en la
+    // misma línea. Igual que en `linea_cronologia.dart`.
+    const ico = esDeLaCiudad(item) ? null : icono(item);
     if (ico) p.appendChild(ico);
 
     const url = destino(item);

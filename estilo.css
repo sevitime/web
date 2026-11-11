@@ -1692,15 +1692,41 @@ html.con-barra .tostada {
 .cronologia { max-width: 760px; margin: 0 auto; padding: 0 16px 60px; }
 .crono-estado { margin: 22px 0; color: var(--apagado); font-size: var(--t-cuerpo); line-height: 1.5; }
 .crono-lista { list-style: none; margin: 0; padding: 0; }
+/* Una FILA, no una tarjeta. Una corriente de sucesos se barre con la vista,
+   y ahí el borde de una caja compite con la frase, que es lo único que
+   importa: filas con filete, como la pestaña de actividad de Instagram, y no
+   cajas como una lista de productos. Entran unas dos entradas más por
+   pantalla. La caja vuelve abajo, solo cuando la entrada trae algo dentro. */
 .crono-item {
   position: relative;
+  padding: 14px 0 14px 10px;
+  border-bottom: 1px solid var(--borde);
+  overflow: hidden;
+}
+.crono-item:last-child { border-bottom: 0; }
+/* Con foto o con cita sí hay un objeto dentro, y entonces el borde se gana su
+   sitio. Es también lo que hace que lo que aporta la gente destaque sobre lo
+   del mapa, que es mayoría y va en una línea. */
+.crono-item:has(.crono-foto-enlace),
+.crono-item:has(.crono-texto) {
   margin-top: 16px;
   padding: 16px 18px;
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: var(--r-lg);
-  overflow: hidden;
 }
+/* El punto de «sin leer», al margen izquierdo de la fila. */
+.crono-punto {
+  position: absolute;
+  top: 21px;
+  left: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--verde);
+}
+.crono-item:has(.crono-foto-enlace) .crono-punto,
+.crono-item:has(.crono-texto) .crono-punto { top: 23px; left: 7px; }
 .crono-cabecera { display: flex; align-items: flex-start; gap: 12px; }
 .crono-avatar {
   flex: none;
@@ -1737,10 +1763,7 @@ html.con-barra .tostada {
   inset: 0;
 }
 .crono-cuando { display: block; margin-top: 2px; color: var(--apagado); font-size: var(--t-etiqueta); }
-.crono-nueva {
-  display: inline-block; margin-left: 8px; padding: 1px 7px; border-radius: 8px;
-  background: var(--verde); color: #fff; font-weight: 700; font-size: var(--t-etiqueta);
-}
+
 .crono-estrellas { margin: 10px 0 0; color: var(--dorado); letter-spacing: 2px; }
 .crono-texto { margin: 8px 0 0; color: var(--apagado); font-size: var(--t-cuerpo); line-height: 1.5; }
 /* El nombre nuevo de un sitio renombrado: un dato, no una cita, así que

@@ -40,8 +40,17 @@
     // app lo pinta igual, en la misma línea de la hora.
     // Publicada desde la última visita: con la lista por la hora real, lo
     // aprobado tarde cae más abajo, y la marca es lo que lo hace encontrable.
+    // Lo nuevo desde la última visita, como el «sin leer» del correo: un
+    // punto al margen. Antes era una chapa verde maciza que gritaba más que
+    // el nombre del sitio, que es lo que hay que tocar, y en la misma fila
+    // había ya tres verdes. El texto se queda para el lector de pantalla,
+    // porque un color no lo lee nadie. Igual que en la app.
     if (C.esNueva(item, vistoAlEntrar)) {
-      cuando.appendChild(C.el('span', 'crono-nueva', 'Nueva'));
+      li.classList.add('crono-item-nueva');
+      const punto = C.el('span', 'crono-punto');
+      punto.setAttribute('role', 'img');
+      punto.setAttribute('aria-label', 'Nueva');
+      li.appendChild(punto);
     }
     quien.appendChild(cuando);
     cabecera.appendChild(quien);
