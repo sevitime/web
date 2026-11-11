@@ -112,6 +112,29 @@
   .extra-lista li:last-child { border-bottom: 0; }
   .extra-lista a { color: var(--verde-claro); font-weight: 650; }
 
+  /* «Lo que viene aquí»: los eventos de este sitio. Mismo aire que las
+     tarjetas de /eventos/, pero en lista y sin foto: aquí es un extra. */
+  .eventos-sitio-lista { list-style: none; padding: 0; margin: 0; }
+  .eventos-sitio-lista li { margin: 0 0 8px; }
+  .eventos-sitio-lista a {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 12px;
+    border: 1px solid var(--borde);
+    border-radius: var(--r-md);
+    color: inherit;
+    text-decoration: none;
+  }
+  .eventos-sitio-lista a:hover { border-color: var(--verde-claro); }
+  .eventos-sitio-icono { font-size: 20px; line-height: 1; }
+  .eventos-sitio-nombre { font-weight: 700; font-size: var(--t-cuerpo); }
+  .eventos-sitio-cuando {
+    display: block;
+    color: var(--apagado);
+    font-size: var(--t-etiqueta);
+  }
+
   /* «Su historia en el mapa»: una línea por cambio, con la fecha delante. */
   .historial-intro { color: var(--apagado); font-size: var(--t-etiqueta); margin: 0 0 10px; }
   .historial-lista { list-style: none; padding: 0; margin: 0; }
@@ -486,6 +509,15 @@
     <!-- `lugar/sellar.js`: el botón del Pasaporte, solo si este sitio da
          algún sello. Si no, aquí no se pinta nada. -->
     <div id="hueco-sellar"></div>
+
+    <!-- «Lo que viene aquí»: lo que hay programado en este mismo sitio, de
+         la tabla `eventos`. Igual que en la app
+         (`eventos_del_lugar_section.dart`): nació con las salas, cuyos
+         conciertos caen justo en el nodo de OpenStreetMap. Vacía si no hay. -->
+    <section class="sitio-extra" id="eventos-sitio" aria-labelledby="eventos-sitio-titulo" hidden>
+      <h2 id="eventos-sitio-titulo">Lo que viene aquí</h2>
+      <ul class="eventos-sitio-lista" id="eventos-sitio-lista"></ul>
+    </section>
 
     <!-- «Su historia en el mapa»: los cambios del sitio en OSM. Va al final,
          después de lo que dice la gente, igual que en la app: es un extra de
@@ -1124,6 +1156,85 @@
     }, function () {}, { timeout: 8000, maximumAge: 300000 });
   }
 
+  // Lo que hay programado en este sitio, de hoy en adelante.
+  //
+  // Mismo criterio que la app: radio corto (80 m) y la distancia de verdad
+  // medida aquí, porque al servidor se le pide una CAJA de coordenadas y una
+  // caja es un cuadrado. Con un radio generoso, en el centro saldría el
+  // concierto de la sala de al lado en la ficha de un bar.
+  //
+  // La web no tiene página por evento todavía, así que el enlace lleva a
+  // /eventos/, como hace «Qué pasa».
+  function pintarEventos(p) {
+    const seccion = document.getElementById('eventos-sitio');
+    const lista = document.getElementById('eventos-sitio-lista');
+    const cliente = window.SEVI && window.SEVI.sb;
+    if (!seccion || !lista || !window.sevitimeLugares) return;
+    if (typeof p.lat !== 'number' || typeof p.lon !== 'number') return;
+    // Supabase se carga aparte y puede no estar todavía: se espera, como en
+    // `perfil/seguir.js`. Sin esto la sección se perdía en la primera visita
+    // y aparecía solo al recargar.
+    if (!cliente) {
+      if (window.SEVI && window.SEVI.conSupabase) {
+        window.SEVI.conSupabase(function () { pintarEventos(p); });
+      }
+      return;
+    }
+
+    const RADIO = 80;
+    const dLat = RADIO / 111000;
+    const dLon = RADIO / (111000 * Math.abs(Math.cos(p.lat * Math.PI / 180)));
+    cliente.from('eventos').select()
+      .gte('lat', p.lat - dLat).lte('lat', p.lat + dLat)
+      .gte('lon', p.lon - dLon).lte('lon', p.lon + dLon)
+      .gte('inicio', new Date().toISOString())
+      .order('inicio').limit(20)
+      .then(function (r) {
+        const filas = (r && r.data) || [];
+        const cerca = filas.filter(function (f) {
+          if (typeof f.lat !== 'number' || typeof f.lon !== 'number') return false;
+          return window.sevitimeLugares.metros(
+            { lat: p.lat, lon: p.lon }, { lat: f.lat, lon: f.lon }) <= RADIO;
+        }).slice(0, 3);
+        if (!cerca.length) return;
+
+        const dia = new Intl.DateTimeFormat('es-ES', { day: 'numeric', month: 'long' });
+        cerca.forEach(function (f) {
+          const cuando = new Date(f.inicio);
+          const li = document.createElement('li');
+          const a = document.createElement('a');
+          a.href = '/eventos/';
+
+          const icono = document.createElement('span');
+          icono.className = 'eventos-sitio-icono';
+          icono.textContent = f.icono || '📅';
+          icono.setAttribute('aria-hidden', 'true');
+          a.appendChild(icono);
+
+          const caja = document.createElement('span');
+          const nombre = document.createElement('span');
+          nombre.className = 'eventos-sitio-nombre';
+          nombre.textContent = f.nombre || 'Evento';
+          const linea = document.createElement('span');
+          linea.className = 'eventos-sitio-cuando';
+          // Sin hora cuando la fuente no la trae: «00:00» en un concierto es
+          // peor que no poner nada. Igual que `eventoSinHora` en la app.
+          const sinHora = cuando.getHours() === 0 && cuando.getMinutes() === 0;
+          linea.textContent = sinHora ? dia.format(cuando)
+            : dia.format(cuando) + ' · '
+              + String(cuando.getHours()).padStart(2, '0') + ':'
+              + String(cuando.getMinutes()).padStart(2, '0');
+          caja.append(nombre, linea);
+          a.appendChild(caja);
+
+          li.appendChild(a);
+          lista.appendChild(li);
+        });
+        seccion.hidden = false;
+      })
+      .catch(function () { /* la ficha no pierde nada: no se pinta */ });
+  }
+
   function pintarHistorial(p) {
     const seccion = document.getElementById('historial-sitio');
     const lista = document.getElementById('historial-lista');
@@ -1205,6 +1316,7 @@
 
     pintarOpiniones();
     pintarExtras(p);
+    pintarEventos(p);
     pintarHistorial(p);
 
     // Valorar y reseñar. Va justo debajo de lo que dice la gente y encima de
