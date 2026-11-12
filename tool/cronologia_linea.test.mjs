@@ -255,3 +255,16 @@ test('un cambio del mapa no se enseña como cita de nadie', () => {
   assert.equal(C.cita(deLaCiudad('lugar_datos', { texto: 'horario' })), null);
   assert.equal(C.cita(deLaCiudad('lugar_renombrado', { texto: 'Otro' })), null);
 });
+
+test('lo que alguien vio al contestar «¿Está abierto?» sale sin autor y en pasado', () => {
+  const C = cargar();
+  const abierto = deLaCiudad('estado_abierto', { sitio: 'Bar Santa Ana', place_key: '37.39_-5.99' });
+  assert.ok(C.esDeLaCiudad(abierto));
+  assert.equal(C.frase(abierto), 'Visto abierto:');
+  assert.equal(C.frase(deLaCiudad('estado_cerrado')), 'Visto cerrado:');
+  // Lleva a la ficha del sitio y no enlaza a ningún perfil.
+  const p = C.linea(abierto);
+  const destinos = enlaces(p);
+  assert.ok(destinos.find((a) => a.textContent === 'Bar Santa Ana'));
+  assert.ok(!destinos.some((a) => String(a.href || '').includes('/perfil/')));
+});

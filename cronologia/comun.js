@@ -54,6 +54,7 @@
   // un vistazo que esto no lo ha puesto una persona.
   const ICONO_CIUDAD = {
     lugar_nuevo: '📍', lugar_desaparecido: '🚫', evento_nuevo: '📅',
+    estado_abierto: '🚪', estado_cerrado: '🔒',
   };
 
   function avatar(item) {
@@ -62,7 +63,9 @@
         ICONO_CIUDAD[item.tipo] || '📍');
       // Gris y no rojo en lo que desaparece: no decimos que haya cerrado, y
       // el rojo se lee como una alarma.
-      d.style.background = item.tipo === 'lugar_desaparecido' ? '#78909C' : '#00897B';
+      d.style.background =
+        item.tipo === 'lugar_desaparecido' || item.tipo === 'estado_cerrado'
+          ? '#78909C' : '#00897B';
       return d;
     }
     const guardado = item.avatar || '';
@@ -122,6 +125,12 @@
     // el registro de lo que le pasa a los SITIOS, y los eventos tienen
     // pantalla propia. Se queda escrito por si se decide al revés.
     evento_nuevo: 'Nuevo evento:',
+    // Lo que alguien contestó a «¿Está abierto?» estando en la puerta, sin
+    // decir quién. En pasado («visto»): la línea dura un día en la lista y
+    // «está abierto» sería mentira a las tres horas. Mismas palabras que la
+    // app (`ItemCronologia.frase`).
+    estado_abierto: 'Visto abierto:',
+    estado_cerrado: 'Visto cerrado:',
   };
 
   // Lo que le pasa a la ciudad y no ha hecho nadie. Mismo criterio que
@@ -135,7 +144,7 @@
   // como noticia de la ciudad. La app lo decía bien desde el primer día.
   const DE_LA_CIUDAD = [
     'lugar_nuevo', 'lugar_desaparecido', 'lugar_renombrado', 'lugar_datos',
-    'evento_nuevo',
+    'evento_nuevo', 'estado_abierto', 'estado_cerrado',
   ];
   function esDeLaCiudad(item) {
     return DE_LA_CIUDAD.indexOf(item.tipo) >= 0;
@@ -322,6 +331,7 @@
     lugar_nuevo: '📍', lugar_desaparecido: '🚫',
     lugar_renombrado: '🏷️', lugar_datos: '✏️',
     evento_nuevo: '📅',
+    estado_abierto: '🚪', estado_cerrado: '🔒',
   };
 
   function icono(item) {
