@@ -2779,6 +2779,8 @@ Use of this source code is governed by a BSD-style license that can be
 found in the LICENSE file.
 --------------------------------------------------------------------------------
 dbus
+geoclue
+gsettings
 gtk
 
 Mozilla Public License Version 2.0
@@ -8247,6 +8249,7 @@ geocoding_platform_interface
 geolocator
 geolocator_android
 geolocator_apple
+geolocator_linux
 geolocator_platform_interface
 geolocator_web
 geolocator_windows
