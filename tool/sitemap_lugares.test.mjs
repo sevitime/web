@@ -104,7 +104,7 @@ test('la página de un sitio lleva sus datos escritos, no los pone el script', (
     slug: 'bar-pepe', clave: '37.50000_-5.90000', nombre: 'Bar <i>Pepe</i>', tipo: 'Bar',
     emoji: '🍺', lat: 37.5, lon: -5.9, direccion: 'Calle Feria, 1', telefono: '954000000',
     web: 'https://pepe.example', horario: 'Mo-Fr 09:00-14:00', horarioPropio: false,
-  }, molde, () => 'Lunes a viernes, de 09:00 a 14:00');
+  }, molde, () => 'De lunes a viernes, de 9:00 a 14:00');
 
   assert.match(html, /<html lang="es" data-k="37\.50000_-5\.90000">/);
   assert.match(html, /<title>Bar &lt;i&gt;Pepe&lt;\/i&gt;: horario, teléfono, web y cómo llegar — SeviTime<\/title>/);

@@ -14,12 +14,12 @@ const { horarioLegible } = ctx.window.sevitimeLugares;
 
 test('días seguidos y un día cerrado', () => {
   assert.equal(horarioLegible('Mo-Fr 09:00-14:00; Sa off'),
-    'Lunes a viernes, de 09:00 a 14:00. Sábado, cerrado');
+    'De lunes a viernes, de 9:00 a 14:00. Sábado, cerrado');
 });
 
 test('horario partido', () => {
   assert.equal(horarioLegible('Mo-Sa 13:00-16:30,20:00-24:00'),
-    'Lunes a sábado, de 13:00 a 16:30 y de 20:00 a 24:00');
+    'De lunes a sábado, de 13:00 a 16:30 y de 20:00 a 24:00');
 });
 
 test('días sueltos, tramos y festivos mezclados', () => {
@@ -28,7 +28,12 @@ test('días sueltos, tramos y festivos mezclados', () => {
 });
 
 test('sin días es todos los días a esa hora', () => {
-  assert.equal(horarioLegible('08:00-23:00'), 'De 08:00 a 23:00');
+  assert.equal(horarioLegible('08:00-23:00'), 'Todos los días, de 8:00 a 23:00');
+});
+
+test('la semana entera se dice de una vez, como en el editor de la app', () => {
+  assert.equal(horarioLegible('Mo-Su 12:00-23:00'), 'Todos los días, de 12:00 a 23:00');
+  assert.equal(horarioLegible('Sa,Su 10:00-00:00'), 'Sábado y domingo, de 10:00 a 0:00');
 });
 
 test('abierto siempre', () => {

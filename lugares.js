@@ -1434,21 +1434,29 @@ const CATEGORIAS_LUGARES = {
     for (let i = 0; i < reglas.length; i++) {
       const m = REGLA.exec(reglas[i]);
       if (!m) return crudo;
-      const dias = m[1]
-        ? unir(m[1].split(',').map(function (tramo) {
-            const extremos = tramo.trim().split('-').map(function (d) {
-              return DIAS_HORARIO[d.trim()];
-            });
-            return extremos.length === 2 ? extremos[0] + ' a ' + extremos[1] : extremos[0];
-          }))
-        : '';
+      // Las mismas palabras que el editor de horarios de la app
+      // (`HorarioEditor.describir`): «De lunes a viernes», «Todos los días» y
+      // las horas sin el cero delante.
+      const grupo = m[1] ? m[1].replace(/\s+/g, '') : '';
+      let dias;
+      if (!grupo || grupo === 'Mo-Su') {
+        dias = 'todos los días';
+      } else if (new RegExp('^' + D + '-' + D + '$').test(grupo)) {
+        const extremos = grupo.split('-');
+        dias = 'de ' + DIAS_HORARIO[extremos[0]] + ' a ' + DIAS_HORARIO[extremos[1]];
+      } else {
+        dias = unir(grupo.split(',').map(function (tramo) {
+          return tramo.split('-').map(function (d) { return DIAS_HORARIO[d]; }).join(' a ');
+        }));
+      }
+      const hora = function (h) { return h.trim().replace(/^0(?=\d:)/, ''); };
       const cuando = m[3]
         ? 'cerrado'
         : unir(m[2].split(',').map(function (tramo) {
             const h = tramo.trim().replace('+', '').split('-');
-            return 'de ' + h[0].trim() + ' a ' + h[1].trim();
+            return 'de ' + hora(h[0]) + ' a ' + hora(h[1]);
           }));
-      const frase = dias ? dias + ', ' + cuando : cuando;
+      const frase = dias + ', ' + cuando;
       frases.push(frase.charAt(0).toUpperCase() + frase.slice(1));
     }
     return frases.join('. ');
