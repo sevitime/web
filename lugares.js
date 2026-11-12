@@ -1332,12 +1332,69 @@ const CATEGORIAS_LUGARES = {
     });
   }
 
+  // --- El horario, en castellano ---------------------------------------------
+  //
+  // OpenStreetMap lo escribe en su propio formato («Mo-Fr 09:00-14:00; Sa
+  // off»), que no entiende nadie que no lo conozca, y era lo que la ficha
+  // enseñaba tal cual. Esto traduce lo corriente: días sueltos y tramos de
+  // días, horas, «off» y «24/7».
+  //
+  // Es prudente a propósito. Ese formato tiene de todo —meses, semanas del
+  // año, «sunrise», comentarios entre comillas— y un horario mal traducido es
+  // peor que uno feo: en cuanto queda una sola palabra que no se reconoce, se
+  // devuelve el texto original entero, sin tocar.
+  const DIAS_HORARIO = {
+    Mo: 'lunes', Tu: 'martes', We: 'miércoles', Th: 'jueves',
+    Fr: 'viernes', Sa: 'sábado', Su: 'domingo', PH: 'festivos',
+  };
+
+  function horarioLegible(horario) {
+    const crudo = String(horario || '').trim();
+    if (!crudo) return '';
+    if (crudo === '24/7') return 'Abierto las 24 horas';
+
+    const D = '(?:Mo|Tu|We|Th|Fr|Sa|Su|PH)';
+    const HORAS = '\\d{1,2}:\\d{2}\\s*-\\s*\\d{1,2}:\\d{2}\\+?';
+    const DIAS = '(' + D + '(?:\\s*-\\s*' + D + ')?(?:\\s*,\\s*' + D + '(?:\\s*-\\s*' + D + ')?)*)';
+    const REGLA = new RegExp('^(?:' + DIAS + '\\s*)?(?:(' + HORAS + '(?:\\s*,\\s*' + HORAS + ')*)|(off|closed))$');
+
+    function unir(lista) {
+      return lista.length < 2 ? lista.join('')
+        : lista.slice(0, -1).join(', ') + ' y ' + lista[lista.length - 1];
+    }
+
+    const reglas = crudo.split(';').map(function (r) { return r.trim(); })
+      .filter(Boolean);
+    const frases = [];
+    for (let i = 0; i < reglas.length; i++) {
+      const m = REGLA.exec(reglas[i]);
+      if (!m) return crudo;
+      const dias = m[1]
+        ? unir(m[1].split(',').map(function (tramo) {
+            const extremos = tramo.trim().split('-').map(function (d) {
+              return DIAS_HORARIO[d.trim()];
+            });
+            return extremos.length === 2 ? extremos[0] + ' a ' + extremos[1] : extremos[0];
+          }))
+        : '';
+      const cuando = m[3]
+        ? 'cerrado'
+        : unir(m[2].split(',').map(function (tramo) {
+            const h = tramo.trim().replace('+', '').split('-');
+            return 'de ' + h[0].trim() + ' a ' + h[1].trim();
+          }));
+      const frase = dias ? dias + ', ' + cuando : cuando;
+      frases.push(frase.charAt(0).toUpperCase() + frase.slice(1));
+    }
+    return frases.join('. ');
+  }
+
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     FILTROS_EXPLORAR, TIPOS_DE_TODO,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones, cambiosDeSitio, buscarPorClave,
-    cargarCurado, completarConDatosPropios,
+    cargarCurado, completarConDatosPropios, horarioLegible,
   };
 })();

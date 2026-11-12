@@ -366,32 +366,52 @@ el punto de encuentro en un móvil de verdad. La app acepta las dos desde la
 punto débil es que la app busca por nombre: en el centro hay 45 «Caixabank».
 Arreglarlo pide que la app acepte también la clave de coordenadas.
 
-**Lo que esta página NO hace, y es a propósito por ahora:**
-- **No tiene vista previa propia al compartirla.** Los rastreadores de WhatsApp
-  y Twitter no ejecutan JavaScript, así que leen las `og:` del fichero, que son
-  genéricas. Para que la previa diga el nombre del bar hace falta una página
-  **por sitio**, generada.
-- **No hay una página generada por sitio.** Serían ~40 MB en el repo y habría
-  que regenerarlas con la foto diaria, así que no se hace «por si acaso».
+**Una página por sitio: `/sitio/<nombre>/` (desde el 12-nov-2026).**
+`/lugar/?k=…` es una sola página que el script rellena, y Google no la quiso:
+un mes después de mandarle 526 direcciones así en el sitemap, `site:sevitime.com`
+daba cinco páginas (portada, eventos, mapa, rutas y cuadro de honor) y ninguna
+ficha. Ahora los sitios con datos tienen además un fichero propio, generado:
 
-**Lo que sí hace desde el 11-oct-2026, para que Google encuentre los sitios:**
-la ficha pone ella misma su título, su descripción, su `canonical`
-(`/lugar/?k=…`) y unos datos estructurados `Place` con lo que está a la vista
-(`paraBuscadores`), y las que no existen se marcan `noindex`. El HTML no lleva
-`canonical` fijo a propósito: lo pone el script. Como desde la web no había
-más camino a las fichas que el mapa (y Google no toca mapas), hay dos listas
-generadas con `node tool/sitemap_lugares.mjs` a partir de `lugares.js`:
-`sitemap-lugares.xml` y **`/sitios/`**, una página con un enlace normal a cada
-ficha, ordenada por tipo y enlazada desde el pie de la portada. `sitios/` no
-se edita a mano; un test comprueba que las dos listas coinciden. **No van
-todos**: solo los que tienen al menos dos de horario, teléfono y web (534 de
-más de 9.000 ese día); una ficha con un nombre y un mapa es contenido pobre.
-Tras regenerar, `node tool/versionar.mjs`. En el mapa, tocar un sitio sin
-sesión enseña una tarjeta con «Ver ficha» y «Corregir» (antes abría el panel
-de entrar con Google, que para quien solo mira era un muro). Es la
-versión ligera: Google indexa las páginas que dependen de JavaScript más
-despacio y con menos garantías que una generada, y la vista previa al
-compartir sigue siendo la genérica.
+- **Qué es.** `lugar/index.html` es el **molde**; `node tool/sitemap_lugares.mjs`
+  lo copia a `sitio/<nombre>/index.html` con el título, la descripción, el
+  `canonical`, los datos estructurados, el nombre, el tipo, la dirección, el
+  teléfono, la web y el horario ya escritos, y la clave en `<html data-k>`.
+  Encima corre el script de siempre, `lugar/ficha.js`, que pone el mapa, las
+  reseñas y los botones. Por eso el estilo y el script de la ficha viven en
+  `lugar/ficha.css` y `lugar/ficha.js` y no dentro del HTML: cada página
+  generada pesa 11 KB y las 544 juntas, 6 MB.
+- **Cuáles.** Las mismas que antes iban al sitemap: al menos dos de horario,
+  teléfono y web. Una ficha con un nombre y un mapa es contenido pobre.
+- **El mismo comando escribe cuatro cosas** que tienen que coincidir, y un
+  test lo comprueba: `sitio/<nombre>/`, `sitio/indice.json` (clave → nombre),
+  `sitemap-lugares.xml` y el listado `/sitios/`. Borra las páginas de los
+  sitios que ya no entran. Después, `node tool/versionar.mjs`.
+- **Cuándo regenerar.** Siempre que se toque `lugar/index.html` (el generador
+  falla si no encuentra una de las líneas que sustituye, y un test falla si
+  las páginas publicadas no salen del molde de hoy), y de vez en cuando para
+  recoger los cambios de la foto de lugares. No hay cron: son ficheros.
+- **El nombre de la página sale del nombre del sitio.** Si dos se llaman
+  igual, a los dos se les añade la calle o las coordenadas. Si un bar cambia
+  de nombre, su página cambia de dirección y la vieja desaparece.
+- **`/lugar/?k=…` sigue igual** para todos los sitios: es adonde llevan el
+  mapa, Explorar y los enlaces de la app. Si el sitio tiene página propia, su
+  `canonical` apunta a ella (lo mira en `sitio/indice.json`).
+- **Las visitas** a `/sitio/…` se cuentan como `/lugar/` (`visitas.js`).
+- **De paso:** compartir una de estas páginas por WhatsApp enseña el nombre y
+  la dirección del sitio, que los rastreadores leen del HTML.
+- **Para saber si ha funcionado:** buscar `site:sevitime.com/sitio` en Google.
+  El 12-nov-2026, cero. Google tarda semanas.
+
+**El horario, en castellano.** `horarioLegible` (en `lugares.js`) traduce el
+formato de OpenStreetMap («Mo-Fr 09:00-14:00; Sa off» → «Lunes a viernes, de
+09:00 a 14:00. Sábado, cerrado»). Es prudente a propósito: si queda una sola
+palabra que no reconoce (meses, «sunrise», comentarios), devuelve el texto
+original entero. El 12-nov-2026 traducía 314 de 338. La app todavía enseña el
+formato de OSM tal cual.
+
+En el mapa, tocar un sitio sin sesión enseña una tarjeta con «Ver ficha» y
+«Corregir» (antes abría el panel de entrar con Google, que para quien solo
+mira era un muro).
 
 **Nota y reseñas (desde el 11-oct-2026):** la ficha enseña la media de
 `place_ratings` y las reseñas aprobadas de `fn_resenas_publicas`, de cinco en

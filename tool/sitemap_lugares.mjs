@@ -1,40 +1,49 @@
-// Genera las dos cosas con las que Google encuentra las fichas de sitio:
+// Genera lo que hace falta para que Google encuentre las fichas de sitio:
 //
-//   sitemap-lugares.xml   la lista de direcciones `/lugar/?k=…`
-//   sitios/index.html     una página de verdad, con un enlace a cada ficha
+//   sitio/<nombre>/index.html   una página de verdad por sitio
+//   sitio/indice.json           qué página tiene cada clave
+//   sitemap-lugares.xml         la lista de esas direcciones
+//   sitios/index.html           un listado con un enlace a cada una
 //
-// `/lugar/?k=…` es una sola página que pinta cualquier sitio. Google ejecuta
-// su script y puede indexarlas una a una, pero solo si sabe que existen y,
-// mejor aún, si llega a ellas por un enlace normal. Hasta ahora no había
-// ninguno: a una ficha se llegaba desde un enlace compartido en la app o
-// tocando un sitio en el mapa, y Google no toca mapas. El listado es ese
-// camino, y de paso es una página útil: los sitios de los que más se sabe,
-// ordenados por tipo.
+// POR QUÉ HAY UNA PÁGINA POR SITIO. Hasta el 12-nov-2026 todas las fichas
+// eran una sola página, `/lugar/?k=…`, que un script rellenaba al cargar. Se
+// le mandaron a Google 526 direcciones así el 11-oct-2026 y un mes después
+// no había indexado NINGUNA (`site:sevitime.com` daba cinco páginas: portada,
+// eventos, mapa, rutas y cuadro de honor). Para él eran 526 direcciones con
+// el mismo HTML vacío. Ahora cada sitio tiene su fichero, con su nombre, su
+// dirección, su horario y sus datos estructurados ya escritos dentro; el
+// script de siempre (`lugar/ficha.js`) sigue corriendo encima y pone el
+// mapa, las reseñas y los botones. De paso, compartir una ficha por WhatsApp
+// enseña el nombre del sitio y no un título genérico.
 //
-// Se llama «Sevilla y alrededores» y no «y su provincia» porque la foto
-// diaria es un radio alrededor de Sevilla y se sale un poco: trae la Gruta de
-// las Maravillas, que está en Aracena (Huelva).
+// `/lugar/?k=…` sigue funcionando igual para todos los sitios: es adonde
+// llevan el mapa, Explorar y los enlaces que comparte la app.
 //
-// NO van todos. De los más de 9.000 sitios con nombre, de casi todos solo se
+// El molde es `lugar/index.html`: las páginas generadas son ese mismo
+// fichero con el sitio puesto. Si se cambia el molde, hay que regenerar.
+//
+// Se llama «Sevilla y alrededores» y no «y su provincia» por costumbre: la
+// foto diaria fue un radio alrededor de Sevilla antes de recortarse a la
+// provincia.
+//
+// NO van todos. De los más de 8.000 sitios con nombre, de casi todos solo se
 // sabe eso, el nombre: una ficha con un nombre y un mapa es contenido pobre,
-// y mandarle 9.000 a Google desde un dominio con siete páginas es pedir que
-// las ignore todas. Van los que tienen algo que enseñar: al menos dos de
-// horario, teléfono y web.
+// y mandarle 8.000 a Google desde un dominio con cinco páginas indexadas es
+// pedir que las ignore todas. Van los que tienen algo que enseñar: al menos
+// dos de horario, teléfono y web.
 //
 // Los sitios salen de `lugares.js`, el mismo fichero que usa la web (la foto
 // diaria, más las altas, menos los ocultos), ejecutado aquí tal cual: así
 // este listado no puede enseñar un sitio que el mapa esconde.
 //
-// Las claves son coordenadas, así que no caducan mientras el sitio no se
-// mueva. Si uno cierra, su ficha se marca `noindex` sola; aun así conviene
-// regenerar esto de vez en cuando:
+// La dirección de cada página sale del nombre del sitio, así que si un bar
+// cambia de nombre su página cambia de dirección y la vieja se borra. No hay
+// cron detrás: son ficheros estáticos. Regenerar de vez en cuando, y siempre
+// que se toque `lugar/index.html`:
 //
 //   node tool/sitemap_lugares.mjs && node tool/versionar.mjs
-//
-// No hay cron detrás, igual que con las categorías: son ficheros estáticos y
-// cambian poco.
 
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
@@ -58,17 +67,61 @@ export function elegir(lugares, claveDe) {
     const clave = claveDe(p.lat, p.lon);
     if (vistas.has(clave)) continue;
     vistas.add(clave);
-    elegidos.push({ clave, nombre, tipo: (p.label || 'Otros sitios').trim(), emoji: p.emoji || '' });
+    elegidos.push({
+      clave, nombre, tipo: (p.label || 'Otros sitios').trim(), emoji: p.emoji || '',
+      lat: p.lat, lon: p.lon,
+      direccion: (p.direccion || '').trim(), telefono: (p.telefono || '').trim(),
+      web: (p.web || '').trim(), horario: (p.horario || '').trim(),
+      horarioPropio: !!p.horarioPropio,
+    });
   }
   const orden = new Intl.Collator('es');
-  return elegidos.sort((a, b) =>
+  elegidos.sort((a, b) =>
     orden.compare(a.tipo, b.tipo) || orden.compare(a.nombre, b.nombre) ||
     (a.clave < b.clave ? -1 : 1));
+  return ponerDirecciones(elegidos);
+}
+
+/// «Bar El Rinconcillo» → `bar-el-rinconcillo`.
+export function slugDe(texto) {
+  return String(texto).normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase().replace(/ñ/g, 'n').replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '').slice(0, 60).replace(/-+$/g, '');
+}
+
+/// A cada sitio, el nombre de su página (`slug`), sin repetir ninguno.
+///
+/// Con el nombre basta casi siempre. Cuando dos sitios se llaman igual
+/// —hay farmacias y cajeros con el mismo nombre en toda la provincia— a
+/// TODOS los que chocan se les añade la calle y, si aun así coinciden o no
+/// la tienen, las coordenadas. A todos y no solo al segundo: si no, cuál se
+/// queda con el nombre limpio dependería del orden, y bastaría que apareciera
+/// un tercero para que las direcciones de los otros dos cambiaran.
+export function ponerDirecciones(sitios) {
+  const cuenta = (lista) => {
+    const veces = new Map();
+    for (const x of lista) veces.set(x, (veces.get(x) || 0) + 1);
+    return veces;
+  };
+  const base = sitios.map((s) => slugDe(s.nombre) || 'sitio');
+  const vecesBase = cuenta(base);
+  const conCalle = sitios.map((s, i) => {
+    if (vecesBase.get(base[i]) === 1) return base[i];
+    const calle = slugDe(s.direccion || '');
+    return calle ? base[i] + '-' + calle : base[i];
+  });
+  const vecesCalle = cuenta(conCalle);
+  return sitios.map((s, i) => ({
+    ...s,
+    slug: vecesCalle.get(conCalle[i]) === 1
+      ? conCalle[i]
+      : base[i] + '-' + s.clave.replace(/[^0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+  }));
 }
 
 export function xml(elegidos) {
   const urls = elegidos.map((s) =>
-    `  <url>\n    <loc>https://sevitime.com/lugar/?k=${s.clave}</loc>\n  </url>\n`).join('');
+    `  <url>\n    <loc>https://sevitime.com/sitio/${s.slug}/</loc>\n  </url>\n`).join('');
   return '<?xml version="1.0" encoding="UTF-8"?>\n' +
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' +
     urls + '</urlset>\n';
@@ -97,7 +150,7 @@ export function pagina(elegidos, portada) {
   }
   const secciones = [...porTipo].map(([tipo, sitios]) =>
     `  <section>\n    <h2>${texto(sitios[0].emoji ? sitios[0].emoji + ' ' : '')}${texto(tipo)} <span class="cuantos">${sitios.length}</span></h2>\n    <ul>\n` +
-    sitios.map((s) => `      <li><a href="/lugar/?k=${s.clave}">${texto(s.nombre)}</a></li>\n`).join('') +
+    sitios.map((s) => `      <li><a href="/sitio/${s.slug}/">${texto(s.nombre)}</a></li>\n`).join('') +
     '    </ul>\n  </section>\n').join('');
 
   return `<!DOCTYPE html>
@@ -176,6 +229,119 @@ ${trozo(portada, '<footer>', '</footer>')}
 `;
 }
 
+/// «horario, teléfono y web», con lo que el sitio tenga.
+function loQueSeSabe(s) {
+  const sabe = [s.horario ? 'horario' : '', s.telefono ? 'teléfono' : '', s.web ? 'web' : '']
+    .filter(Boolean);
+  return sabe.join(', ').replace(/, ([^,]*)$/, ' y $1');
+}
+
+/// Lo mismo que escribe `paraBuscadores` en `lugar/ficha.js` para las fichas
+/// sin página propia, con la calle delante cuando se sabe.
+export function descripcionDe(s) {
+  const sabe = loQueSeSabe(s);
+  return s.nombre + ' (' + s.tipo.toLowerCase() + ')' +
+    (s.direccion ? ', en ' + s.direccion : '') +
+    ': ' + (sabe ? 'su ' + sabe + ', ' : '') +
+    'dónde está y cómo llegar. En SeviTime, el mapa de Sevilla y su provincia.';
+}
+
+/// Solo lo que se ve en la página, como en `paraBuscadores`: sin nota ni
+/// «abierto ahora». El horario no va porque OpenStreetMap lo escribe en un
+/// formato que schema.org no entiende.
+export function datosEstructurados(s) {
+  const datos = {
+    '@context': 'https://schema.org',
+    '@type': 'Place',
+    name: s.nombre,
+    url: 'https://sevitime.com/sitio/' + s.slug + '/',
+    geo: { '@type': 'GeoCoordinates', latitude: s.lat, longitude: s.lon },
+  };
+  if (s.direccion) {
+    datos.address = {
+      '@type': 'PostalAddress', streetAddress: s.direccion,
+      addressRegion: 'Sevilla', addressCountry: 'ES',
+    };
+  }
+  if (s.telefono) datos.telephone = s.telefono;
+  if (/^https?:\/\//.test(s.web || '')) datos.sameAs = s.web;
+  return datos;
+}
+
+function cambiar(html, de, a) {
+  if (!html.includes(de)) {
+    throw new Error(`El molde lugar/index.html ya no tiene «${de.slice(0, 60)}»: revisa fichaDe.`);
+  }
+  return html.replace(de, () => a);
+}
+
+/// La página de un sitio: el molde (`lugar/index.html`) con el sitio puesto.
+export function fichaDe(s, molde, horarioLegible = (h) => h) {
+  const url = 'https://sevitime.com/sitio/' + s.slug + '/';
+  // «El Rinconcillo: horario, teléfono, web y cómo llegar — SeviTime».
+  const partes = [s.horario ? 'horario' : '', s.telefono ? 'teléfono' : '',
+    s.web ? 'web' : '', 'cómo llegar'].filter(Boolean);
+  const titulo = s.nombre + ': ' +
+    partes.join(', ').replace(/, ([^,]*)$/, ' y $1') + ' — SeviTime';
+  const descripcion = descripcionDe(s);
+  const filas = [
+    s.direccion ? ['Dirección', texto(s.direccion)] : null,
+    s.telefono ? ['Teléfono', `<a href="tel:${texto(s.telefono)}">${texto(s.telefono)}</a>`] : null,
+    s.web && /^https?:\/\//.test(s.web)
+      ? ['Web', `<a href="${texto(s.web)}" target="_blank" rel="noopener">${texto(s.web)}</a>`]
+      : null,
+    s.horario ? ['Horario', texto(horarioLegible(s.horario)) +
+      (s.horarioPropio ? ' (aportado a SeviTime)' : ' (según OpenStreetMap)')] : null,
+  ].filter(Boolean).map(([etiqueta, valor]) =>
+    `<li><span class="etiqueta">${etiqueta}</span><span>${valor}</span></li>`).join('');
+  // `<` escapado: un nombre con «</script>» dentro no puede cerrar la etiqueta.
+  const ld = JSON.stringify(datosEstructurados(s)).replace(/</g, '\\u003c');
+
+  let html = molde;
+  html = cambiar(html, '<!DOCTYPE html>',
+    '<!DOCTYPE html>\n<!-- GENERADO por tool/sitemap_lugares.mjs a partir de lugar/index.html. No lo edites a mano: se pisa. -->');
+  html = cambiar(html, '<html lang="es">', `<html lang="es" data-k="${texto(s.clave)}">`);
+  html = cambiar(html, '<title>Un sitio de Sevilla — SeviTime</title>', `<title>${texto(titulo)}</title>`);
+  html = cambiar(html,
+    '<meta name="description" content="Un sitio de Sevilla en SeviTime: dónde está, cómo llegar y qué se sabe de él.">',
+    `<meta name="description" content="${texto(descripcion)}">\n<link rel="canonical" href="${url}">\n<script type="application/ld+json">${ld}</script>`);
+  html = cambiar(html, '<meta property="og:url" content="https://sevitime.com/lugar/">',
+    `<meta property="og:url" content="${url}">`);
+  html = cambiar(html, '<meta property="og:title" content="Un sitio de Sevilla — SeviTime">',
+    `<meta property="og:title" content="${texto(s.nombre)} — SeviTime">`);
+  html = cambiar(html, '<meta property="og:description" content="Míralo en el mapa y ábrelo en SeviTime.">',
+    `<meta property="og:description" content="${texto(descripcion)}">`);
+  html = cambiar(html, '<div class="sitio-emoji" id="emoji" aria-hidden="true">📍</div>',
+    `<div class="sitio-emoji" id="emoji" aria-hidden="true">${texto(s.emoji || '📍')}</div>`);
+  html = cambiar(html, '<h1 id="nombre" class="cargando">Buscando el sitio…</h1>',
+    `<h1 id="nombre">${texto(s.nombre)}</h1>`);
+  html = cambiar(html, '<p class="sitio-tipo" id="tipo"></p>',
+    `<p class="sitio-tipo" id="tipo">${texto(s.tipo)}</p>`);
+  html = cambiar(html, '<ul class="sitio-datos" id="datos"></ul>',
+    `<ul class="sitio-datos" id="datos">${filas}</ul>`);
+  return html;
+}
+
+/// Escribe una página por sitio y borra las de los que ya no están.
+function escribirFichas(elegidos, horarioLegible) {
+  const carpeta = join(RAIZ, 'sitio');
+  const molde = readFileSync(join(RAIZ, 'lugar', 'index.html'), 'utf8');
+  mkdirSync(carpeta, { recursive: true });
+  const vivas = new Set(elegidos.map((s) => s.slug));
+  for (const nombre of readdirSync(carpeta, { withFileTypes: true })) {
+    if (nombre.isDirectory() && !vivas.has(nombre.name)) {
+      rmSync(join(carpeta, nombre.name), { recursive: true });
+    }
+  }
+  for (const s of elegidos) {
+    mkdirSync(join(carpeta, s.slug), { recursive: true });
+    writeFileSync(join(carpeta, s.slug, 'index.html'), fichaDe(s, molde, horarioLegible));
+  }
+  const indice = {};
+  for (const s of elegidos) indice[s.clave] = s.slug;
+  writeFileSync(join(carpeta, 'indice.json'), JSON.stringify(indice) + '\n');
+}
+
 /// `lugares.js` tal cual, con lo mínimo que espera encontrar en un navegador.
 function cargarLugares() {
   const guardado = new Map();
@@ -199,9 +365,10 @@ if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const elegidos = elegir(await api.cargar(), api.claveDe);
   // Con muy pocos, algo ha ido mal con la foto: no se pisa lo bueno.
   if (elegidos.length < 100) throw new Error(`Solo ${elegidos.length} sitios: no se escribe nada.`);
+  escribirFichas(elegidos, api.horarioLegible);
   writeFileSync(join(RAIZ, 'sitemap-lugares.xml'), xml(elegidos));
   mkdirSync(join(RAIZ, 'sitios'), { recursive: true });
   writeFileSync(join(RAIZ, 'sitios', 'index.html'),
     pagina(elegidos, readFileSync(join(RAIZ, 'index.html'), 'utf8')));
-  console.log(`${elegidos.length} sitios: sitemap-lugares.xml y sitios/index.html.\nFalta: node tool/versionar.mjs`);
+  console.log(`${elegidos.length} sitios: sitio/<nombre>/, sitemap-lugares.xml y sitios/index.html.\nFalta: node tool/versionar.mjs`);
 }

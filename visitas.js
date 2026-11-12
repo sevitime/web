@@ -76,6 +76,9 @@
   // previsto cae en «otra» y la tabla no puede crecer sin control.
   function ruta() {
     var p = window.location.pathname.replace(/index\.html$/, '');
+    // Las fichas generadas (`/sitio/<nombre>/`) son la ficha de un sitio: se
+    // cuentan con las demás, sin apuntar cuál.
+    if (p.indexOf('/sitio/') === 0) return '/lugar/';
     if (p === '/404.html') return '/404';
     return p.replace(/\.html$/, '');
   }
