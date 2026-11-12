@@ -9,9 +9,11 @@
 //   * La ubicación la da el **navegador** (`navigator.geolocation`), solo
 //     cuando se pulsa. Nunca se envía a ningún sitio: se usa aquí para medir
 //     distancias y ordenar.
-//   * Sin ubicación NO se dice «cerca de ti»: se dice que la lista sale del
-//     centro de Sevilla y se ordena por valoración, igual que hace la app en
-//     escritorio (ver `CercaDeTiHeader`). Llamarlo «cerca» sería mentir.
+//   * Sin ubicación NO se dice «cerca de ti»: se dice «Lo mejor de Sevilla» y
+//     se ordena como la app (`_computePlacesFiltrados` en `home_provider.dart`),
+//     con los monumentos y lo conocido delante y **sin distancias en la
+//     tarjeta**: medirlas desde el centro enseñaba «98 m» de un sitio a
+//     kilómetros de quien miraba. Llamarlo «cerca» sería mentir.
 //   * Los sitios salen de la **foto diaria** (`lugares.js`, la misma que lee
 //     la app) con las altas manuales, los ocultos y las fusiones ya
 //     aplicadas. No se habla con Overpass.
@@ -491,6 +493,14 @@
       fuera = fuera.filter((p) => L.metros(estado.origen, p) <= estado.radio);
     }
 
+    // Sin ubicación y sin haber pedido otro orden: lo mejor de Sevilla, igual
+    // que en la app. Ver `ordenarSinUbicacion` en `lugares.js`.
+    if (!estado.ubicacionReal && !q && estado.orden === 'valoracion') {
+      return L.ordenarSinUbicacion(fuera, paraOrdenar,
+        window.sevitimeSellos, window.sevitimeTiposVisitables)
+        .map((p) => ({ p, m: L.metros(estado.origen, p) }));
+    }
+
     const conDistancia = fuera.map((p) => ({ p, m: L.metros(estado.origen, p) }));
     if (estado.orden === 'nombre') {
       conDistancia.sort((a, b) => a.p.nombre.localeCompare(b.p.nombre, 'es'));
@@ -530,8 +540,15 @@
 
     const meta = el('span', 'sitio-meta');
     meta.appendChild(el('span', null, p.label || 'Sitio'));
-    meta.appendChild(el('span', 'punto', '·'));
-    meta.appendChild(el('span', null, L.formatDist(entrada.m)));
+    // La distancia, solo si se sabe desde dónde. Sin ubicación se medía al
+    // centro de Sevilla y la tarjeta decía «98 m» de un sitio a kilómetros
+    // de quien miraba; la app tampoco la enseña. La excepción es haber pedido
+    // «Más cercano» a propósito: entonces sí, y el resumen dice «del centro
+    // de Sevilla», que es desde donde se mide.
+    if (estado.ubicacionReal || estado.orden === 'distancia') {
+      meta.appendChild(el('span', 'punto', '·'));
+      meta.appendChild(el('span', null, L.formatDist(entrada.m)));
+    }
     txt.appendChild(meta);
 
     if (p.direccion) txt.appendChild(el('span', 'sitio-dir', p.direccion));
@@ -562,18 +579,27 @@
     const hasta = estado.radio < 1000
       ? estado.radio + ' m'
       : (estado.radio / 1000) + ' km';
-    return estado.ubicacionReal
-      ? cuantos + ' a menos de ' + hasta + ' de ti'
+    if (estado.ubicacionReal) return cuantos + ' a menos de ' + hasta + ' de ti';
+    return estado.orden === 'valoracion'
+      ? cuantos + ' a menos de ' + hasta + ' del centro de Sevilla, monumentos primero'
       : cuantos + ' a menos de ' + hasta + ' del centro de Sevilla';
+  }
+
+  // El título dice desde dónde se mide. «Lo mejor de Sevilla» solo vale para
+  // el orden que no mide nada; si se ha pedido «Más cercano» estando en el
+  // centro, se dice.
+  function tituloDeLaLista() {
+    if (estado.ubicacionReal) return 'Cerca de ti';
+    if (estado.orden === 'valoracion') return 'Lo mejor de Sevilla';
+    if (estado.orden === 'nombre') return 'Sitios de Sevilla';
+    return 'Desde el centro de Sevilla';
   }
 
   function pintar() {
     if (!estado.sitios) return;
     const todas = lista_filtrada();
 
-    $('titulo-lista').textContent = estado.ubicacionReal
-      ? 'Cerca de ti'
-      : 'En el centro de Sevilla';
+    $('titulo-lista').textContent = tituloDeLaLista();
     resumen.textContent = textoDelResumen(todas.length);
 
     lista.textContent = '';

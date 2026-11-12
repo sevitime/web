@@ -198,9 +198,13 @@ Es la gemela de `HomeScreen` en la app, con el mismo criterio:
 - **La ubicación la da el navegador y solo al pulsar** «Ver lo que tengo cerca».
   No se envía a ningún servidor. Que ya se dio el permiso se recuerda en
   `localStorage` (`sevi-ubicacion-ok`) para no volver a preguntar.
-- **Sin ubicación no se dice «cerca de ti»**: se dice «En el centro de Sevilla»
-  y se ordena por valoración, igual que hace la app en escritorio
-  (`CercaDeTiHeader`). Llamarlo «cerca» sería mentir.
+- **Sin ubicación no se dice «cerca de ti»**: se dice «Lo mejor de Sevilla» y
+  se ordena como la app (`_computePlacesFiltrados` en `home_provider.dart`),
+  con los sitios del Pasaporte y los monumentos delante y **sin distancias en
+  la tarjeta**: medirlas desde el centro enseñaba «98 m» de un sitio a
+  kilómetros de quien miraba. Llamarlo «cerca» sería mentir. La excepción es
+  pedir «Más cercano» a propósito: entonces se ordena y se mide desde el
+  centro, y el título y el resumen lo dicen.
 - **Más allá de 60 km se avisa y se usa el centro**: a 390 km de Sevilla la
   posición es correcta y aun así no sirve de nada.
 - **Los chips son `FILTROS_EXPLORAR`, no `FILTROS`.** `FILTROS` es la lista de
@@ -685,6 +689,13 @@ Lo que se ve en la web tiene que coincidir con lo de la app. Cómo se consigue:
 - **Categorías/colores/emojis:** una sola fuente en la app
   (`lib/models/place_categories_data.dart`), copiada con
   `tool/actualizar_categorias.mjs`.
+- **Qué sale primero sin ubicación:** `ordenarSinUbicacion` en `lugares.js` es
+  el espejo de `_computePlacesFiltrados` en `home_provider.dart` —Pasaporte,
+  luego clase de sitio, luego lo que tiene artículo, luego la nota—. Va con
+  test propio (`tool/orden_sin_ubicacion.test.mjs`), con los mismos casos que
+  `test/providers/orden_sin_ubicacion_test.dart` en la app. Lo único que no se
+  puede igualar es su nivel 2 (ficha curada), porque la web solo pide
+  `curated_places` al abrir un sitio y no para la lista.
 - **Aportaciones:** la web escribe en las mismas tablas (`sugerencias`,
   `reportes_lugares`) que la app; se moderan en el panel de la app.
 - **Tiles del mapa:** el mismo `.pmtiles` propio.

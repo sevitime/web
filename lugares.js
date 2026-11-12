@@ -594,6 +594,9 @@ const CATEGORIAS_LUGARES = {
       // también se puede buscar. El pueblo NO entra: en la app sale de otro
       // snapshot (los núcleos de población) y aquí no se descarga.
       direccion: direccionDe(t),
+      // Si OpenStreetMap lo enlaza con Wikipedia o Wikidata. No se enseña:
+      // sirve para saber qué sitios son conocidos (`ordenarSinUbicacion`).
+      conArticulo: !!(t.wikipedia || t.wikidata),
       osm: (e.type && e.id) ? 'https://www.openstreetmap.org/' + e.type + '/' + e.id : '',
       osmType: e.type || null,
       osmId: e.id != null ? e.id : null,
@@ -1332,6 +1335,68 @@ const CATEGORIAS_LUGARES = {
     });
   }
 
+  // --- Qué va primero cuando no se sabe dónde está quien mira ----------------
+  //
+  // Sin ubicación no hay «lo más cercano». La web ordenaba entonces por nota
+  // y, como casi nada tiene votos, desempataba por distancia al centro de
+  // Sevilla: salían primero los bares de la calle Sierpes con sus metros a un
+  // punto donde no está nadie. La app dejó de hacerlo hace tiempo (allí puso
+  // el Convento de San Agustín el primero durante meses) y esto es su mismo
+  // orden, `_computePlacesFiltrados` en `home_provider.dart`:
+  //
+  //   1. los sitios del Pasaporte (la Giralda, el Alcázar…), sean lo que sean;
+  //   2. por clase: lo que se va a ver antes que los bares, los servicios al
+  //      final;
+  //   3. dentro de cada clase, lo que tiene artículo en Wikipedia antes;
+  //   4. la nota, y el nombre para que el orden no baile entre recargas.
+  //
+  // Estar dentro del radio de un sello no basta para ser «del Pasaporte»: en
+  // el de la Plaza de España caben sus 48 bancos de azulejos. El monumento
+  // es el que además tiene artículo.
+  //
+  // La app tiene un nivel más entre «con artículo» y «sin nada»: la ficha
+  // curada (descripción o foto editorial). Aquí no se puede: `curated_places`
+  // se pide al abrir un sitio, nunca para la lista, así que un sitio curado
+  // sale en el puesto que le toque por lo demás.
+  function grupoSinUbicacion(tipo) {
+    const t = CATEGORIAS_LUGARES.tipos[tipo];
+    switch (t ? t.categoria : '') {
+      case 'historia': case 'cultura': case 'atracciones': return 0;
+      case 'iglesias': case 'parques': return 1;
+      case 'hosteleria': return 2;
+      case 'servicios': case 'aseos': return 4;
+      default: return 3;
+    }
+  }
+
+  function famaDe(p, sellos, visitables) {
+    if (!p.conArticulo) return 0;
+    if (visitables.indexOf(p.tipo) !== -1) {
+      for (const s of sellos) {
+        if (s.lat == null || s.radio == null) continue;
+        if (metros(p, s) <= s.radio) return 3;
+      }
+    }
+    return 1;
+  }
+
+  /// [sitios] en el orden de «Lo mejor de Sevilla». [nota] dice la nota con
+  /// la que ordenar un sitio; [sellos] y [visitables] son el catálogo del
+  /// Pasaporte (`pasaporte/sellos.js`). No toca la lista que recibe.
+  function ordenarSinUbicacion(sitios, nota, sellos, visitables) {
+    const datos = new Map();
+    for (const p of sitios) {
+      const fama = famaDe(p, sellos || [], visitables || []);
+      datos.set(p, { fama, grupo: fama === 3 ? -1 : grupoSinUbicacion(p.tipo), nota: nota(p) });
+    }
+    return sitios.slice().sort((a, b) => {
+      const x = datos.get(a);
+      const y = datos.get(b);
+      return x.grupo - y.grupo || y.fama - x.fama || y.nota - x.nota ||
+        (a.nombre < b.nombre ? -1 : a.nombre > b.nombre ? 1 : 0);
+    });
+  }
+
   // --- El horario, en castellano ---------------------------------------------
   //
   // OpenStreetMap lo escribe en su propio formato («Mo-Fr 09:00-14:00; Sa
@@ -1395,6 +1460,6 @@ const CATEGORIAS_LUGARES = {
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones, cambiosDeSitio, buscarPorClave,
-    cargarCurado, completarConDatosPropios, horarioLegible,
+    cargarCurado, completarConDatosPropios, horarioLegible, ordenarSinUbicacion,
   };
 })();
