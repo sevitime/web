@@ -111,7 +111,7 @@ test('la página de un sitio lleva sus datos escritos, no los pone el script', (
   assert.match(html, /<link rel="canonical" href="https:\/\/sevitime\.com\/sitio\/bar-pepe\/">/);
   assert.match(html, /<h1 id="nombre">Bar &lt;i&gt;Pepe&lt;\/i&gt;<\/h1>/);
   assert.match(html, /Calle Feria, 1/);
-  assert.match(html, /Lunes a viernes, de 09:00 a 14:00 \(según OpenStreetMap\)/);
+  assert.match(html, /De lunes a viernes, de 9:00 a 14:00 \(según OpenStreetMap\)/);
   // Los datos estructurados son JSON válido y no dejan cerrar la etiqueta.
   const ld = html.match(/<script type="application\/ld\+json">(.*?)<\/script>/)[1];
   assert.equal(JSON.parse(ld).name, 'Bar <i>Pepe</i>');
