@@ -86,6 +86,36 @@
     return DOMINIOS_ENTRADAS.some((d) => host.includes(d));
   }
 
+  // Gemela de `urlEsDelLocal` y `etiquetaDelEnlace` (app). Contado el
+  // 12-nov-2026: NINGUNO de los eventos que hay enlaza una taquilla de
+  // terceros —todos van a la web del local (salamalandar.com, fibes.es,
+  // teatrodelamaestranza.es, cartujacenter.com, assejazz.com)—, así que el
+  // botón decía siempre «Más información» incluso cuando el enlace es la
+  // página del espectáculo, que es donde está el botón de comprar. No se
+  // arregla metiendo esos dominios en DOMINIOS_ENTRADAS: «Entradas» tiene que
+  // seguir significando taquilla. Se arregla diciendo adónde lleva.
+  function limpio(v) {
+    return String(v || '').toLowerCase()
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9]/g, '');
+  }
+  function urlEsDelLocal(url, lugar) {
+    if (!url || !lugar) return false;
+    let host = '';
+    try { host = new URL(url).hostname.toLowerCase(); } catch (_) { return false; }
+    const partes = host.split('.').filter((p) => p !== 'www');
+    if (partes.length > 1) partes.pop();
+    const dominio = limpio(partes.join(''));
+    const nombre = limpio(lugar);
+    if (dominio.length < 5 || nombre.length < 5) return false;
+    return dominio.indexOf(nombre) !== -1 || nombre.indexOf(dominio) !== -1;
+  }
+  function etiquetaDelEnlace(url, lugar, estrecho) {
+    if (urlEsDeEntradas(url)) return 'Entradas';
+    if (urlEsDelLocal(url, lugar)) return 'Ver en su web';
+    return estrecho ? 'Más info' : 'Más información';
+  }
+
   const EN_LA_FICHA = 3;
 
   const dlg = document.getElementById('ficha');
@@ -269,9 +299,8 @@
       botones.appendChild(avisar);
     }
     if (hayUrl) {
-      const entradas = urlEsDeEntradas(e.url);
       const link = el('a', 'boton-primario',
-        entradas ? 'Entradas' : (puedeIr ? 'Más info' : 'Más información'));
+        etiquetaDelEnlace(e.url, e.lugar, puedeIr));
       link.href = e.url;
       link.target = '_blank';
       link.rel = 'noopener';
