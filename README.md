@@ -20,3 +20,9 @@ dominio se reclama desde este repositorio aparte.
 - `capturas/` — capturas de la ficha de Google Play, redimensionadas a 540 px.
 - `social.jpg` — imagen de 1200×630 para cuando se comparte el enlace.
 - La política de privacidad **no** está aquí: sigue en `sevitime/privacidad`.
+
+## Licencia
+
+Todos los derechos reservados (ver `LICENSE`). El repositorio es público
+porque GitHub Pages, en el plan gratuito, solo sirve repositorios públicos;
+eso no da permiso para reutilizar nada de él.
