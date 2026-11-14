@@ -30,6 +30,9 @@
     return m === 0 ? h + ' h' : h + ' h ' + m + ' min';
   }
 
+  // Los kilómetros, en rutas/km.js (se prueban sin el DOM).
+  const { kmDeRuta, textoKm } = window.sevitimeRutasKm;
+
   const FILTROS = [
     { id: 'todas', etiqueta: 'Todas', emoji: '🧭' },
     { id: 'rutas', etiqueta: 'Rutas', emoji: '🥾' },
@@ -275,7 +278,14 @@
     sello.textContent = esRec ? 'Recomendación' : r.paradas.length + ' paradas';
     const dur = document.createElement('span');
     dur.textContent = '⏱ ' + duracionTexto(r.minutos);
-    meta.append(sello, dur);
+    meta.append(sello);
+    if (!esRec) {
+      const km = document.createElement('span');
+      km.textContent = textoKm(kmDeRuta(r.paradas));
+      km.title = 'Sumando las paradas en línea recta';
+      meta.appendChild(km);
+    }
+    meta.appendChild(dur);
     // El nombre del autor viene de usuarios: siempre como texto, nunca HTML.
     const quien = r.oficial ? 'SeviTime' : r.autor;
     if (quien) {
