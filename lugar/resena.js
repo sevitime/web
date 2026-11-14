@@ -606,6 +606,7 @@
       puesto = !estaba;
       cuantos += estaba ? -1 : 1;
       repintar();
+      if (!estaba) window.sevitimeLugares.latir(icono);
       try {
         if (estaba) {
           const { error } = await sb().from('resenas_utiles').delete()

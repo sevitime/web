@@ -1961,3 +1961,16 @@ dialog.aceptacion-fotos::backdrop { background: rgba(0, 0, 0, 0.55); }
   text-decoration: underline;
 }
 .diario-plan-sitio:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
+
+/* El corazón de guardar y de «me gusta» da un salto al marcarse
+   (14-nov-2026), como `IconoQueLate` en la app. Lo pone `latir()` de
+   lugares.js. Con «reducir movimiento», no se mueve. */
+@keyframes late {
+  0% { transform: scale(1); }
+  40% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+.late-ahora { animation: late 320ms cubic-bezier(.34, 1.56, .64, 1); }
+@media (prefers-reduced-motion: reduce) {
+  .late-ahora { animation: none; }
+}

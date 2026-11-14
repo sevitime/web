@@ -856,6 +856,22 @@ const CATEGORIAS_LUGARES = {
     return 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lon;
   }
 
+  // El salto del corazón al guardar o dar «me gusta» (14-nov-2026), como
+  // `IconoQueLate` en la app: escala corta (la clase `late-ahora`, en
+  // estilo.css) y una vibración de 12 ms donde el navegador la admite
+  // (Android; el iPhone no vibra desde la web). Solo se llama al MARCAR: quitar
+  // no se celebra. Con «reducir movimiento», solo la vibración.
+  function latir(elemento) {
+    if (!elemento) return;
+    try { if (navigator.vibrate) navigator.vibrate(12); } catch (_) {}
+    let reducir = false;
+    try { reducir = window.matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (_) {}
+    if (reducir) return;
+    elemento.classList.remove('late-ahora');
+    void elemento.offsetWidth; // vuelve a arrancar la animación si ya estaba
+    elemento.classList.add('late-ahora');
+  }
+
   function normalizarNombre(s) {
     return normalizar(s).replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
   }
@@ -1751,6 +1767,6 @@ const CATEGORIAS_LUGARES = {
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones, cambiosDeSitio, buscarPorClave,
     cargarCurado, completarConDatosPropios, horarioLegible, ordenarSinUbicacion,
-    queEsDe, casaConBusqueda, enlaceAlMapa,
+    queEsDe, casaConBusqueda, enlaceAlMapa, latir,
   };
 })();
