@@ -685,11 +685,11 @@
       : 'Recibido. Lo revisamos y te avisamos en el buzón de la app.');
   });
 
-  // Como la app (elegirFotoDeAportacion): 1600 px de lado y JPEG al 80 %.
+  // Como la app (`ladoMaximoFoto`, `calidadFoto`): 1280 px de lado y JPEG al 80 %.
   // El bucket admite 5 MB por archivo y no da para fotos de móvil enteras.
   async function reducirFoto(archivo) {
     const bitmap = await createImageBitmap(archivo);
-    const escala = Math.min(1, 1600 / Math.max(bitmap.width, bitmap.height));
+    const escala = Math.min(1, 1280 / Math.max(bitmap.width, bitmap.height));
     const lienzo = document.createElement('canvas');
     lienzo.width = Math.round(bitmap.width * escala);
     lienzo.height = Math.round(bitmap.height * escala);
