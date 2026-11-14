@@ -839,6 +839,23 @@ const CATEGORIAS_LUGARES = {
   // nunca pone el punto donde el nuestro: el 26-sep-2026 salían duplicados
   // Burger Up!, Shayka, Caprixo, Lamprea, C.D. Demo y Ronda Alamillo.
 
+  // Adónde lleva tocar la dirección de una ficha (14-nov-2026), como
+  // `NavigationUtils.mostrarEnMaps` en la app: la app de mapas de cada uno.
+  // En Android, `geo:`, que el sistema manda a la app de mapas por defecto (o
+  // pregunta cuál). En iPhone, Apple Maps, que es la que abre el sistema. En
+  // el ordenador, Google Maps en el navegador.
+  function enlaceAlMapa(lat, lon, nombre, ua) {
+    const agente = ua || (typeof navigator !== 'undefined' ? navigator.userAgent : '');
+    const etiqueta = encodeURIComponent(nombre || '');
+    if (/Android/i.test(agente)) {
+      return 'geo:' + lat + ',' + lon + '?q=' + lat + ',' + lon + (nombre ? '(' + etiqueta + ')' : '');
+    }
+    if (/iPhone|iPad|iPod/i.test(agente)) {
+      return 'https://maps.apple.com/?q=' + etiqueta + '&ll=' + lat + ',' + lon;
+    }
+    return 'https://www.google.com/maps/search/?api=1&query=' + lat + ',' + lon;
+  }
+
   function normalizarNombre(s) {
     return normalizar(s).replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
   }
@@ -1734,6 +1751,6 @@ const CATEGORIAS_LUGARES = {
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones, cambiosDeSitio, buscarPorClave,
     cargarCurado, completarConDatosPropios, horarioLegible, ordenarSinUbicacion,
-    queEsDe, casaConBusqueda,
+    queEsDe, casaConBusqueda, enlaceAlMapa,
   };
 })();

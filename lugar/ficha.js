@@ -919,7 +919,11 @@
     datos.textContent = '';
     // La dirección, como en la ficha de la app: calle y número según
     // OpenStreetMap. Sin calle no se pone nada (ver `direccionDe`).
-    if (p.direccion) datos.appendChild(fila('Dirección', p.direccion));
+    // La dirección abre la app de mapas, como en la app (era texto suelto).
+    if (p.direccion) {
+      datos.appendChild(fila('Dirección', p.direccion,
+        window.sevitimeLugares.enlaceAlMapa(p.lat, p.lon, p.nombre)));
+    }
     if (p.telefono) datos.appendChild(fila('Teléfono', p.telefono, 'tel:' + p.telefono));
     if (p.web) datos.appendChild(fila('Web', p.web, p.web));
     // El horario se enseña como lo que es: lo que dice OpenStreetMap, no lo
