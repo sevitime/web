@@ -487,8 +487,9 @@
     if (q) {
       // Buscando por texto el radio no manda: igual que en la app, quien
       // escribe «alcázar» quiere el Alcázar esté a 300 m o a 3 km.
-      fuera = fuera.filter((p) =>
-        L.normalizar(p.nombre).includes(q) || L.normalizar(p.direccion).includes(q));
+      // Y por lo que es: «heladerías cerca» encuentra Rayas. Ver
+      // `casaConBusqueda` en lugares.js.
+      fuera = fuera.filter((p) => L.casaConBusqueda(p, estado.texto));
     } else {
       fuera = fuera.filter((p) => L.metros(estado.origen, p) <= estado.radio);
     }

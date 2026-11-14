@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="utf-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com 'sha256-qKbW0cyGBOOJMY4deDOXds/kxmnbS5fXeBE8rQTWv3o='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:; media-src 'self' blob: https:; frame-src https:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com 'sha256-DEo1MPj6/ksw+b3CMTM5N+gKssSfQIlmNqWvyPEYaJ8='; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; font-src 'self' data:; connect-src 'self' https: wss:; media-src 'self' blob: https:; frame-src https:; worker-src 'self' blob:; manifest-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <meta name="theme-color" content="#0F1C1A" media="(prefers-color-scheme: dark)">
 <meta name="theme-color" content="#F2F7F6" media="(prefers-color-scheme: light)">
@@ -48,7 +48,7 @@
 <!-- Sin `defer` a propósito: el script de esta página va en línea y se
      ejecuta antes que los diferidos; necesita `SeviSugerir` ya disponible. -->
 <script src="/sugerir.js?v=fbf31424"></script>
-<script defer src="/lugares.js?v=c8dac0b3"></script>
+<script defer src="/lugares.js?v=f68dc065"></script>
 <script defer src="/nav.js?v=cb440bc2"></script>
 <style>
   /* La paleta y la tipografía vienen de /estilo.css, el mismo que usan la
@@ -1259,9 +1259,12 @@ window.addEventListener('DOMContentLoaded', function () {
 
   function pintarResultados(q) {
     listaBuscar.textContent = '';
-    const consulta = normalizar(q);
+    // Por el nombre o por lo que es («farmacia»), como en Explorar y en la
+    // app. Ver `casaConBusqueda` en lugares.js.
+    const L = window.sevitimeLugares;
     const encontrados = (lugaresCargados || [])
-      .filter((p) => normalizar(p.nombre).includes(consulta))
+      .filter((p) => L ? L.casaConBusqueda({ direccion: '', ...p }, q)
+        : normalizar(p.nombre).includes(normalizar(q)))
       .slice(0, 8);
     if (!encontrados.length) {
       const vacio = document.createElement('li');
