@@ -13,10 +13,15 @@
 
   const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
-  const CUANTAS = 30;
+  // Una semana de los tres medios ronda las 250.
+  const CUANTAS = 300;
+  const { seccionar, temasCon, TEMAS, DIAS } = window.SeviNoticias;
 
   const estado = document.getElementById('estado');
   const lista = document.getElementById('lista');
+  const chips = document.getElementById('chips');
+  let todas = [];
+  let tema = null;
 
   function el(tag, clase, texto) {
     const n = document.createElement(tag);
@@ -38,8 +43,42 @@
     return d.toLocaleDateString('es-ES', { day: 'numeric', month: 'long' });
   }
 
-  function pintar(noticias) {
+  function pintarChips(temas) {
+    chips.textContent = '';
+    // Con un solo tema, los chips no filtran nada.
+    if (temas.length < 2) { chips.hidden = true; return; }
+    const opciones = [{ id: null, etiqueta: 'Todas' }]
+      .concat(TEMAS.filter((t) => temas.indexOf(t.id) >= 0));
+    opciones.forEach(function (o) {
+      const b = el('button', 'chip' + (o.id === tema ? ' seleccionado' : ''), o.etiqueta);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', String(o.id === tema));
+      b.addEventListener('click', function () { tema = o.id; pintar(); });
+      chips.appendChild(b);
+    });
+    chips.hidden = false;
+  }
+
+  // Por días, como en la app: «Hoy», «Ayer» y «Esta semana».
+  function pintar() {
+    const ahora = new Date();
+    const temas = temasCon(todas, ahora);
+    // Si el tema elegido se ha quedado sin noticias, vuelta a «Todas».
+    if (temas.indexOf(tema) < 0) tema = null;
+    pintarChips(temas);
     lista.textContent = '';
+    seccionar(todas, ahora, tema).forEach(function (s) {
+      const cab = el('h2', 'n-dia', s.titulo);
+      cab.appendChild(el('span', 'n-cuenta', String(s.noticias.length)));
+      lista.appendChild(cab);
+      const ul = el('ul', 'n-lista');
+      pintarLista(ul, s.noticias);
+      lista.appendChild(ul);
+    });
+    estado.hidden = true;
+  }
+
+  function pintarLista(ul, noticias) {
     noticias.forEach(function (n) {
       const item = el('li', 'n-item');
       const enlace = el('a', 'n-enlace');
@@ -65,20 +104,20 @@
       const cuerpo = el('div', 'n-cuerpo');
       // Todo esto viene de un medio: se pinta con `textContent`, nunca como
       // HTML.
-      cuerpo.appendChild(el('h2', 'n-titulo', n.titulo || ''));
+      cuerpo.appendChild(el('h3', 'n-titulo', n.titulo || ''));
       if (n.descripcion) cuerpo.appendChild(el('p', 'n-extracto', n.descripcion));
       cuerpo.appendChild(el('span', 'n-meta',
         [n.fuente, cuando(n.fecha)].filter(Boolean).join(' · ')));
       enlace.appendChild(cuerpo);
       item.appendChild(enlace);
-      lista.appendChild(item);
+      ul.appendChild(item);
     });
-    estado.hidden = true;
   }
 
   fetch(SUPABASE_URL + '/rest/v1/noticias' +
-    '?select=titulo,descripcion,url,imagen_url,fuente,fecha' +
-    '&activa=eq.true&order=fecha.desc&limit=' + CUANTAS, {
+    '?select=titulo,descripcion,url,imagen_url,fuente,fecha,tema' +
+    '&activa=eq.true&fecha=gte.' + new Date(Date.now() - DIAS * 864e5).toISOString() +
+    '&order=fecha.desc&limit=' + CUANTAS, {
     headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY },
   })
     .then(function (r) {
@@ -93,7 +132,8 @@
           'Vuelve dentro de un rato.';
         return;
       }
-      pintar(noticias);
+      todas = noticias;
+      pintar();
     })
     .catch(function () {
       estado.textContent = 'No se han podido cargar las noticias. ' +
