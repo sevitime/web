@@ -137,6 +137,7 @@
     // es lo que hace la app con el corazón.
     puesto[accion.id] = !estaba;
     pintarBoton(accion, boton);
+    if (!estaba) window.sevitimeLugares.latir(boton.querySelector('.guardar-icono'));
     aviso.textContent = '';
 
     try {
