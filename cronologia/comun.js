@@ -50,17 +50,14 @@
     farol: '💡', sol: '☀️', madruga: '🌙', cafe: '☕',
   };
 
-  // El icono que va donde iría el avatar cuando no hay autor. Deja claro de
-  // un vistazo que esto no lo ha puesto una persona.
-  const ICONO_CIUDAD = {
-    lugar_nuevo: '📍', lugar_desaparecido: '🚫', evento_nuevo: '📅',
-    estado_abierto: '🚪', estado_cerrado: '🔒',
-  };
+  // El icono que va donde iría el avatar cuando no hay autor sale de la
+  // misma tabla que el de la línea (`emojiDe`): había una aparte que no
+  // conocía los renombrados ni los datos, y les ponía a todos un pin.
 
   function avatar(item) {
     if (esDeLaCiudad(item)) {
       const d = el('span', 'crono-avatar crono-inicial crono-ciudad',
-        ICONO_CIUDAD[item.tipo] || '📍');
+        emojiDe(item) || '📍');
       // Gris y no rojo en lo que desaparece: no decimos que haya cerrado, y
       // el rojo se lee como una alarma.
       d.style.background =
@@ -334,10 +331,29 @@
     estado_abierto: '🚪', estado_cerrado: '🔒',
   };
 
+  // Un icono por dato en los cambios del mapa y en las aportaciones de un
+  // solo dato (14-nov-2026), como `iconoDeCronologia` en la app: llevaban
+  // todos el mismo lápiz. El mapa los manda sin tilde («direccion») y la
+  // gente con ella («teléfono»).
+  const ICONOS_DATO = {
+    horario: '🕒', telefono: '📞', web: '🌐', terraza: '☂️',
+    cocina: '🍽️', accesibilidad: '♿', historia: '📜', direccion: '📍',
+  };
+
+  function emojiDe(item) {
+    if (item.tipo === 'lugar_datos' || item.tipo === 'dato') {
+      const campos = String(item.texto || '').split(',')
+        .map((c) => c.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
+        .filter(Boolean);
+      if (campos.length === 1 && ICONOS_DATO[campos[0]]) return ICONOS_DATO[campos[0]];
+    }
+    return ICONOS[item.tipo] || null;
+  }
+
   function icono(item) {
     // Un tipo que esta versión no conoce: mejor nada que un icono que diga
     // algo falso.
-    const e = ICONOS[item.tipo];
+    const e = emojiDe(item);
     if (!e) return null;
     const n = el('span', 'crono-icono', e);
     // Decorativo: lo que dice ya está en la frase, y un lector de pantalla
@@ -498,6 +514,7 @@
     detalle: detalle,
     esDeLaCiudad: esDeLaCiudad,
     icono: icono,
+    emojiDe: emojiDe,
     pedir: pedir,
     leerVisto: leerVisto,
     marcarVisto: marcarVisto,
