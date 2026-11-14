@@ -155,6 +155,9 @@
   .parada-texto { min-width: 0; }
   .parada-nombre { display: block; font-size: var(--t-cuerpo); font-weight: 600; }
   .parada-meta { display: block; font-size: var(--t-etiqueta); color: var(--tenue); margin-top: 1px; }
+  /* Sellos del Pasaporte en la ruta (14-nov-2026), como en la app. */
+  .paradas-sellos { margin: 0 0 8px; font-size: var(--t-etiqueta); font-weight: 600; color: var(--verde-claro); }
+  .parada-sello { display: block; font-size: var(--t-etiqueta); font-weight: 600; color: var(--verde-claro); margin-top: 2px; }
   .parada-nota { display: block; font-size: var(--t-cuerpo); color: var(--apagado); margin-top: 4px; font-style: italic; }
 
   .mapa-caja { flex: 1; min-width: 0; position: relative; }
@@ -256,8 +259,10 @@
   </div>
 </main>
 
+<script defer src="/pasaporte/sellos.js?v=7614df0c"></script>
+<script defer src="/rutas/sellos-ruta.js?v=606a0570"></script>
 <script defer src="/rutas/km.js?v=e0736005"></script>
-<script defer src="/rutas/rutas.js?v=f7115613"></script>
+<script defer src="/rutas/rutas.js?v=523b666a"></script>
 <script defer src="/visitas.js?v=a0509804"></script>
 </body>
 </html>

@@ -423,6 +423,16 @@
   function paradasDe(r) {
     const caja = document.createElement('div');
     caja.className = 'paradas';
+    // Dónde se puede sellar el Pasaporte, como en la app (rutas/sellos-ruta.js).
+    const SR = window.sevitimeSellosRuta;
+    const sellos = SR ? SR.sellosDeParadas(r.paradas) : [];
+    const resumen = SR ? SR.textoResumenSellos(sellos) : '';
+    if (resumen) {
+      const linea = document.createElement('p');
+      linea.className = 'paradas-sellos';
+      linea.textContent = resumen;
+      caja.appendChild(linea);
+    }
     r.paradas.forEach((p, i) => {
       const b = document.createElement('button');
       b.type = 'button';
@@ -441,6 +451,12 @@
       meta.className = 'parada-meta';
       meta.textContent = labelFor(p.tipo);
       texto.append(nombre, meta);
+      if (sellos[i]) {
+        const sello = document.createElement('span');
+        sello.className = 'parada-sello';
+        sello.textContent = 'Sello del Pasaporte: ' + sellos[i].label;
+        texto.appendChild(sello);
+      }
       if (p.nota) {
         const nota = document.createElement('span');
         nota.className = 'parada-nota';
