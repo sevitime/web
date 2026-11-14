@@ -22,7 +22,7 @@
 //     una estrella, igual que en la app desde la 0.0.57.
 //
 // Las fotos van al bucket público `sugerencias-fotos`, con la misma ruta que
-// la app (`uid/marca_indice.jpg`) y reducidas aquí a 1600 px antes de subir:
+// la app (`uid/marca_indice.jpg`) y reducidas aquí a 1280 px antes de subir:
 // una foto de un móvil actual son 4 MB y la app también la reduce.
 //
 // Texto de usuarios: siempre con `textContent`, nunca como HTML.
@@ -30,7 +30,9 @@
   'use strict';
 
   const MAX_FOTOS = 3;
-  const MAX_LADO = 1600;
+  // 1280 desde el 14-nov-2026, igual que la app (`ladoMaximoFoto`): un 35 %
+  // menos de peso y en pantalla de móvil no se nota.
+  const MAX_LADO = 1280;
   const MAX_COMENTARIO = 1000;
 
   // Espejo de `nombrePublicoMinimo`/`nombrePublicoMaximo` y `_formato` en
@@ -142,8 +144,8 @@
 
   // --- Fotos ----------------------------------------------------------------
 
-  // Reduce a 1600 px de lado mayor y la pasa a JPEG, como hace la app con
-  // `ImagePicker(maxWidth: 1600, imageQuality: 80)`. Si algo falla se sube el
+  // Reduce a 1280 px de lado mayor y la pasa a JPEG, como hace la app con
+  // `ladoMaximoFoto` y `calidadFoto` (1280 px, 80 %). Si algo falla se sube el
   // fichero tal cual: es mejor una foto grande que ninguna.
   function reducir(file) {
     return new Promise((resolve) => {
