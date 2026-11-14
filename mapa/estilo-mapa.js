@@ -108,23 +108,48 @@ function sevitimeEstiloMapa(oscuro) {
 let _falloTeselas = false;
 let _alFallarTeselas = null;
 
+// Reintentos antes de dar el mapa por caído (14-nov-2026).
+//
+// pmtiles guarda la promesa de la cabecera del archivo **aunque falle**, y
+// no la vuelve a pedir: si la primera petición se caía una sola vez (una
+// conexión que parpadea, el CDN tardando en servir un archivo recién
+// publicado), el mapa se quedaba en blanco para siempre con el aviso puesto,
+// y solo recargar la página lo arreglaba. Ahora se hace lo mismo que
+// recargar —un protocolo nuevo, sin nada guardado— y se vuelve a pedir, con
+// una pausa creciente. Tres veces por página como mucho: si el archivo de
+// verdad no llega, no tiene sentido seguir llamando.
+const REINTENTOS_TESELAS = 3;
+const _teselas = { esperaReintentoMs: 800, fallo: () => _falloTeselas };
+if (typeof window !== 'undefined') window.sevitimeTeselas = _teselas;
+
 function usarProtocoloTeselas() {
-  const protocol = new pmtiles.Protocol();
-  const tileOriginal = protocol.tile.bind(protocol);
-  maplibregl.addProtocol('pmtiles', (params, abortController) => {
-    return Promise.resolve(tileOriginal(params, abortController)).catch((e) => {
-      // MapLibre cancela peticiones al mover o encuadrar el mapa; eso no es un
-      // fallo. Solo cuenta si el aborto no lo pidió el propio MapLibre.
-      const abortado =
-        (abortController && abortController.signal && abortController.signal.aborted) ||
-        (e && (e.name === 'AbortError' ||
-          (e.name === 'DOMException' && /abort/i.test(e.message || ''))));
-      if (!abortado) {
-        _falloTeselas = true;
-        if (_alFallarTeselas) _alFallarTeselas();
+  let protocol = new pmtiles.Protocol();
+  let reintentos = 0;
+  // MapLibre cancela peticiones al mover o encuadrar el mapa; eso no es un
+  // fallo. Solo cuenta si el aborto no lo pidió el propio MapLibre.
+  const abortado = (abortController, e) =>
+    !!((abortController && abortController.signal && abortController.signal.aborted) ||
+      (e && (e.name === 'AbortError' ||
+        (e.name === 'DOMException' && /abort/i.test(e.message || '')))));
+  const esperar = (ms) => new Promise((ok) => setTimeout(ok, ms));
+
+  maplibregl.addProtocol('pmtiles', async (params, abortController) => {
+    for (;;) {
+      try {
+        return await Promise.resolve(protocol.tile(params, abortController));
+      } catch (e) {
+        if (abortado(abortController, e)) throw e;
+        if (reintentos >= REINTENTOS_TESELAS) {
+          _falloTeselas = true;
+          if (_alFallarTeselas) _alFallarTeselas();
+          throw e;
+        }
+        reintentos++;
+        protocol = new pmtiles.Protocol();
+        await esperar(_teselas.esperaReintentoMs * reintentos);
+        if (abortado(abortController, null)) throw e;
       }
-      throw e;
-    });
+    }
   });
 }
 
