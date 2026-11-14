@@ -422,7 +422,233 @@ const CATEGORIAS_LUGARES = {
     "bank": "Banco",
     "toilets": "Aseos públicos",
     "drinking_water": "Fuente de agua potable"
-  }
+  },
+  "queEs": [
+    {
+      "palabras": [
+        "heladeria",
+        "heladerias",
+        "helado",
+        "helados"
+      ],
+      "tipos": [
+        "ice_cream"
+      ],
+      "cocinas": [
+        "ice_cream"
+      ]
+    },
+    {
+      "palabras": [
+        "farmacia",
+        "farmacias"
+      ],
+      "tipos": [
+        "pharmacy"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "museo",
+        "museos"
+      ],
+      "tipos": [
+        "museum"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "parque",
+        "parques",
+        "jardin",
+        "jardines"
+      ],
+      "tipos": [
+        "park",
+        "garden"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "pizzeria",
+        "pizzerias",
+        "pizza",
+        "pizzas"
+      ],
+      "tipos": [],
+      "cocinas": [
+        "pizza"
+      ]
+    },
+    {
+      "palabras": [
+        "cafe",
+        "cafes",
+        "cafeteria",
+        "cafeterias",
+        "desayunar",
+        "desayuno",
+        "desayunos"
+      ],
+      "tipos": [
+        "cafe"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "bar",
+        "bares",
+        "cerveceria",
+        "cervecerias",
+        "cerveza",
+        "cervezas",
+        "copas"
+      ],
+      "tipos": [
+        "bar",
+        "pub",
+        "biergarten"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "restaurante",
+        "restaurantes",
+        "comer",
+        "cenar",
+        "almorzar"
+      ],
+      "tipos": [
+        "restaurant"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "iglesia",
+        "iglesias",
+        "parroquia",
+        "parroquias",
+        "capilla",
+        "capillas"
+      ],
+      "tipos": [
+        "place_of_worship"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "mercado",
+        "mercados",
+        "mercadillo",
+        "mercadillos"
+      ],
+      "tipos": [
+        "marketplace"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "mirador",
+        "miradores"
+      ],
+      "tipos": [
+        "viewpoint"
+      ],
+      "cocinas": []
+    },
+    {
+      "palabras": [
+        "sushi",
+        "japones",
+        "japonesa",
+        "japoneses"
+      ],
+      "tipos": [],
+      "cocinas": [
+        "sushi",
+        "japanese"
+      ]
+    },
+    {
+      "palabras": [
+        "hamburgueseria",
+        "hamburgueserias",
+        "hamburguesa",
+        "hamburguesas",
+        "burger"
+      ],
+      "tipos": [],
+      "cocinas": [
+        "burger"
+      ]
+    },
+    {
+      "palabras": [
+        "kebab",
+        "kebabs"
+      ],
+      "tipos": [],
+      "cocinas": [
+        "kebab"
+      ]
+    }
+  ],
+  "rellenoQueEs": [
+    "a",
+    "abierta",
+    "abiertas",
+    "abierto",
+    "abiertos",
+    "aqui",
+    "algo",
+    "algun",
+    "alguna",
+    "buen",
+    "buena",
+    "buenas",
+    "buenos",
+    "cerca",
+    "cercana",
+    "cercanas",
+    "cercano",
+    "cercanos",
+    "con",
+    "de",
+    "del",
+    "donde",
+    "el",
+    "en",
+    "ir",
+    "la",
+    "las",
+    "los",
+    "mas",
+    "mejor",
+    "mejores",
+    "mi",
+    "para",
+    "por",
+    "quiero",
+    "sevilla",
+    "sitio",
+    "sitios",
+    "tomar",
+    "un",
+    "una",
+    "unas",
+    "unos",
+    "lugar",
+    "lugares",
+    "y"
+  ]
 };
 // ===== FIN categorias-lugares =====
 
@@ -597,6 +823,8 @@ const CATEGORIAS_LUGARES = {
       // Si OpenStreetMap lo enlaza con Wikipedia o Wikidata. No se enseña:
       // sirve para saber qué sitios son conocidos (`ordenarSinUbicacion`).
       conArticulo: !!(t.wikipedia || t.wikidata),
+      // `cuisine` de OSM, para buscar «pizza» o «sushi» (`casaConBusqueda`).
+      cocinas: (t.cuisine || '').split(';').map((c) => c.trim()).filter(Boolean),
       osm: (e.type && e.id) ? 'https://www.openstreetmap.org/' + e.type + '/' + e.id : '',
       osmType: e.type || null,
       osmId: e.id != null ? e.id : null,
@@ -613,6 +841,43 @@ const CATEGORIAS_LUGARES = {
 
   function normalizarNombre(s) {
     return normalizar(s).replace(/[^a-z0-9 ]/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  // Buscar un sitio por lo que es (14-nov-2026), como `utils/que_es.dart` en
+  // la app y con la misma tabla (`queEs`, generada desde la app). Buscando
+  // solo en el nombre, «heladería» encontraba 23 de las 66 heladerías y
+  // «restaurante» 130 de 1.495: faltaban los que se llaman como su dueño.
+  //
+  // Una pregunta hecha solo con palabras de una fila y relleno («heladerías
+  // cerca», «dónde comer») es una pregunta por ese tipo. Si lleva algo más,
+  // es un nombre («Museo de Bellas Artes»), y dos tipos distintos tampoco se
+  // juntan.
+  const QUE_ES = CATEGORIAS_LUGARES.queEs || [];
+  const RELLENO_QUE_ES = new Set(CATEGORIAS_LUGARES.rellenoQueEs || []);
+  const FILA_QUE_ES = new Map();
+  for (const fila of QUE_ES) for (const w of fila.palabras) FILA_QUE_ES.set(w, fila);
+
+  function queEsDe(texto) {
+    let fila = null;
+    for (const w of normalizarNombre(texto).split(' ')) {
+      if (!w || RELLENO_QUE_ES.has(w)) continue;
+      const suya = FILA_QUE_ES.get(w);
+      if (!suya || (fila && fila !== suya)) return null;
+      fila = suya;
+    }
+    return fila;
+  }
+
+  // Si `p` sale buscando `texto`: por su nombre o su calle, como siempre, o
+  // por lo que es.
+  function casaConBusqueda(p, texto) {
+    const q = normalizar(texto);
+    if (!q) return true;
+    if (normalizar(p.nombre).includes(q) || normalizar(p.direccion).includes(q)) return true;
+    const fila = queEsDe(texto);
+    if (!fila) return false;
+    return fila.tipos.includes(p.tipo) ||
+      (p.cocinas || []).some((c) => fila.cocinas.includes(c));
   }
 
   // Palabras que dicen qué es el sitio, no cuál.
@@ -1469,5 +1734,6 @@ const CATEGORIAS_LUGARES = {
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones, cambiosDeSitio, buscarPorClave,
     cargarCurado, completarConDatosPropios, horarioLegible, ordenarSinUbicacion,
+    queEsDe, casaConBusqueda,
   };
 })();
