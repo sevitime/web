@@ -21,7 +21,8 @@
 <link rel="stylesheet" href="/estilo.css?v=5887af16">
 <script defer src="/nav.js?v=cb440bc2"></script>
 <script defer src="/auth.js?v=c7d7806f"></script>
-<script defer src="/noticias/noticias.js?v=868a85bf"></script>
+<script defer src="/noticias/secciones.js?v=0fd136e1"></script>
+<script defer src="/noticias/noticias.js?v=33c627be"></script>
 <style>
   .noticias { max-width: 760px; margin: 0 auto; padding: 24px 16px 60px; }
   .noticias h1 {
@@ -30,6 +31,13 @@
   }
   .noticias .intro { margin: 0 0 18px; font-size: var(--t-cuerpo); color: var(--apagado); text-wrap: pretty; }
   .n-estado { margin: 0 0 16px; font-size: var(--t-cuerpo); color: var(--apagado); }
+  .filtros { display: flex; flex-wrap: wrap; gap: 6px; padding: 0 0 4px; }
+  .n-dia {
+    margin: 22px 0 10px; font-size: var(--t-seccion); color: var(--texto); font-weight: 700;
+    display: flex; align-items: baseline; gap: 8px;
+  }
+  .n-dia:first-child { margin-top: 8px; }
+  .n-dia .n-cuenta { font-size: var(--t-cuerpo); color: var(--tenue); font-variant-numeric: tabular-nums; }
   .n-lista { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
   .n-item {
     border: 1px solid var(--borde); border-radius: var(--r-lg);
@@ -103,7 +111,9 @@
 
   <p class="n-estado" id="estado" role="status">Cargando las noticias…</p>
 
-  <ul class="n-lista" id="lista"></ul>
+  <div id="chips" class="filtros" role="group" aria-label="Filtrar por tema" hidden></div>
+
+  <div id="lista"></div>
 
   <p class="n-pie">
     SeviTime no escribe estas noticias ni las aloja: enlaza a quien las
