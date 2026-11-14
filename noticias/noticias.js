@@ -13,8 +13,9 @@
 
   const SUPABASE_URL = 'https://kdqiwhvtovafugpcrumf.supabase.co';
   const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
-  // Una semana de los tres medios ronda las 250.
-  const CUANTAS = 300;
+  // Un techo de seguridad, no un recorte: lo que acota es la semana (ronda
+  // las 350-400 con el tope por canal en 20).
+  const CUANTAS = 1000;
   const { seccionar, temasCon, TEMAS, DIAS } = window.SeviNoticias;
 
   const estado = document.getElementById('estado');
@@ -44,6 +45,18 @@
   }
 
   function pintarChips(temas) {
+    // Si los chips son los mismos, solo se marca el elegido: rehacerlos
+    // quitaba el botón con el foco y el teclado volvía al principio.
+    const clave = temas.join(',');
+    if (chips.dataset.temas === clave) {
+      chips.querySelectorAll('.chip').forEach(function (b) {
+        const elegido = (b.dataset.tema || null) === tema;
+        b.classList.toggle('seleccionado', elegido);
+        b.setAttribute('aria-pressed', String(elegido));
+      });
+      return;
+    }
+    chips.dataset.temas = clave;
     chips.textContent = '';
     // Con un solo tema, los chips no filtran nada.
     if (temas.length < 2) { chips.hidden = true; return; }
@@ -52,6 +65,7 @@
     opciones.forEach(function (o) {
       const b = el('button', 'chip' + (o.id === tema ? ' seleccionado' : ''), o.etiqueta);
       b.type = 'button';
+      b.dataset.tema = o.id || '';
       b.setAttribute('aria-pressed', String(o.id === tema));
       b.addEventListener('click', function () { tema = o.id; pintar(); });
       chips.appendChild(b);
@@ -82,11 +96,13 @@
     noticias.forEach(function (n) {
       const item = el('li', 'n-item');
       const enlace = el('a', 'n-enlace');
-      enlace.href = n.url;
+      // Solo direcciones web: una `javascript:` en una noticia puesta a mano
+      // se ejecutaría al pulsarla.
+      if (/^https?:\/\//i.test(n.url || '')) enlace.href = n.url;
       enlace.rel = 'noopener nofollow';
       enlace.target = '_blank';
 
-      if (n.imagen_url) {
+      if (/^https?:\/\//i.test(n.imagen_url || '')) {
         const img = document.createElement('img');
         img.className = 'n-foto';
         img.src = n.imagen_url;

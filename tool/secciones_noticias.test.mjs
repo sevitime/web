@@ -63,3 +63,10 @@ test('los temas que tienen algo esta semana, en el orden de los chips', () => {
 test('cada tema tiene su nombre para el chip', () => {
   assert.deepEqual(TEMAS.map((t) => t.etiqueta), ['Ciudad', 'Sucesos y tribunales', 'Planes', 'Provincia']);
 });
+
+test('el lunes del cambio de hora, pasada la medianoche, lo del domingo es «Ayer»', () => {
+  // Lunes 29-mar-2027 a las 00:30 en Sevilla (28-mar 22:30 UTC). Restando
+  // 24 h caía el sábado, porque el domingo tuvo 23 horas.
+  const ss = seccionar([n('domingo', '2027-03-28T10:00:00Z')], new Date('2027-03-28T22:30:00Z'));
+  assert.deepEqual(resumen(ss), ['Ayer: domingo']);
+});

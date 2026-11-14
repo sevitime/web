@@ -34,7 +34,10 @@
 
   function seccionar(noticias, ahora, tema) {
     const hoy = diaEnSevilla(ahora);
-    const ayer = diaEnSevilla(new Date(ahora.getTime() - 864e5));
+    // «Ayer» por calendario, no restando 24 h: el día del cambio de hora no
+    // las tiene.
+    const [a, m, d] = hoy.split('-').map(Number);
+    const ayer = new Date(Date.UTC(a, m - 1, d - 1)).toISOString().slice(0, 10);
     const grupos = { 'Hoy': [], 'Ayer': [], 'Esta semana': [] };
     noticias
       .slice()
