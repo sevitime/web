@@ -289,6 +289,12 @@
   function mensajeDeGuardado(resultado) {
     if (!mia) return '¡Gracias! Tu reseña se publicará en cuanto la revisemos.';
     if (resultado === 'aplicada') return 'Puntuación actualizada.';
+    // Desde el 15-nov-2026 un cambio que pasa el filtro se aplica ya, como
+    // en la app (docs/sql/ediciones_al_momento.sql).
+    if (resultado === 'publicada') return 'Guardado. Tu reseña ya está actualizada.';
+    if (resultado === 'publicada_fotos_en_revision') {
+      return 'Guardado. Tu reseña ya está actualizada; las fotos nuevas se verán en cuanto las revisemos.';
+    }
     if (resultado === 'edicion_en_revision') {
       return 'Guardado. Tu reseña sigue publicada y revisaremos el cambio.';
     }
@@ -545,7 +551,7 @@
     cuerpo.appendChild(aviso);
     cuerpo.appendChild(el('p', 'resena-nota',
       mia && mia.estado === 'aprobada'
-        ? 'Cambiar solo la puntuación se publica al momento; si cambias el texto o las fotos, lo revisamos antes y mientras sigue publicada la versión anterior.'
+        ? 'Los cambios se publican al momento; las fotos nuevas, en cuanto las revisemos.'
         : 'Normalmente tu reseña se publica al momento; las fotos, cuando las revisemos. Hasta 3 fotos.'));
   }
 
