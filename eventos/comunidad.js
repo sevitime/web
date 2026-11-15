@@ -550,7 +550,7 @@
     enviar.type = 'button';
     form.appendChild(area);
     form.appendChild(enviar);
-    form.appendChild(el('p', 'ficha-nota', 'Los comentarios se revisan antes de publicarse.'));
+    form.appendChild(el('p', 'ficha-nota', 'Normalmente se publican al momento; si no, los revisamos antes.'));
     abrirForm.addEventListener('click', () => {
       abrirForm.hidden = true;
       form.hidden = false;
@@ -568,11 +568,18 @@
         });
         if (error) throw error;
         if (data && data.error === 'tope diario') msg = 'Has llegado al máximo de comentarios de hoy. Vuelve mañana.';
+        // Desde el 15-nov-2026 lo que pasa el filtro sale al momento, como
+        // en la app (docs/sql/comentarios_al_momento.sql en su repo).
+        else if (data && data.estado === 'aprobado') msg = 'Publicado.';
       } catch (_) {
         msg = 'No se ha podido enviar. Inténtalo de nuevo.';
       }
       enviar.disabled = false;
       alertaSuave(msg);
+      // Si ya se ve, la lista de encima se vuelve a pedir.
+      if (msg === 'Publicado.' && caja.previousElementSibling && caja.parentNode) {
+        cargarComentarios(e, caja.parentNode.querySelector('h3'), caja.previousElementSibling);
+      }
       pintarFormComentario(e, caja);
     });
     caja.appendChild(abrirForm);
