@@ -132,6 +132,19 @@
   .resena-util-btn.marcado { border-color: var(--verde-claro); color: var(--verde-claro); }
   .resena-util-btn:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; }
 
+  /* «Me gusta» y «Denunciar», en una fila. Denunciar en texto apagado y a la
+     derecha: está para quien lo busque, no compite con «Me gusta». */
+  .resena-pie { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; margin-top: 8px; }
+  .resena-pie .resena-util-btn { margin-top: 0; }
+  .resena-denunciar-caja { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-left: auto; }
+  .resena-denunciar {
+    min-height: 36px; padding: 0 6px; border: 0; background: transparent;
+    color: var(--tenue); font: inherit; font-size: var(--t-etiqueta); cursor: pointer;
+  }
+  .resena-denunciar:hover { color: var(--texto); text-decoration: underline; }
+  .resena-denunciar:focus-visible { outline: 3px solid var(--verde-claro); outline-offset: 2px; border-radius: 6px; }
+  .resena-denunciar-aviso { font-size: var(--t-etiqueta); color: var(--apagado); }
+
   /* ---- Tu reseña (escribir, cambiar, borrar) ---- */
   .tu-resena {
     margin: 0 0 28px; padding: 18px;

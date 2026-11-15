@@ -109,7 +109,7 @@
     try {
       const { data } = await sb()
         .from('resenas')
-        .select('id, rating, comentario, foto_url, fotos, estado, motivo_rechazo, ' +
+        .select('id, rating, comentario, foto_url, fotos, estado, motivo_rechazo, fotos_en_revision, ' +
           'resenas_ediciones(rating, comentario, fotos)')
         .eq('user_id', usuario.id)
         .eq('place_key', clave)
@@ -130,6 +130,9 @@
         comentario: (edicion && edicion.comentario) || fila.comentario || '',
         fotos: leerFotos(edicion || fila),
         edicionPendiente: Boolean(edicion),
+        // Las fotos de una reseña que salió al momento esperan aparte
+        // (docs/sql/resenas_al_momento.sql en la app).
+        fotosEnRevision: Number(fila.fotos_en_revision) || 0,
       };
       fotosSubidas = mia.fotos.slice();
     } catch (_) { /* si no se puede leer, se ofrece escribir una nueva */ }
@@ -253,14 +256,32 @@
       } catch (_) { /* lo arregla el servidor al aprobar */ }
 
       // El mensaje se decide ANTES de recargar: después, `mia` ya existe y
-      // una reseña nueva se anunciaría como si fuera un cambio.
+      // una reseña nueva se anunciaría como si fuera un cambio. Si es nueva,
+      // depende de lo que haya decidido el servidor, y eso solo se sabe al
+      // recargarla.
+      const nueva = !mia;
       const mensaje = mensajeDeGuardado(resultado);
       await refrescar();
-      anunciar(mensaje);
+      anunciar(nueva ? mensajeDeNueva(mia) : mensaje);
     } catch (_) {
       boton.disabled = false;
       aviso.textContent = 'No se ha podido enviar. Inténtalo más tarde.';
     }
+  }
+
+  // Lo mismo que `mensajeDeResenaNueva` en la app. Desde el 15-nov-2026 la
+  // reseña sale al momento si pasa el filtro; las fotos esperan revisión.
+  function mensajeDeNueva(fila) {
+    if (!fila || fila.estado !== 'aprobada') {
+      return '¡Gracias! Tu reseña se publicará en cuanto la revisemos.';
+    }
+    if (fila.fotosEnRevision === 1) {
+      return '¡Gracias! Tu reseña ya está publicada. La foto se verá en cuanto la revisemos.';
+    }
+    if (fila.fotosEnRevision > 1) {
+      return '¡Gracias! Tu reseña ya está publicada. Las fotos se verán en cuanto las revisemos.';
+    }
+    return '¡Gracias! Tu reseña ya está publicada.';
   }
 
   // Lo mismo que `_mensajeDeGuardado` en la app: importa afinarlo, porque
@@ -473,6 +494,11 @@
         estado.classList.add('malo');
       } else if (mia.edicionPendiente) {
         estado.textContent = '⏳ Tu reseña está publicada y tu último cambio espera revisión.';
+      } else if (mia.fotosEnRevision > 0) {
+        estado.textContent = mia.fotosEnRevision === 1
+          ? '✔ Tu reseña está publicada. La foto se verá en cuanto la revisemos.'
+          : '✔ Tu reseña está publicada. Las fotos se verán en cuanto las revisemos.';
+        estado.classList.add('bueno');
       } else {
         estado.textContent = '✔ Tu reseña está publicada.';
         estado.classList.add('bueno');
@@ -520,7 +546,7 @@
     cuerpo.appendChild(el('p', 'resena-nota',
       mia && mia.estado === 'aprobada'
         ? 'Cambiar solo la puntuación se publica al momento; si cambias el texto o las fotos, lo revisamos antes y mientras sigue publicada la versión anterior.'
-        : 'Las reseñas se revisan antes de publicarse. Hasta 3 fotos.'));
+        : 'Normalmente tu reseña se publica al momento; las fotos, cuando las revisemos. Hasta 3 fotos.'));
   }
 
   // --- Pintado de la sección ------------------------------------------------
@@ -627,6 +653,109 @@
     return b;
   }
 
+  // --- Denunciar la reseña de otra persona ----------------------------------
+
+  // La misma lista que `MotivoDenunciaResena` en la app y que el CHECK de
+  // `denuncias_resena`: si se añade un motivo, va en los tres sitios.
+  const MOTIVOS_DENUNCIA = [
+    ['ofensiva', 'Insulta o falta al respeto'],
+    ['datos_personales', 'Da datos de otra persona'],
+    ['falsa', 'Es falsa o no ha estado aquí'],
+    ['otro_sitio', 'Habla de otro sitio'],
+    ['spam', 'Publicidad o spam'],
+    ['otro', 'Otra cosa'],
+  ];
+
+  // Como denunciar un perfil (perfil/denunciar.js): pide cuenta y no se
+  // cuenta nunca en qué quedó. Desde el 15-nov-2026 las reseñas se publican
+  // al momento, y esto es lo que deja avisar de una que no debería estar.
+  function abrirDenuncia(fila, aviso) {
+    const d = el('dialog', 'aceptacion-fotos denuncia-perfil');
+    d.appendChild(el('h2', null, 'Denunciar esta reseña'));
+    d.appendChild(el('p', null,
+      'Lo revisa una persona de SeviTime. No se le dice a nadie que has '
+      + 'denunciado, ni quién.'));
+    const form = el('form');
+    MOTIVOS_DENUNCIA.forEach(function (m, i) {
+      const linea = el('label', 'denuncia-motivo');
+      const radio = document.createElement('input');
+      radio.type = 'radio';
+      radio.name = 'motivo';
+      radio.value = m[0];
+      if (i === 0) radio.required = true;
+      linea.append(radio, el('span', null, m[1]));
+      form.appendChild(linea);
+    });
+    const notas = document.createElement('textarea');
+    notas.maxLength = 500;
+    notas.rows = 3;
+    notas.placeholder = 'Cuéntalo si hace falta (opcional)';
+    notas.className = 'denuncia-notas';
+    notas.setAttribute('aria-label', 'Detalles de la denuncia (opcional)');
+    form.appendChild(notas);
+    const acciones = el('div', 'aceptacion-fotos-acciones');
+    const cancelar = el('button', null, 'Cancelar');
+    cancelar.type = 'button';
+    const mandar = el('button', 'primario', 'Enviar denuncia');
+    mandar.type = 'submit';
+    acciones.append(cancelar, mandar);
+    form.appendChild(acciones);
+    d.appendChild(form);
+    cancelar.addEventListener('click', function () { d.close(); });
+
+    form.addEventListener('submit', async function (ev) {
+      ev.preventDefault();
+      const marcado = form.querySelector('input[name="motivo"]:checked');
+      if (!marcado || !sb()) return;
+      mandar.disabled = true;
+      cancelar.disabled = true;
+      let texto;
+      try {
+        const { data, error } = await sb().rpc('fn_denunciar_resena', {
+          p_resena_id: fila.id,
+          p_motivo: marcado.value,
+          p_notas: notas.value.trim() || null,
+        });
+        if (error) throw error;
+        if (data && data.ok) texto = 'Gracias. Una persona de SeviTime lo va a revisar.';
+        else if (data && data.error === 'limite_dia') texto = 'Has denunciado mucho hoy. Prueba mañana.';
+        else if (data && data.error === 'sin_cuenta') texto = 'Hace falta iniciar sesión.';
+        else if (data && (data.error === 'es_tuya' || data.error === 'sin_resena')) texto = 'Esta reseña no se puede denunciar.';
+        else texto = 'No se ha podido enviar. Inténtalo más tarde.';
+      } catch (_) {
+        texto = 'No se ha podido enviar. Inténtalo más tarde.';
+      }
+      d.close();
+      aviso.textContent = texto;
+    });
+
+    document.body.appendChild(d);
+    d.addEventListener('close', function () { d.remove(); });
+    d.showModal();
+  }
+
+  // La llama la ficha al pintar cada reseña pública. En la propia no sale.
+  // Sin sesión sí, como en la app: al pulsarlo se pide entrar.
+  function botonDenunciar(fila) {
+    if (fila.es_mia || fila.id == null) return null;
+    const caja = el('span', 'resena-denunciar-caja');
+    const b = el('button', 'resena-denunciar', 'Denunciar');
+    b.type = 'button';
+    b.setAttribute('aria-label', 'Denunciar esta reseña');
+    const aviso = el('span', 'resena-denunciar-aviso', '');
+    aviso.setAttribute('role', 'status');
+    b.addEventListener('click', function () {
+      if (!usuario) {
+        aviso.textContent = 'Entra con Google para denunciar una reseña.';
+        entrar();
+        return;
+      }
+      abrirDenuncia(fila, aviso);
+    });
+    caja.append(b, aviso);
+    return caja;
+  }
+
   // --- Arranque -------------------------------------------------------------
 
   function montar(donde) {
@@ -679,6 +808,7 @@
       }
     },
     botonUtil,
+    botonDenunciar,
     get haySesion() { return Boolean(usuario); },
   };
 })();

@@ -487,9 +487,17 @@
       });
       li.appendChild(tira);
     }
-    // El botón va al final, debajo del texto y de las fotos: primero se lee
-    // la reseña y después se dice si ha servido.
-    if (boton) li.appendChild(boton);
+    // Los botones van al final, debajo del texto y de las fotos: primero se
+    // lee la reseña y después se dice si ha servido, o si no debería estar.
+    const denunciar = window.SeviResena && window.SeviResena.botonDenunciar
+      ? window.SeviResena.botonDenunciar(r) : null;
+    if (boton || denunciar) {
+      const pie = document.createElement('div');
+      pie.className = 'resena-pie';
+      if (boton) pie.appendChild(boton);
+      if (denunciar) pie.appendChild(denunciar);
+      li.appendChild(pie);
+    }
     return li;
   }
 

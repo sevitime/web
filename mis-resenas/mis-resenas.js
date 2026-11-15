@@ -78,6 +78,10 @@
         : 'A ' + fila.utiles_count + ' personas les ha servido');
     }
     if (fila.tiene_edicion_pendiente) meta.push('Con un cambio en revisión');
+    // Salió al momento y sus fotos esperan (como «Foto en revisión» en la app).
+    if (Number(fila.fotos_en_revision) > 0) {
+      meta.push(Number(fila.fotos_en_revision) === 1 ? 'Foto en revisión' : 'Fotos en revisión');
+    }
     if (meta.length) li.appendChild(el('p', 't-meta', meta.join(' · ')));
 
     return li;
@@ -127,7 +131,7 @@
       const { data, error } = await sb()
         .from('resenas')
         .select('id, place_name, place_key, rating, comentario, estado, ' +
-                'created_at, utiles_count, motivo_rechazo, resenas_ediciones(enviada_at)')
+                'created_at, utiles_count, motivo_rechazo, fotos_en_revision, resenas_ediciones(enviada_at)')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       if (error) throw error;
