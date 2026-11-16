@@ -52,14 +52,41 @@
       avatar.style.background = COLOR_PRESET[id] || '#00897B';
       avatar.textContent = EMOJI_PRESET[id] || '📍';
     } else if (guardado) {
+      // Una foto subida se abre en grande al tocarla, como en la app
+      // (`AvatarSevitime(ampliable: true)`). Los de la casa y las iniciales
+      // no: no hay nada más que ver en ellos.
+      const boton = document.createElement('button');
+      boton.type = 'button';
+      boton.className = 'perfil-avatar-boton';
+      boton.setAttribute('aria-label', 'Ver la foto de perfil de ' + nombre);
       const img = document.createElement('img');
       img.src = guardado;
       img.alt = '';
       img.referrerPolicy = 'no-referrer';
-      avatar.appendChild(img);
+      boton.appendChild(img);
+      boton.addEventListener('click', () => ampliarAvatar(guardado, nombre));
+      avatar.appendChild(boton);
     } else {
       avatar.textContent = iniciales(nombre);
     }
+  }
+
+  // La foto en grande, redonda como se ve en el perfil, sobre el fondo
+  // oscurecido. Se cierra tocando en cualquier parte o con Escape (lo da el
+  // propio <dialog>), y el foco vuelve a la miniatura.
+  function ampliarAvatar(url, nombre) {
+    const dlg = document.createElement('dialog');
+    dlg.className = 'foto-perfil-grande';
+    dlg.setAttribute('aria-label', 'Foto de perfil de ' + nombre);
+    const img = document.createElement('img');
+    img.src = url;
+    img.alt = 'Foto de perfil de ' + nombre;
+    img.referrerPolicy = 'no-referrer';
+    dlg.appendChild(img);
+    dlg.addEventListener('click', () => dlg.close());
+    dlg.addEventListener('close', () => dlg.remove());
+    document.body.appendChild(dlg);
+    dlg.showModal();
   }
 
   function anadirStat(valor, etiqueta) {
