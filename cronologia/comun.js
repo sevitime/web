@@ -118,9 +118,9 @@
     // manos. `sitio` es el nombre VIEJO, que es el que la gente reconoce; el
     // nuevo va en el detalle.
     lugar_renombrado: 'Ha cambiado de nombre:',
-    // El servidor NO manda `evento_nuevo` desde el 6-nov-2026: «Qué pasa» es
-    // el registro de lo que le pasa a los SITIOS, y los eventos tienen
-    // pantalla propia. Se queda escrito por si se decide al revés.
+    // Un evento propuesto por alguien, sin su nombre (lo propuso antes del
+    // 16-nov-2026 o no sale en el cuadro de honor). Los de las fuentes no
+    // entran. Ver docs/sql/cronologia_eventos_propuestos.sql en la app.
     evento_nuevo: 'Nuevo evento:',
     // Lo que alguien contestó a «¿Está abierto?» estando en la puerta, sin
     // decir quién. En pasado («visto»): la línea dura un día en la lista y
@@ -327,7 +327,7 @@
     ruta: '🧭', comentario_evento: '💬',
     lugar_nuevo: '📍', lugar_desaparecido: '🚫',
     lugar_renombrado: '🏷️', lugar_datos: '✏️',
-    evento_nuevo: '📅',
+    evento: '📅', evento_nuevo: '📅',
     estado_abierto: '🚪', estado_cerrado: '🔒',
   };
 
