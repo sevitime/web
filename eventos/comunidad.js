@@ -741,8 +741,27 @@
     });
   }
 
+  // `/eventos/?e=<clave>`: el enlace que manda la app al compartir un evento
+  // (`enlaceEvento` en lib/data/enlaces.dart). Hasta el 18-nov-2026 la app
+  // compartía solo el nombre, la fecha y el sitio, sin nada que pulsar. Con
+  // la app instalada en Android el enlace lo abre la app; aquí llega quien
+  // no la tiene, o quien está en un iPhone.
+  let enlaceAtendido = false;
+  function abrirDelEnlace() {
+    if (enlaceAtendido) return;
+    enlaceAtendido = true;
+    let clave = null;
+    try { clave = new URLSearchParams(location.search).get('e'); } catch (_) { /* nada */ }
+    if (!clave) return;
+    const e = eventos.find((x) => claveEvento(x) === clave);
+    if (e) { abrir(e); return; }
+    // Ya pasó o se retiró: la lista solo trae lo que está por venir. Decirlo
+    // en vez de dejar la lista como si el enlace no hubiera hecho nada.
+    alertaSuave('Ese evento ya ha pasado o no está en la agenda. Estos son los próximos.');
+  }
+
   window.SeviComunidad = {
     abrir,
-    conEventos(lista) { eventos = lista; reabrirTrasLogin(); },
+    conEventos(lista) { eventos = lista; reabrirTrasLogin(); abrirDelEnlace(); },
   };
 })();
