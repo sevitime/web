@@ -114,9 +114,9 @@
     // demuestra que haya cerrado, y decirlo de un negocio real que sigue
     // abierto es el fallo que no se perdona.
     lugar_desaparecido: 'Ya no aparece en el mapa:',
-    // El sitio ha cambiado de nombre en el mapa: el negocio ha cambiado de
-    // manos. `sitio` es el nombre VIEJO, que es el que la gente reconoce; el
-    // nuevo va en el detalle.
+    // El sitio ha cambiado de nombre en el mapa. Con el nombre nuevo la
+    // frase es «Guadalquivir ahora se llama» (ver `frase`); esto queda para
+    // cuando no llega.
     lugar_renombrado: 'Ha cambiado de nombre:',
     // Un evento propuesto por alguien, sin su nombre (lo propuso antes del
     // 16-nov-2026 o no sale en el cuadro de honor). Los de las fuentes no
@@ -291,10 +291,8 @@
         && item.texto) {
       return 'En ' + item.texto;
     }
-    // El nombre nuevo de un sitio renombrado en el mapa: `sitio` es el viejo.
-    if (item.tipo === 'lugar_renombrado' && item.texto) {
-      return 'Ahora se llama ' + item.texto;
-    }
+    // `lugar_renombrado` no lleva: el nombre nuevo ya va destacado en la
+    // propia línea.
     // La dirección nueva: `texto` dice QUÉ cambió («direccion») y `valor`,
     // cuál es la calle. Sin el valor, la línea obligaba a abrir la ficha para
     // saber qué dirección es. Igual que `ItemCronologia.detalle` en la app.
@@ -305,7 +303,26 @@
     return null;
   }
 
+  // Si el detalle es el dato nuevo en sí (la dirección que acaba de
+  // aparecer) y no un apunte como el pueblo: entonces es la noticia y se
+  // pinta como texto, no en gris. Igual que `detalleEsLaNovedad` en la app.
+  function detalleEsLaNovedad(item) {
+    return item.tipo === 'lugar_datos' && detalle(item) != null;
+  }
+
+  // El nombre que se destaca y se toca: el del sitio, salvo en un renombrado
+  // del mapa, que es el nuevo. «Guadalquivir ahora se llama Malafama»: la
+  // noticia es Malafama, y es el nombre que ya dice la ficha. Hasta el
+  // 19-nov-2026 era al revés. Igual que `nombreDestacado` en la app.
+  function nombreDestacado(item) {
+    if (item.tipo === 'lugar_renombrado' && item.texto) return item.texto;
+    return item.sitio;
+  }
+
   function frase(item) {
+    if (item.tipo === 'lugar_renombrado' && item.texto) {
+      return item.sitio + ' ahora se llama';
+    }
     if (item.tipo === 'dato') return fraseDelDato(item.texto);
     if (item.tipo === 'lugar_datos') return fraseDeLoQueGano(item.texto, item.sitio || '');
     // Un tipo que esta versión de la web no conoce: mejor decir poco que
@@ -400,12 +417,13 @@
     if (ico) p.appendChild(ico);
 
     const url = destino(item);
+    const nombre = nombreDestacado(item);
     if (url) {
-      const a = el('a', 'crono-sitio', item.sitio);
+      const a = el('a', 'crono-sitio', nombre);
       a.href = url;
       p.appendChild(a);
     } else {
-      p.appendChild(el('span', 'crono-sitio', item.sitio));
+      p.appendChild(el('span', 'crono-sitio', nombre));
     }
     return p;
   }
@@ -504,6 +522,7 @@
   }
 
   window.SeviCrono = {
+    nombreDestacado, detalleEsLaNovedad,
     el: el,
     avatar: avatar,
     haceCuanto: haceCuanto,

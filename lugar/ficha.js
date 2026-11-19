@@ -798,8 +798,11 @@
 
         const que = document.createElement('span');
         que.className = 'historial-que';
-        let phrase = C.frase(item);
         // En la ficha no va el nombre del sitio detrás, así que el «:» sobra.
+        // Un renombrado dice el nombre nuevo debajo.
+        let phrase = f.tipo === 'lugar_renombrado'
+          ? 'Ha cambiado de nombre'
+          : C.frase(item);
         if (phrase.endsWith(':')) phrase = phrase.slice(0, -1);
         que.textContent = phrase;
         li.appendChild(que);
@@ -807,7 +810,9 @@
         // El nombre nuevo o la dirección nueva, debajo y sin comillas: no lo
         // dijo nadie, es un dato. Igual que en la app.
         if (f.tipo === 'lugar_renombrado' || f.tipo === 'lugar_datos') {
-          const detalle = C.detalle(item);
+          const detalle = f.tipo === 'lugar_renombrado'
+            ? (f.texto ? 'Ahora se llama ' + f.texto : null)
+            : C.detalle(item);
           if (detalle) {
             const d = document.createElement('span');
             d.className = 'historial-detalle';

@@ -197,10 +197,10 @@ test('los cambios del mapa se cuentan con sus palabras, no «ha participado»', 
   // Pepe» y encima no contaba como noticia de la ciudad. La app lo decía bien
   // desde el primer día; esto es la paridad que falta.
   const C = cargar();
+  // Desde el 19-nov-2026 el nombre nuevo va destacado en la línea.
   assert.equal(C.frase(deLaCiudad('lugar_renombrado', { texto: 'Taberna Pepe' })),
-    'Ha cambiado de nombre:');
-  assert.equal(C.detalle(deLaCiudad('lugar_renombrado', { texto: 'Taberna Pepe' })),
-    'Ahora se llama Taberna Pepe');
+    'Bar Pepe ahora se llama');
+  assert.equal(C.frase(deLaCiudad('lugar_renombrado')), 'Ha cambiado de nombre:');
   assert.ok(C.esDeLaCiudad({ tipo: 'lugar_renombrado' }));
   assert.ok(C.esDeLaCiudad({ tipo: 'lugar_datos' }));
 });
@@ -267,4 +267,28 @@ test('lo que alguien vio al contestar «¿Está abierto?» sale sin autor y en p
   const destinos = enlaces(p);
   assert.ok(destinos.find((a) => a.textContent === 'Bar Santa Ana'));
   assert.ok(!destinos.some((a) => String(a.href || '').includes('/perfil/')));
+});
+
+test('un renombrado destaca el nombre nuevo, que lleva a la ficha', () => {
+  // «Guadalquivir ahora se llama Malafama»: la noticia es Malafama.
+  const C = cargar();
+  const item = entrada({
+    tipo: 'lugar_renombrado', apodo: null, sitio: 'Guadalquivir',
+    texto: 'Malafama', place_key: '37.39_-5.99',
+  });
+  const p = C.linea(item);
+  assert.equal(texto(p), 'Guadalquivir ahora se llama Malafama');
+  const sitio = enlaces(p).find((a) => a.textContent === 'Malafama');
+  assert.equal(sitio.href, '/lugar/?k=37.39_-5.99');
+  assert.equal(C.detalle(item), null, 'ya va en la línea');
+});
+
+test('la dirección nueva es la noticia; el pueblo, un apunte', () => {
+  const C = cargar();
+  assert.equal(C.detalleEsLaNovedad(entrada({
+    tipo: 'lugar_datos', texto: 'direccion', valor: 'Calle Feria 12',
+  })), true);
+  assert.equal(C.detalleEsLaNovedad(entrada({
+    tipo: 'lugar_nuevo', texto: 'Utrera',
+  })), false);
 });

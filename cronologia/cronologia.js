@@ -61,10 +61,15 @@
     }
     const dicho = C.cita(item);
     if (dicho) li.appendChild(el('p', 'crono-texto', '«' + dicho + '»'));
-    // El nombre nuevo de un sitio renombrado va sin comillas: no lo dijo
-    // nadie, es un dato.
+    // Un dato, no una cita: va sin comillas. Si es el dato nuevo (la
+    // dirección que acaba de aparecer), es la noticia; si es un apunte (el
+    // pueblo), en gris. Igual que en la app.
     const dato = C.detalle(item);
-    if (dato) li.appendChild(el('p', 'crono-detalle', dato));
+    if (dato) {
+      li.appendChild(el('p',
+        C.detalleEsLaNovedad(item) ? 'crono-detalle' : 'crono-detalle crono-apunte',
+        dato));
+    }
     if (item.foto_url) {
       // La foto se abre sola, como en la ficha del sitio; el enlace al sitio
       // ya está en el nombre. Antes tocarla no hacía nada.
