@@ -1606,11 +1606,18 @@ const CATEGORIAS_LUGARES = {
   // Devuelve una promesa con el array de lugares ya convertidos y sin nulos:
   // la foto diaria de OSM (la misma que lee la app) **más las altas manuales**
   // y **menos los ocultos**, en el mismo orden que la app.
+  // Cuándo se hizo la foto que se ha leído. La ficha lo compara con los
+  // cambios de «Qué pasa»: un renombrado posterior aún no está en ella.
+  let fotoGenerada = null;
+
   function cargar() {
     return Promise.all([
       fetch(SNAPSHOT_URL)
         .then((r) => r.json())
-        .then((d) => (d.elements || []).map(aLugar).filter(Boolean)),
+        .then((d) => {
+          fotoGenerada = d.generada ? new Date(d.generada) : null;
+          return (d.elements || []).map(aLugar).filter(Boolean);
+        }),
       manuales().then((filas) => filas.map(aLugarManual).filter(Boolean)),
       ocultos(),
       clavesConVotos(),
@@ -1766,6 +1773,7 @@ const CATEGORIAS_LUGARES = {
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones, cambiosDeSitio, buscarPorClave,
+    fotoGenerada: function () { return fotoGenerada; },
     cargarCurado, completarConDatosPropios, horarioLegible, ordenarSinUbicacion,
     queEsDe, casaConBusqueda, enlaceAlMapa, latir,
   };

@@ -771,6 +771,24 @@
       .catch(function () { /* la ficha no pierde nada: no se pinta */ });
   }
 
+  // Un cambio de nombre sale en «Qué pasa» a la media hora, pero la foto es
+  // de la madrugada: la ficha decía el nombre viejo hasta el día siguiente.
+  // Si el último renombrado es posterior a la foto, manda el suyo. La app
+  // hace lo mismo al abrir la ficha desde «Qué pasa».
+  function nombreAlDia(p, filas) {
+    const generada = window.sevitimeLugares.fotoGenerada();
+    let ultimo = null;
+    filas.forEach(function (f) {
+      if (f.tipo !== 'lugar_renombrado' || !f.texto || !f.cuando) return;
+      if (!ultimo || new Date(f.cuando) > new Date(ultimo.cuando)) ultimo = f;
+    });
+    if (!ultimo || ultimo.texto === p.nombre) return;
+    if (generada && new Date(ultimo.cuando) <= generada) return;
+    p.nombre = ultimo.texto;
+    document.getElementById('nombre').textContent = p.nombre;
+    if (!claveFija) document.title = p.nombre + ' — SeviTime';
+  }
+
   function pintarHistorial(p) {
     const seccion = document.getElementById('historial-sitio');
     const lista = document.getElementById('historial-lista');
@@ -779,6 +797,7 @@
 
     window.sevitimeLugares.cambiosDeSitio(p).then(function (filas) {
       if (!filas || !filas.length) return;
+      nombreAlDia(p, filas);
       const fecha = new Intl.DateTimeFormat('es-ES', {
         day: 'numeric', month: 'short', year: 'numeric',
       });
