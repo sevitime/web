@@ -316,3 +316,11 @@ test('la cocina dice cuál es, como en la app', () => {
   assert.equal(cocina('basque'), 'Cocina: basque');
   assert.equal(cocina('Calle Feria', 'direccion,cocina'), 'En Calle Feria');
 });
+
+test('una aportación con foto lo dice, como en la app', () => {
+  const C = cargar();
+  const aporte = (texto) => ({ tipo: 'dato', apodo: 'Selu', sitio: 'Kebab España', texto, valor: 'foto' });
+  assert.equal(C.frase(aporte(null)), 'ha añadido una foto de');
+  assert.equal(C.frase(aporte('teléfono')), 'ha añadido el teléfono y una foto de');
+  assert.equal(C.frase({ tipo: 'dato', texto: 'teléfono' }), 'ha añadido el teléfono de');
+});

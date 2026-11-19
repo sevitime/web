@@ -147,7 +147,16 @@
     return DE_LA_CIUDAD.indexOf(item.tipo) >= 0;
   }
 
-  const ARTICULOS = { horario: 'el', 'teléfono': 'el', web: 'la' };
+  const ARTICULOS = { horario: 'el', 'teléfono': 'el', web: 'la', foto: 'una' };
+
+  // Los campos de una aportación de la gente. La foto llega aparte, en
+  // `valor` = 'foto' (ver `fn_cronologia_filas`), y se suma al final. Igual
+  // que `ItemCronologia.campos` en la app.
+  function camposDe(item) {
+    const lista = trozos(item.texto);
+    if (item.tipo === 'dato' && item.valor === 'foto') lista.push('foto');
+    return lista;
+  }
 
   // La conjunción que toca delante de una palabra: la «y» se convierte en «e»
   // ante sonido /i/ («horario e historia»), salvo `hie-`, que suena /je/ y
@@ -238,8 +247,8 @@
 
   // «ha añadido el horario y el teléfono de». `texto` trae lo aportado
   // separado por comas, tal como lo monta `fn_cronologia`.
-  function fraseDelDato(texto) {
-    const datos = trozos(texto).map(function (d) {
+  function fraseDelDato(campos) {
+    const datos = campos.map(function (d) {
       return (ARTICULOS[d] || 'el') + ' ' + d;
     });
 
@@ -404,7 +413,7 @@
     if (item.tipo === 'lugar_renombrado' && item.texto) {
       return item.sitio + ' ahora se llama';
     }
-    if (item.tipo === 'dato') return fraseDelDato(item.texto);
+    if (item.tipo === 'dato') return fraseDelDato(camposDe(item));
     if (item.tipo === 'lugar_datos') return fraseDeLoQueGano(item.texto, item.sitio || '');
     // Un tipo que esta versión de la web no conoce: mejor decir poco que
     // llamar reseña a un aviso de cierre.
@@ -436,6 +445,7 @@
   const ICONOS_DATO = {
     horario: '🕒', telefono: '📞', web: '🌐', terraza: '☂️',
     cocina: '🍽️', accesibilidad: '♿', historia: '📜', direccion: '📍',
+    foto: '📷',
   };
 
   function emojiDe(item) {
@@ -443,6 +453,7 @@
       const campos = String(item.texto || '').split(',')
         .map((c) => c.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''))
         .filter(Boolean);
+      if (item.tipo === 'dato' && item.valor === 'foto') campos.push('foto');
       if (campos.length === 1 && ICONOS_DATO[campos[0]]) return ICONOS_DATO[campos[0]];
     }
     return ICONOS[item.tipo] || null;
