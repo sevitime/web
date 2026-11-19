@@ -587,6 +587,27 @@
     if (window.vigilarTeselas) vigilarTeselas(map);
   }
 
+  // El pueblo o el barrio, detrás de la calle o en su lugar: «Calle Feria,
+  // 12 · Feria (Casco Antiguo), Sevilla». Solo el 29 % de los sitios tiene
+  // calle en OSM, y el resto no decía dónde estaba. Lo resuelve el servidor
+  // (`fn_donde`), y se dice igual que en «Qué pasa» y que en la app.
+  function pintarDonde(p, datos, filaDireccion, alMapa) {
+    const C = window.SeviCrono;
+    if (!C || !C.donde) return;
+    pedir('rpc/fn_donde', { cuerpo: { p_lat: p.lat, p_lon: p.lon } })
+      .then(function (filas) {
+        const zona = filas && filas[0] ? C.donde(filas[0]) : null;
+        if (!zona) return;
+        if (filaDireccion) {
+          const valor = filaDireccion.lastChild;
+          valor.textContent = p.direccion + ' · ' + zona;
+        } else {
+          datos.insertBefore(fila('Dónde', zona, alMapa), datos.firstChild);
+        }
+      })
+      .catch(function () { /* sin red: se queda la calle, como antes */ });
+  }
+
   function fila(etiqueta, valor, href) {
     const li = document.createElement('li');
     const e = document.createElement('span');
@@ -933,10 +954,10 @@
     // La dirección, como en la ficha de la app: calle y número según
     // OpenStreetMap. Sin calle no se pone nada (ver `direccionDe`).
     // La dirección abre la app de mapas, como en la app (era texto suelto).
-    if (p.direccion) {
-      datos.appendChild(fila('Dirección', p.direccion,
-        window.sevitimeLugares.enlaceAlMapa(p.lat, p.lon, p.nombre)));
-    }
+    const alMapa = window.sevitimeLugares.enlaceAlMapa(p.lat, p.lon, p.nombre);
+    const filaDireccion = p.direccion ? fila('Dirección', p.direccion, alMapa) : null;
+    if (filaDireccion) datos.appendChild(filaDireccion);
+    pintarDonde(p, datos, filaDireccion, alMapa);
     if (p.telefono) datos.appendChild(fila('Teléfono', p.telefono, 'tel:' + p.telefono));
     if (p.web) datos.appendChild(fila('Web', p.web, p.web));
     // El horario se enseña como lo que es: lo que dice OpenStreetMap, no lo
