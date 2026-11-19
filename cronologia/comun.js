@@ -168,6 +168,67 @@
     return partes.join(', ') + ' ' + conjuncion(ultimo) + ' ' + ultimo;
   }
 
+  // Los valores de `cuisine` de OSM en castellano: la MISMA tabla que
+  // `PlaceTypes._cocinas` en la app (copiada de allí). Si cambia una,
+  // cambia la otra.
+  const COCINAS = {
+    spanish: 'Española',
+    regional: 'Regional',
+    tapas: 'Tapas',
+    pizza: 'Pizza',
+    burger: 'Hamburguesas',
+    coffee_shop: 'Cafetería',
+    italian: 'Italiana',
+    japanese: 'Japonesa',
+    sandwich: 'Bocadillos',
+    fish: 'Pescado',
+    local: 'Cocina local',
+    churro: 'Churros',
+    cake: 'Pastelería',
+    friture: 'Fritura',
+    breakfast: 'Desayunos',
+    kebab: 'Kebab',
+    seafood: 'Marisco',
+    mexican: 'Mexicana',
+    chinese: 'China',
+    chicken: 'Pollo',
+    mediterranean: 'Mediterránea',
+    pasta: 'Pasta',
+    asian: 'Asiática',
+    sushi: 'Sushi',
+    steak_house: 'Carnes',
+    american: 'Americana',
+    barbecue: 'Barbacoa',
+    tea: 'Té',
+    ice_cream: 'Heladería',
+    bakery: 'Panadería',
+    international: 'Internacional',
+    vegetarian: 'Vegetariana',
+    vegan: 'Vegana',
+    indian: 'India',
+    greek: 'Griega',
+    french: 'Francesa',
+    peruvian: 'Peruana',
+    argentinian: 'Argentina',
+    arab: 'Árabe',
+    andalusian: 'Andaluza',
+  };
+
+  // `spanish;tapas` → «Cocina: española y tapas». Igual que
+  // `ItemCronologia._cocinaLegible` en la app.
+  function cocinaLegible(valor) {
+    const vistos = [];
+    String(valor || '').split(';').forEach(function (c) {
+      const v = c.trim().toLowerCase();
+      if (!v) return;
+      let n = COCINAS[v] || (v.charAt(0).toUpperCase() + v.slice(1).replace(/_/g, ' '));
+      n = n.toLowerCase();
+      if (n.indexOf('cocina ') === 0) n = n.slice(7);
+      if (n && vistos.indexOf(n) < 0) vistos.push(n);
+    });
+    return vistos.length ? 'Cocina: ' + enumerar(vistos) : null;
+  }
+
   function trozos(texto) {
     return String(texto || '')
       .split(',')
@@ -224,7 +285,8 @@
         ],
         cocina: [
           'Ahora consta en el mapa qué cocina ofrece:',
-          'Se ha añadido al mapa el tipo de cocina:',
+          // Vale también cuando la cocina cambia: «se ha añadido» no.
+          'Ya se sabe qué cocina ofrece:',
           'El mapa ya indica qué cocina ofrece:',
         ],
         historia: [
@@ -301,6 +363,11 @@
     if (item.tipo === 'lugar_datos' && item.valor
         && trozos(item.texto).indexOf('direccion') >= 0) {
       return 'En ' + item.valor;
+    }
+    // Qué cocina es: `valor` trae los valores de OSM desde el 19-nov-2026.
+    if (item.tipo === 'lugar_datos' && item.valor
+        && trozos(item.texto).indexOf('cocina') >= 0) {
+      return cocinaLegible(item.valor);
     }
     return null;
   }

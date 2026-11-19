@@ -302,3 +302,15 @@ test('dónde: el barrio en la capital, el pueblo fuera, sin repetirlo debajo', (
   assert.equal(C.detalle(alta), null);
   assert.equal(C.detalle({ tipo: 'lugar_nuevo', texto: 'Écija' }), 'En Écija');
 });
+
+test('la cocina dice cuál es, como en la app', () => {
+  const C = cargar();
+  const cocina = (valor, texto = 'cocina') =>
+    C.detalle({ tipo: 'lugar_datos', texto, valor });
+  assert.equal(cocina('italian'), 'Cocina: italiana');
+  assert.equal(cocina('spanish;tapas'), 'Cocina: española y tapas');
+  assert.equal(cocina('spanish;italian'), 'Cocina: española e italiana');
+  assert.equal(cocina('local'), 'Cocina: local');
+  assert.equal(cocina('basque'), 'Cocina: basque');
+  assert.equal(cocina('Calle Feria', 'direccion,cocina'), 'En Calle Feria');
+});
