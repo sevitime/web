@@ -287,8 +287,10 @@
     if (item.tipo === 'evento_nuevo' && item.texto) return 'En ' + item.texto;
     // El pueblo, en los sitios de la provincia. La capital no lo lleva: el
     // servidor manda `texto` solo cuando NO es Sevilla.
+    // Solo si el servidor no ha mandado el municipio: con él, el pueblo ya va
+    // junto a la hora (`donde`) y debajo salía repetido.
     if ((item.tipo === 'lugar_nuevo' || item.tipo === 'lugar_desaparecido')
-        && item.texto) {
+        && item.texto && !item.municipio) {
       return 'En ' + item.texto;
     }
     // `lugar_renombrado` no lleva: el nombre nuevo ya va destacado en la
@@ -317,6 +319,14 @@
   function nombreDestacado(item) {
     if (item.tipo === 'lugar_renombrado' && item.texto) return item.texto;
     return item.sitio;
+  }
+
+  // Dónde ha pasado, junto a la hora: «Triana, Sevilla» en la capital (el
+  // barrio lo resuelve el servidor con `fn_barrio`) y el pueblo fuera. Solo
+  // «Sevilla» no decía nada. Igual que `ItemCronologia.donde` en la app.
+  function donde(item) {
+    if (!item.municipio) return null;
+    return item.barrio ? item.barrio + ', ' + item.municipio : item.municipio;
   }
 
   function frase(item) {
@@ -522,7 +532,7 @@
   }
 
   window.SeviCrono = {
-    nombreDestacado, detalleEsLaNovedad,
+    nombreDestacado, detalleEsLaNovedad, donde,
     el: el,
     avatar: avatar,
     haceCuanto: haceCuanto,

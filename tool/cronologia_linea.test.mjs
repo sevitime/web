@@ -292,3 +292,13 @@ test('la dirección nueva es la noticia; el pueblo, un apunte', () => {
     tipo: 'lugar_nuevo', texto: 'Utrera',
   })), false);
 });
+
+test('dónde: el barrio en la capital, el pueblo fuera, sin repetirlo debajo', () => {
+  const C = cargar();
+  assert.equal(C.donde({ municipio: 'Sevilla', barrio: 'Triana' }), 'Triana, Sevilla');
+  assert.equal(C.donde({ municipio: 'Sevilla' }), 'Sevilla');
+  assert.equal(C.donde({}), null);
+  const alta = { tipo: 'lugar_nuevo', texto: 'Écija', municipio: 'Écija' };
+  assert.equal(C.detalle(alta), null);
+  assert.equal(C.detalle({ tipo: 'lugar_nuevo', texto: 'Écija' }), 'En Écija');
+});

@@ -32,9 +32,9 @@
     // «hace 2 días · Guillena»: el municipio, de un vistazo. Lo resuelve el
     // servidor por coordenadas, así que lo traen todas las entradas del mapa
     // aunque OSM no tenga `addr:city`.
+    const donde = C.donde(item);
     const cuando = C.el('span', 'crono-cuando',
-      C.haceCuanto(item.cuando) +
-      (item.municipio ? ' · ' + item.municipio : ''));
+      C.haceCuanto(item.cuando) + (donde ? ' · ' + donde : ''));
     // `municipio` llega resuelto del servidor (`fn_cronologia`), no de
     // `addr:city`: así lo llevan también los pueblos que no lo etiquetan. La
     // app lo pinta igual, en la misma línea de la hora.
