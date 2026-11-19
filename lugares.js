@@ -817,9 +817,12 @@ const CATEGORIAS_LUGARES = {
       horario: t.opening_hours || '',
       // Calle y número como en la app (`PlacesService._direccion`): es lo
       // que las tarjetas de Explorar enseñan en la última línea y por lo que
-      // también se puede buscar. El pueblo NO entra: en la app sale de otro
-      // snapshot (los núcleos de población) y aquí no se descarga.
+      // también se puede buscar.
       direccion: direccionDe(t),
+      // El pueblo, que apunta en la foto `snapshot-lugares` desde el
+      // 19-nov-2026 (campo suelto, no etiqueta de OSM). Lo mismo que lee la
+      // lupa de la app: con toda la provincia hay veinte «Bar Manolo».
+      municipio: e.municipio || null,
       // Si OpenStreetMap lo enlaza con Wikipedia o Wikidata. No se enseña:
       // sirve para saber qué sitios son conocidos (`ordenarSinUbicacion`).
       conArticulo: !!(t.wikipedia || t.wikidata),

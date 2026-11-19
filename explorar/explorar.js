@@ -541,6 +541,12 @@
 
     const meta = el('span', 'sitio-meta');
     meta.appendChild(el('span', null, p.label || 'Sitio'));
+    // El pueblo, fuera de la capital, como en la lupa de la app: con toda la
+    // provincia dentro hay veinte «Bar Manolo». «Sevilla» se da por hecho.
+    if (p.municipio && p.municipio !== 'Sevilla') {
+      meta.appendChild(el('span', 'punto', '·'));
+      meta.appendChild(el('span', null, p.municipio));
+    }
     // La distancia, solo si se sabe desde dónde. Sin ubicación se medía al
     // centro de Sevilla y la tarjeta decía «98 m» de un sitio a kilómetros
     // de quien miraba; la app tampoco la enseña. La excepción es haber pedido
