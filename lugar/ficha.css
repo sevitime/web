@@ -25,9 +25,10 @@
   #atribucion-mapa {
     position: absolute; left: 0; bottom: 0; margin: 0;
     padding: 3px 8px; border-bottom-left-radius: 16px;
-    font-size: var(--t-etiqueta); color: var(--texto);
+    font-size: 11px; color: var(--texto);
     background: var(--atrib-bg);
   }
+  #atribucion-mapa a { color: inherit; text-decoration: none; }
 
   .sitio-datos { list-style: none; padding: 0; margin: 0 0 28px; }
   .sitio-datos li {
