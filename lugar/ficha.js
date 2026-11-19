@@ -596,13 +596,23 @@
     if (!C || !C.donde) return;
     pedir('rpc/fn_donde', { cuerpo: { p_lat: p.lat, p_lon: p.lon } })
       .then(function (filas) {
-        const zona = filas && filas[0] ? C.donde(filas[0]) : null;
-        if (!zona) return;
+        const f = filas && filas[0];
+        if (!f) return;
+        const zona = C.donde(f);
         if (filaDireccion) {
-          const valor = filaDireccion.lastChild;
-          valor.textContent = p.direccion + ' · ' + zona;
-        } else {
-          datos.insertBefore(fila('Dónde', zona, alMapa), datos.firstChild);
+          if (zona) filaDireccion.lastChild.textContent = p.direccion + ' · ' + zona;
+          return;
+        }
+        // Sin calle en OSM, la del Catastro (19-nov-2026), citando la fuente:
+        // su reutilización es libre con esa condición. Igual que la app.
+        const calle = f.direccion || null;
+        const valor = [calle, zona].filter(Boolean).join(' · ');
+        if (!valor) return;
+        datos.insertBefore(fila(calle ? 'Dirección' : 'Dónde', valor, alMapa),
+          datos.firstChild);
+        if (calle) {
+          datos.appendChild(fila('Fuente de la dirección',
+            'Dirección General del Catastro'));
         }
       })
       .catch(function () { /* sin red: se queda la calle, como antes */ });
