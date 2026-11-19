@@ -1606,18 +1606,68 @@ const CATEGORIAS_LUGARES = {
   // Devuelve una promesa con el array de lugares ya convertidos y sin nulos:
   // la foto diaria de OSM (la misma que lee la app) **más las altas manuales**
   // y **menos los ocultos**, en el mismo orden que la app.
-  // Cuándo se hizo la foto que se ha leído. La ficha lo compara con los
-  // cambios de «Qué pasa»: un renombrado posterior aún no está en ella.
-  let fotoGenerada = null;
+  // --- El mapa al día ------------------------------------------------------
+  //
+  // La foto es de la madrugada. Un sitio nuevo o un cambio de nombre sale en
+  // «Qué pasa» a la media hora, pero la lista, la búsqueda y la ficha seguían
+  // con lo de la foto hasta el día siguiente. `fn_mapa_al_dia` da lo que
+  // «Qué pasa» ha anunciado después de la foto (solo altas y renombrados) y
+  // se aplica encima. Igual que `MapaAlDiaService` en la app.
+  function mapaAlDia(generada) {
+    if (!generada) return Promise.resolve([]);
+    const control = new AbortController();
+    const reloj = setTimeout(function () { control.abort(); }, 6000);
+    return fetch(SUPABASE_URL + '/rest/v1/rpc/fn_mapa_al_dia', {
+      method: 'POST',
+      headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ p_desde: generada }),
+      signal: control.signal,
+    })
+      .then(function (r) { return r.ok ? r.json() : []; })
+      .catch(function () { return []; })
+      .finally(function () { clearTimeout(reloj); });
+  }
+
+  function aplicarMapaAlDia(elementos, cambios) {
+    if (!Array.isArray(cambios) || !cambios.length) return elementos;
+    const resultado = elementos.slice();
+    const porId = new Map();
+    const porClave = new Map();
+    resultado.forEach(function (e, i) {
+      porId.set(e.type + '/' + e.id, i);
+      const lat = e.lat != null ? e.lat : e.center && e.center.lat;
+      const lon = e.lon != null ? e.lon : e.center && e.center.lon;
+      if (lat != null && lon != null) porClave.set(claveDe(lat, lon), i);
+    });
+    cambios.forEach(function (c) {
+      if (!c || !c.nombre || !c.clave || !c.valor) return;
+      const id = c.osm_type + '/' + c.osm_id;
+      let i = porId.get(id);
+      if (i == null && c.place_key) i = porClave.get(c.place_key);
+      if (c.clase === 'nombre') {
+        if (i == null) return;
+        const e = resultado[i];
+        resultado[i] = Object.assign({}, e, {
+          tags: Object.assign({}, e.tags, { name: c.nombre }),
+        });
+      } else if (c.clase === 'alta') {
+        if (i != null) return;
+        const tags = { name: c.nombre };
+        tags[c.clave] = c.valor;
+        resultado.push({ type: c.osm_type, id: c.osm_id, lat: c.lat, lon: c.lon, tags: tags });
+        porId.set(id, resultado.length - 1);
+      }
+    });
+    return resultado;
+  }
 
   function cargar() {
     return Promise.all([
       fetch(SNAPSHOT_URL)
         .then((r) => r.json())
-        .then((d) => {
-          fotoGenerada = d.generada ? new Date(d.generada) : null;
-          return (d.elements || []).map(aLugar).filter(Boolean);
-        }),
+        .then((d) => mapaAlDia(d.generada).then((cambios) =>
+          aplicarMapaAlDia(d.elements || [], cambios)))
+        .then((elementos) => elementos.map(aLugar).filter(Boolean)),
       manuales().then((filas) => filas.map(aLugarManual).filter(Boolean)),
       ocultos(),
       clavesConVotos(),
@@ -1772,8 +1822,7 @@ const CATEGORIAS_LUGARES = {
     FILTROS_EXPLORAR, TIPOS_DE_TODO,
     tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
-    fusiones, cambiosDeSitio, buscarPorClave,
-    fotoGenerada: function () { return fotoGenerada; },
+    fusiones, cambiosDeSitio, buscarPorClave, aplicarMapaAlDia,
     cargarCurado, completarConDatosPropios, horarioLegible, ordenarSinUbicacion,
     queEsDe, casaConBusqueda, enlaceAlMapa, latir,
   };
