@@ -388,12 +388,16 @@
     return item.sitio;
   }
 
-  // Dónde ha pasado, junto a la hora: «Triana, Sevilla» en la capital (el
-  // barrio lo resuelve el servidor con `fn_barrio`) y el pueblo fuera. Solo
-  // «Sevilla» no decía nada. Igual que `ItemCronologia.donde` en la app.
+  // Dónde ha pasado, junto a la hora: «La Calzada (Nervión), Sevilla» en la
+  // capital y «Peñaflor (Vega del Guadalquivir)» fuera. El barrio y la
+  // comarca los resuelve el servidor (`fn_barrio`, `fn_comarca`). Igual que
+  // `ItemCronologia.donde` en la app.
   function donde(item) {
     if (!item.municipio) return null;
-    return item.barrio ? item.barrio + ', ' + item.municipio : item.municipio;
+    if (item.barrio) return item.barrio + ', ' + item.municipio;
+    return item.comarca
+      ? item.municipio + ' (' + item.comarca + ')'
+      : item.municipio;
   }
 
   function frase(item) {

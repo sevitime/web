@@ -297,6 +297,8 @@ test('dónde: el barrio en la capital, el pueblo fuera, sin repetirlo debajo', (
   const C = cargar();
   assert.equal(C.donde({ municipio: 'Sevilla', barrio: 'Triana' }), 'Triana, Sevilla');
   assert.equal(C.donde({ municipio: 'Sevilla' }), 'Sevilla');
+  assert.equal(C.donde({ municipio: 'Peñaflor', comarca: 'Vega del Guadalquivir' }),
+    'Peñaflor (Vega del Guadalquivir)');
   assert.equal(C.donde({}), null);
   const alta = { tipo: 'lugar_nuevo', texto: 'Écija', municipio: 'Écija' };
   assert.equal(C.detalle(alta), null);
