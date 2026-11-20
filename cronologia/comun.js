@@ -613,7 +613,42 @@
       });
   }
 
+  // --- Volver a pedirla al volver a la página -------------------------------
+  //
+  // Igual que la app (`refrescarCronologiaAlVolver`, 2 minutos): la web solo
+  // la pedía al cargar, así que una pestaña abierta desde por la mañana, la
+  // página que el navegador restaura con «atrás» o la web instalada en el
+  // iPhone —que no recarga sola ni tiene «tirar para refrescar»— enseñaban
+  // lo de entonces aunque en la app ya hubiera salido algo nuevo.
+  const REFRESCO_AL_VOLVER = 2 * 60 * 1000;
+
+  function tocaRefrescar(pedidaEn, ahora) {
+    return !(ahora - pedidaEn < REFRESCO_AL_VOLVER);
+  }
+
+  // `accion` devuelve una promesa; mientras está en marcha no se pide otra.
+  // Se cuenta desde que se registra, que es justo después de la primera
+  // petición de la página.
+  function refrescarAlVolver(accion) {
+    let pedidaEn = Date.now();
+    let enMarcha = false;
+    function quizas() {
+      if (document.visibilityState === 'hidden') return;
+      if (enMarcha || !tocaRefrescar(pedidaEn, Date.now())) return;
+      enMarcha = true;
+      pedidaEn = Date.now();
+      Promise.resolve()
+        .then(accion)
+        .catch(function () { /* sin red se queda lo que había */ })
+        .finally(function () { enMarcha = false; });
+    }
+    document.addEventListener('visibilitychange', quizas);
+    window.addEventListener('pageshow', function (e) { if (e.persisted) quizas(); });
+  }
+
   window.SeviCrono = {
+    tocaRefrescar: tocaRefrescar,
+    refrescarAlVolver: refrescarAlVolver,
     nombreDestacado, detalleEsLaNovedad, donde,
     el: el,
     avatar: avatar,

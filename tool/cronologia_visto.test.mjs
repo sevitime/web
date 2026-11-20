@@ -74,3 +74,13 @@ test('sin localStorage, el contador se queda a cero y no revienta', () => {
   assert.equal(C.nuevas([dia('2026-11-04T10:00:00Z')]), 0);
   assert.equal(datos.size, 0);
 });
+
+test('al volver solo se pide otra vez pasados 2 minutos, como la app', () => {
+  const { C } = cargar();
+  const t0 = Date.parse('2026-11-20T10:00:00Z');
+
+  assert.equal(C.tocaRefrescar(t0, t0 + 60 * 1000), false);
+  assert.equal(C.tocaRefrescar(t0, t0 + 2 * 60 * 1000 - 1), false);
+  assert.equal(C.tocaRefrescar(t0, t0 + 2 * 60 * 1000), true);
+  assert.equal(C.tocaRefrescar(t0, t0 + 3 * 60 * 60 * 1000), true);
+});

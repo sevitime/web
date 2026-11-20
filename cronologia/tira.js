@@ -26,18 +26,20 @@
   if (!hueco || !window.SeviCrono) return;
   const C = window.SeviCrono;
 
-  C.pedir(40).then(function (filas) {
-    if (!Array.isArray(filas) || !filas.length) return;
+  let sec = null;
+  let contador = null;
+  let filasPintadas = null;
 
+  function pintar(filas) {
     C.inicializarVisto(filas);
     const pendientes = C.nuevas(filas);
 
-    const sec = C.el('section', 'tira-crono');
+    const nueva = C.el('section', 'tira-crono');
 
     const cabecera = C.el('div', 'tira-crono-cabecera');
     const titulo = C.el('div', 'tira-crono-titulo');
     titulo.appendChild(C.el('h2', null, 'Qué pasa'));
-    let contador = null;
+    contador = null;
     if (pendientes > 0) {
       contador = C.el('span', 'tira-crono-nuevas',
         pendientes + (pendientes === 1 ? ' nueva' : ' nuevas'));
@@ -47,7 +49,7 @@
     const todo = C.el('a', 'tira-crono-todo', 'Ver todo');
     todo.href = '/cronologia/';
     cabecera.appendChild(todo);
-    sec.appendChild(cabecera);
+    nueva.appendChild(cabecera);
 
     const lista = C.el('ul', 'tira-crono-lista');
     filas.slice(0, 3).forEach(function (item) {
@@ -59,23 +61,40 @@
       li.appendChild(txt);
       lista.appendChild(li);
     });
-    sec.appendChild(lista);
+    nueva.appendChild(lista);
 
     const honor = C.el('a', 'tira-crono-honor', 'Ver el cuadro de honor');
     honor.href = '/ranking/';
-    sec.appendChild(honor);
+    nueva.appendChild(honor);
 
-    hueco.appendChild(sec);
+    // Se sustituye en el sitio: al refrescar no salta al final del hueco.
+    if (sec) sec.replaceWith(nueva); else hueco.appendChild(nueva);
+    sec = nueva;
+    filasPintadas = filas;
+  }
 
-    // Al volver con el botón atrás, el navegador puede restaurar esta página
-    // tal cual (bfcache). Si mientras tanto se abrió la cronología, el
-    // contador ya está visto y sobra.
-    window.addEventListener('pageshow', function () {
-      if (contador && C.nuevas(filas) === 0) {
-        contador.remove();
-        contador = null;
-      }
+  function cargar() {
+    return C.pedir(40).then(function (filas) {
+      // Si no llega nada, se queda la tira que había (como la tarjeta de la
+      // app, que no se quita si el refresco no llega).
+      if (!Array.isArray(filas) || !filas.length) return;
+      pintar(filas);
     });
+  }
+
   // Sin red, la tira no sale: como cuando no hay nada, pero sin decirlo.
-  }).catch(function () {});
+  cargar().catch(function () {});
+  // Lo nuevo de los últimos minutos, al volver a la pestaña o a la web
+  // instalada, como la app.
+  C.refrescarAlVolver(cargar);
+
+  // Al volver con el botón atrás, el navegador puede restaurar esta página
+  // tal cual (bfcache). Si mientras tanto se abrió la cronología, el
+  // contador ya está visto y sobra.
+  window.addEventListener('pageshow', function () {
+    if (contador && filasPintadas && C.nuevas(filasPintadas) === 0) {
+      contador.remove();
+      contador = null;
+    }
+  });
 }());

@@ -99,11 +99,11 @@
   let cargadas = 0;
   let pidiendo = false;
 
-  function pintar(filas) {
+  function pintar(filas, pedidas) {
     filas.forEach(function (f) { lista.appendChild(fila(f)); });
     cargadas += filas.length;
     // Una página incompleta es el final de la lista.
-    if (mas) mas.hidden = filas.length < PAGINA;
+    if (mas) mas.hidden = filas.length < (pedidas || PAGINA);
   }
 
   function siguiente() {
@@ -125,20 +125,44 @@
 
   if (mas) mas.addEventListener('click', siguiente);
 
+  function primera(filas) {
+    if (!Array.isArray(filas) || !filas.length) {
+      estado.textContent = 'Todavía no hay nada que contar. En cuanto alguien ' +
+        'reseñe un sitio, añada uno nuevo o corrija algo, saldrá aquí.';
+      return;
+    }
+    // Entrar aquí es haber visto la cronología: al volver a Explorar, el
+    // contador de novedades de la tira se apaga.
+    C.marcarVisto(C.ultimaPublicacion(filas));
+    estado.hidden = true;
+    pintar(filas);
+  }
+
   C.pedir(PAGINA, 0)
-    .then(function (filas) {
-      if (!Array.isArray(filas) || !filas.length) {
-        estado.textContent = 'Todavía no hay nada que contar. En cuanto alguien ' +
-          'reseñe un sitio, añada uno nuevo o corrija algo, saldrá aquí.';
-        return;
-      }
-      // Entrar aquí es haber visto la cronología: al volver a Explorar, el
-      // contador de novedades de la tira se apaga.
-      C.marcarVisto(C.ultimaPublicacion(filas));
-      estado.hidden = true;
-      pintar(filas);
-    })
+    .then(primera)
     .catch(function () {
       estado.textContent = 'No hemos podido cargarlo. Inténtalo en un momento.';
     });
+
+  // Al volver a la pestaña o a la web instalada pasados 2 minutos, se vuelve
+  // a pedir, como la app. Se piden de una vez todas las que ya había en
+  // pantalla (el servidor da como mucho 100) y se repinta la lista entera,
+  // porque lo aprobado tarde no cae arriba sino en su hora. Lo que ha salido
+  // mientras tanto lleva el punto de «Nueva»: se compara con la visita de
+  // antes de entrar, no con esta.
+  C.refrescarAlVolver(function () {
+    if (pidiendo || cargadas > 100) return null;
+    const cuantas = Math.max(cargadas, PAGINA);
+    pidiendo = true;
+    return C.pedir(cuantas, 0)
+      .then(function (filas) {
+        if (!Array.isArray(filas) || !filas.length) return;
+        if (!cargadas) { primera(filas); return; }
+        C.marcarVisto(C.ultimaPublicacion(filas));
+        lista.replaceChildren();
+        cargadas = 0;
+        pintar(filas, cuantas);
+      })
+      .finally(function () { pidiendo = false; });
+  });
 }());
