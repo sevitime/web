@@ -146,6 +146,9 @@
   const SUPABASE_KEY = 'sb_publishable_sBgKboeZMNaMLZWDekEW6A_1kG8JH8l';
   const POR_TANDA = 5;
   let datosEstructurados = null;
+  // El tipo del sitio («Restaurante», «Museo»…), para elegir su tipo de
+  // schema.org al ponerle la nota.
+  let etiquetaSitio = '';
   let resenasPintadas = 0;
   // Qué repintado de las opiniones es el válido. Si entra una sesión
   // mientras la primera carga está en vuelo, las dos vaciaban la lista y
@@ -209,7 +212,12 @@
     caja.hidden = false;
 
     // La nota, también para los buscadores: es un dato que está a la vista.
-    if (datosEstructurados) {
+    // Solo en los negocios: Google no admite nota en un `Place` ni en un
+    // museo, y avisa de error en Search Console (ver `tipoSchemaDe`).
+    const L = window.sevitimeLugares;
+    const schema = L && L.tipoSchemaDe ? L.tipoSchemaDe(etiquetaSitio) : null;
+    if (datosEstructurados && schema && schema.nota) {
+      datosEstructurados.datos['@type'] = schema.tipo;
       datosEstructurados.datos.aggregateRating = {
         '@type': 'AggregateRating',
         ratingValue: Math.round(media * 10) / 10,
@@ -883,6 +891,7 @@
 
   function pintar(p) {
     contarApertura();
+    etiquetaSitio = p.label || '';
     pintarDistancia(p);
     const nombre = document.getElementById('nombre');
     nombre.textContent = p.nombre;

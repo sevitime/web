@@ -746,6 +746,31 @@ const CATEGORIAS_LUGARES = {
     return infoDe(tipo).etiqueta;
   }
 
+  // Tipo de schema.org de un sitio, para los datos estructurados de la ficha.
+  // Google solo enseña la nota de las reseñas (`aggregateRating`) colgada de
+  // ciertos tipos: negocios (`LocalBusiness` y sus hijos), productos,
+  // eventos… No de un `Place` genérico ni de un museo o una iglesia. El
+  // 25-nov-2026 Search Console avisó de «El tipo de objeto del campo
+  // <parent_node> no es válido» porque todas las fichas eran `Place`.
+  // `nota` dice si a ese tipo se le puede poner la nota.
+  const TIPO_SCHEMA = {
+    'Restaurante': 'Restaurant', 'Restaurantes': 'Restaurant',
+    'Bar': 'BarOrPub', 'Bares': 'BarOrPub', 'Terraza': 'BarOrPub',
+    'Comida': 'FoodEstablishment',
+    'Café': 'CafeOrCoffeeShop', 'Cafés': 'CafeOrCoffeeShop',
+    'Heladería': 'IceCreamShop',
+    'Discoteca': 'NightClub',
+    'Banco': 'BankOrCreditUnion',
+    'Farmacia': 'Pharmacy',
+    'Cine': 'MovieTheater',
+    'Biblioteca': 'Library',
+  };
+
+  function tipoSchemaDe(etiqueta) {
+    const tipo = TIPO_SCHEMA[(etiqueta || '').trim()];
+    return tipo ? { tipo: tipo, nota: true } : { tipo: 'Place', nota: false };
+  }
+
   // Color de texto legible (blanco o negro) para poner sobre un fondo dado.
   // Los colores de categoría no cambian con el tema, así que el mismo cálculo
   // vale para claro y oscuro. Con el blanco, el naranja (#EF6C00, 3,08), el
@@ -1823,7 +1848,7 @@ const CATEGORIAS_LUGARES = {
   window.sevitimeLugares = {
     SNAPSHOT_URL, SEVILLA, HISTORIA, CULTURA, PARQUES, IGLESIAS, GENERICOS, FILTROS,
     FILTROS_EXPLORAR, TIPOS_DE_TODO,
-    tipoDe, colorFor, emojiFor, labelFor, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
+    tipoDe, colorFor, emojiFor, labelFor, tipoSchemaDe, textoSobre, normalizar, metros, formatDist, claveDe, aLugar, cargar,
     sonMismoLugar, radioMismoSitio, juntar, juntarDeOsm, estaOculto, ocultos,
     fusiones, cambiosDeSitio, buscarPorClave, aplicarMapaAlDia,
     cargarCurado, completarConDatosPropios, horarioLegible, ordenarSinUbicacion,
