@@ -857,7 +857,32 @@
     }).catch(function () {});
   }
 
+  // Suma uno a las aperturas de hoy de esta ficha (`vistas_ficha`, la misma
+  // tabla que la app con `origen = 'app'`). Solo va la clave del sitio: ni
+  // cuenta, ni token, ni nada guardado en el navegador para contar, así que
+  // no se sabe quién la abrió. Mismos filtros que `visitas.js`: solo el
+  // dominio de verdad, sin automatismos y sin los navegadores marcados como
+  // de un administrador. Una vez por carga de página.
+  let contada = false;
+  function contarApertura() {
+    if (contada) return;
+    contada = true;
+    if (location.hostname !== 'sevitime.com' || navigator.webdriver) return;
+    try {
+      if (localStorage.getItem('sevi_no_contar') === '1') return;
+    } catch (_) {}
+    try {
+      fetch(SUPABASE_URL + '/rest/v1/rpc/fn_contar_ficha', {
+        method: 'POST',
+        headers: { apikey: SUPABASE_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ p_place_key: clave, p_origen: 'web' }),
+        keepalive: true,
+      }).catch(function () {});
+    } catch (_) {}
+  }
+
   function pintar(p) {
+    contarApertura();
     pintarDistancia(p);
     const nombre = document.getElementById('nombre');
     nombre.textContent = p.nombre;
